@@ -1,0 +1,960 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{897717E9-276E-40E3-8FFB-969702304EFE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CapaPresentacion</RootNamespace>
+    <AssemblyName>CapaPresentacion</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AlphaBlendTextBox">
+      <HintPath>..\..\..\..\OTROS\AlphaBlendTextBox_src\bin\Debug\AlphaBlendTextBox.dll</HintPath>
+    </Reference>
+    <Reference Include="MetroFramework, Version=1.4.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MetroFramework.Design, Version=1.4.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.Design.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MetroFramework.Fonts, Version=1.4.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.Fonts.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ReportViewer.Common, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Reporting.WinForms.v11.1.0.0.0\lib\Microsoft.ReportViewer.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.ReportViewer.ProcessingObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Reporting.WinForms.v11.1.0.0.0\lib\Microsoft.ReportViewer.ProcessingObjectModel.DLL</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.ReportViewer.WinForms, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Reporting.WinForms.v11.1.0.0.0\lib\Microsoft.ReportViewer.WinForms.DLL</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Reporting.WinForms.v11.1.0.0.0\lib\Microsoft.SqlServer.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Configuraciones\ConfiguracionDatagridview.cs" />
+    <Compile Include="dsReportes.cs">
+      <DependentUpon>dsReportes.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="dsReportes.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>dsReportes.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\AdjuntarImagen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\AdjuntarImagen.Designer.cs">
+      <DependentUpon>AdjuntarImagen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\ConfiguracionImagen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\ConfiguracionImagen.Designer.cs">
+      <DependentUpon>ConfiguracionImagen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomButtonMesa.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomButtonMesa.Designer.cs">
+      <DependentUpon>CustomButtonMesa.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomGridPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomGridPanel.designer.cs">
+      <DependentUpon>CustomGridPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomTextBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomTextBox.designer.cs">
+      <DependentUpon>CustomTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomTextbox2.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomTextbox2.Designer.cs">
+      <DependentUpon>CustomTextbox2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\Observacion.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\Observacion.designer.cs">
+      <DependentUpon>Observacion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\UploadImage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\UploadImage.designer.cs">
+      <DependentUpon>UploadImage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\DatosInicioSesion.cs" />
+    <Compile Include="Formularios\FormsBebidas\FrmAgregarBebidas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsBebidas\FrmAgregarBebidas.Designer.cs">
+      <DependentUpon>FrmAgregarBebidas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsBebidas\FrmObservarBebidas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsBebidas\FrmObservarBebidas.Designer.cs">
+      <DependentUpon>FrmObservarBebidas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\ContextMenuAgregarCliente.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\ContextMenuAgregarCliente.Designer.cs">
+      <DependentUpon>ContextMenuAgregarCliente.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\FrmAgregarCliente.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\FrmAgregarCliente.Designer.cs">
+      <DependentUpon>FrmAgregarCliente.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\FrmObservarClientes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsClientes\FrmObservarClientes.Designer.cs">
+      <DependentUpon>FrmObservarClientes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsDetalles\ConvertidorPorciones.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsDetalles\ConvertidorPorciones.Designer.cs">
+      <DependentUpon>ConvertidorPorciones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsDetalles\FrmAgregarDetallePlato.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsDetalles\FrmAgregarDetallePlato.Designer.cs">
+      <DependentUpon>FrmAgregarDetallePlato.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEgresos\FrmNuevoEgreso.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEgresos\FrmNuevoEgreso.Designer.cs">
+      <DependentUpon>FrmNuevoEgreso.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\EEmpleado.cs" />
+    <Compile Include="Formularios\FormsEmpleados\EmpleadoNominaSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\EmpleadoNominaSmall.Designer.cs">
+      <DependentUpon>EmpleadoNominaSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmAgregarEmpleado.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmAgregarEmpleado.Designer.cs">
+      <DependentUpon>FrmAgregarEmpleado.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmModificarClaveMaestra.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmModificarClaveMaestra.Designer.cs">
+      <DependentUpon>FrmModificarClaveMaestra.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmNominaEmpleados.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmNominaEmpleados.Designer.cs">
+      <DependentUpon>FrmNominaEmpleados.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmObservarEmpleados.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEmpleados\FrmObservarEmpleados.Designer.cs">
+      <DependentUpon>FrmObservarEmpleados.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario.Designer.cs">
+      <DependentUpon>FrmReporteDiario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsIngresos\FrmNuevoIngreso.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsIngresos\FrmNuevoIngreso.Designer.cs">
+      <DependentUpon>FrmNuevoIngreso.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\AyudaInsumos.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\AyudaInsumos.Designer.cs">
+      <DependentUpon>AyudaInsumos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\FrmAgregarInsumos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\FrmAgregarInsumos.Designer.cs">
+      <DependentUpon>FrmAgregarInsumos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\FrmObservarInsumos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsInsumos\FrmObservarInsumos.Designer.cs">
+      <DependentUpon>FrmObservarInsumos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsMesas\EMesa.cs" />
+    <Compile Include="Formularios\FormsMesas\FrmObservarMesas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsMesas\FrmObservarMesas.Designer.cs">
+      <DependentUpon>FrmObservarMesas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsMesas\MesaSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsMesas\MesaSmall.Designer.cs">
+      <DependentUpon>MesaSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsMovimientos\FrmObservarMovimientos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsMovimientos\FrmObservarMovimientos.Designer.cs">
+      <DependentUpon>FrmObservarMovimientos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\ENotas.cs" />
+    <Compile Include="Formularios\FormsNotas\FrmNuevaNota.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\FrmNuevaNota.Designer.cs">
+      <DependentUpon>FrmNuevaNota.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\FrmObservarNotas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\FrmObservarNotas.Designer.cs">
+      <DependentUpon>FrmObservarNotas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\NotaSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsNotas\NotaSmall.Designer.cs">
+      <DependentUpon>NotaSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Bebidas\EBebidas.cs" />
+    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.Designer.cs">
+      <DependentUpon>FrmPedidoBebidas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.Designer.cs">
+      <DependentUpon>FrmPreciosBebidas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\ContextMenuDatosPedido.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\ContextMenuDatosPedido.Designer.cs">
+      <DependentUpon>ContextMenuDatosPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DatosUsuario.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DatosUsuario.Designer.cs">
+      <DependentUpon>DatosUsuario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DescuentosOpcionesPedido.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DescuentosOpcionesPedido.Designer.cs">
+      <DependentUpon>DescuentosOpcionesPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DomicilioSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DomicilioSmall.Designer.cs">
+      <DependentUpon>DomicilioSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\EmailFactura.cs" />
+    <Compile Include="Formularios\FormsPedido\FrmDeletePedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmDeletePedido.Designer.cs">
+      <DependentUpon>FrmDeletePedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmDomicilios.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmDomicilios.Designer.cs">
+      <DependentUpon>FrmDomicilios.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmObservacionPedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmObservacionPedido.designer.cs">
+      <DependentUpon>FrmObservacionPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmCambiarMesa.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmCambiarMesa.Designer.cs">
+      <DependentUpon>FrmCambiarMesa.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmDetallePedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmDetallePedido.Designer.cs">
+      <DependentUpon>FrmDetallePedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Designer.cs">
+      <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmObservarMesas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmObservarMesas.Designer.cs">
+      <DependentUpon>FrmObservarMesas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmPedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmPedido.Designer.cs">
+      <DependentUpon>FrmPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmRealizarPedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmRealizarPedido.Designer.cs">
+      <DependentUpon>FrmRealizarPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Platos\EPlatos.cs" />
+    <Compile Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.Designer.cs">
+      <DependentUpon>FrmPedidoPlatos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\Controles\PoperContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\PoperContainer.Designer.cs">
+      <DependentUpon>PoperContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\PruebaDetallePedido.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\PruebaDetallePedido.Designer.cs">
+      <DependentUpon>PruebaDetallePedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\TablasPedido.cs" />
+    <Compile Include="Formularios\FormsPlatos\FrmAgregarPlato.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPlatos\FrmAgregarPlato.Designer.cs">
+      <DependentUpon>FrmAgregarPlato.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPlatos\FrmObservarPlatos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPlatos\FrmObservarPlatos.Designer.cs">
+      <DependentUpon>FrmObservarPlatos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfiguracionReportes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfiguracionReportes.designer.cs">
+      <DependentUpon>FrmConfiguracionReportes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsManuales\FrmManualEmpleados.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsManuales\FrmManualEmpleados.Designer.cs">
+      <DependentUpon>FrmManualEmpleados.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsManuales\FrmManuales.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsManuales\FrmManuales.Designer.cs">
+      <DependentUpon>FrmManuales.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmAdministracionAvanzada.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmAdministracionAvanzada.Designer.cs">
+      <DependentUpon>FrmAdministracionAvanzada.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmFunciones.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmFunciones.Designer.cs">
+      <DependentUpon>FrmFunciones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmVentanaInicial.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmVentanaInicial.Designer.cs">
+      <DependentUpon>FrmVentanaInicial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuAdministracion.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuAdministracion.designer.cs">
+      <DependentUpon>MenuAdministracion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuEmpleados.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuEmpleados.designer.cs">
+      <DependentUpon>MenuEmpleados.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\EReservas.cs" />
+    <Compile Include="Formularios\FormsReservas\FrmNuevaReserva.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\FrmNuevaReserva.Designer.cs">
+      <DependentUpon>FrmNuevaReserva.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\FrmObservarReservas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\FrmObservarReservas.Designer.cs">
+      <DependentUpon>FrmObservarReservas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\MenuNotification.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\MenuNotification.Designer.cs">
+      <DependentUpon>MenuNotification.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\ReservaMesaSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsReservas\ReservaMesaSmall.Designer.cs">
+      <DependentUpon>ReservaMesaSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.Designer.cs">
+      <DependentUpon>FrmReporteNominaEmpleado.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\ControladorImpresion.cs" />
+    <Compile Include="Servicios\EnviarEmailErrores2.cs" />
+    <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.Designer.cs">
+      <DependentUpon>FrmIniciarSesion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmPrincipal.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmPrincipal.Designer.cs">
+      <DependentUpon>FrmPrincipal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\OpcionesUsuario.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\OpcionesUsuario.Designer.cs">
+      <DependentUpon>OpcionesUsuario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\PasosError.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\PasosError.Designer.cs">
+      <DependentUpon>PasosError.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\Filtrosventa.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\Filtrosventa.Designer.cs">
+      <DependentUpon>Filtrosventa.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\FrmDetalleVenta.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\FrmDetalleVenta.designer.cs">
+      <DependentUpon>FrmDetalleVenta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\FrmObservarVentas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\FrmObservarVentas.Designer.cs">
+      <DependentUpon>FrmObservarVentas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\ResumenVenta.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsVentas\ResumenVenta.Designer.cs">
+      <DependentUpon>ResumenVenta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FrmComprobacion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FrmComprobacion.Designer.cs">
+      <DependentUpon>FrmComprobacion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ReportesFacturas\Comandas\FrmComandas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportesFacturas\Comandas\FrmComandas.Designer.cs">
+      <DependentUpon>FrmComandas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ReportesFacturas\FacturaFinal\FrmFacturaFinal.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportesFacturas\FacturaFinal\FrmFacturaFinal.Designer.cs">
+      <DependentUpon>FrmFacturaFinal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\ArchivosAdjuntos.cs" />
+    <Compile Include="Servicios\AutoCompletar.cs" />
+    <Compile Include="Servicios\ComprobacionesControles.cs" />
+    <Compile Include="Servicios\DatagridString.cs" />
+    <Compile Include="Servicios\EnviarEmailErrores.cs" />
+    <Compile Include="Servicios\FormsCorreoTicket\FrmEmailTicket.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\FormsCorreoTicket\FrmEmailTicket.Designer.cs">
+      <DependentUpon>FrmEmailTicket.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\FormsCorreoTicket\ScreenCapture.cs" />
+    <Compile Include="Servicios\FrmWait\FrmWait.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\FrmWait\FrmWait.designer.cs">
+      <DependentUpon>FrmWait.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\FrmWait\MensajeEspera.cs" />
+    <Compile Include="Servicios\Imagenes.cs" />
+    <Compile Include="Servicios\LlenarListas.cs" />
+    <Compile Include="Servicios\Mensajes.cs" />
+    <Compile Include="Servicios\Mensajes\FrmInputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmInputBox.designer.cs">
+      <DependentUpon>FrmInputBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeError.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeError.designer.cs">
+      <DependentUpon>FrmMensajeError.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeErrorCompleto.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeErrorCompleto.designer.cs">
+      <DependentUpon>FrmMensajeErrorCompleto.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeInformacion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeInformacion.designer.cs">
+      <DependentUpon>FrmMensajeInformacion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeOk.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajeOk.designer.cs">
+      <DependentUpon>FrmMensajeOk.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajePregunta.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Servicios\Mensajes\FrmMensajePregunta.designer.cs">
+      <DependentUpon>FrmMensajePregunta.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Servicios\MsgBoxUtil.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CapaEntidades\CapaEntidades.csproj">
+      <Project>{24a2770c-b7f5-40ae-9ca7-eed819df2bf5}</Project>
+      <Name>CapaEntidades</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CapaNegocio\CapaNegocio.csproj">
+      <Project>{393ff5f0-9c01-42e3-a551-f86b7a58306d}</Project>
+      <Name>CapaNegocio</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Formularios\Controles\AdjuntarImagen.resx">
+      <DependentUpon>AdjuntarImagen.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\ConfiguracionImagen.resx">
+      <DependentUpon>ConfiguracionImagen.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\CustomButtonMesa.resx">
+      <DependentUpon>CustomButtonMesa.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\CustomTextBox.resx">
+      <DependentUpon>CustomTextBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\Observacion.resx">
+      <DependentUpon>Observacion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\UploadImage.resx">
+      <DependentUpon>UploadImage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsBebidas\FrmAgregarBebidas.resx">
+      <DependentUpon>FrmAgregarBebidas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsBebidas\FrmObservarBebidas.resx">
+      <DependentUpon>FrmObservarBebidas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsClientes\ContextMenuAgregarCliente.resx">
+      <DependentUpon>ContextMenuAgregarCliente.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsClientes\FrmAgregarCliente.resx">
+      <DependentUpon>FrmAgregarCliente.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsClientes\FrmObservarClientes.resx">
+      <DependentUpon>FrmObservarClientes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsDetalles\ConvertidorPorciones.resx">
+      <DependentUpon>ConvertidorPorciones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsDetalles\FrmAgregarDetallePlato.resx">
+      <DependentUpon>FrmAgregarDetallePlato.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEgresos\FrmNuevoEgreso.resx">
+      <DependentUpon>FrmNuevoEgreso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEmpleados\EmpleadoNominaSmall.resx">
+      <DependentUpon>EmpleadoNominaSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEmpleados\FrmAgregarEmpleado.resx">
+      <DependentUpon>FrmAgregarEmpleado.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEmpleados\FrmModificarClaveMaestra.resx">
+      <DependentUpon>FrmModificarClaveMaestra.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEmpleados\FrmNominaEmpleados.resx">
+      <DependentUpon>FrmNominaEmpleados.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEmpleados\FrmObservarEmpleados.resx">
+      <DependentUpon>FrmObservarEmpleados.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteDiario.resx">
+      <DependentUpon>FrmReporteDiario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\rptReporteDiario.rdlc" />
+    <EmbeddedResource Include="Formularios\FormsIngresos\FrmNuevoIngreso.resx">
+      <DependentUpon>FrmNuevoIngreso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsInsumos\AyudaInsumos.resx">
+      <DependentUpon>AyudaInsumos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsInsumos\FrmAgregarInsumos.resx">
+      <DependentUpon>FrmAgregarInsumos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsInsumos\FrmObservarInsumos.resx">
+      <DependentUpon>FrmObservarInsumos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsMesas\FrmObservarMesas.resx">
+      <DependentUpon>FrmObservarMesas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsMesas\MesaSmall.resx">
+      <DependentUpon>MesaSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsMovimientos\FrmObservarMovimientos.resx">
+      <DependentUpon>FrmObservarMovimientos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsNotas\FrmNuevaNota.resx">
+      <DependentUpon>FrmNuevaNota.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsNotas\FrmObservarNotas.resx">
+      <DependentUpon>FrmObservarNotas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsNotas\NotaSmall.resx">
+      <DependentUpon>NotaSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.resx">
+      <DependentUpon>FrmPedidoBebidas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.resx">
+      <DependentUpon>FrmPreciosBebidas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\ContextMenuDatosPedido.resx">
+      <DependentUpon>ContextMenuDatosPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\DatosUsuario.resx">
+      <DependentUpon>DatosUsuario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\DescuentosOpcionesPedido.resx">
+      <DependentUpon>DescuentosOpcionesPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\DomicilioSmall.resx">
+      <DependentUpon>DomicilioSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmDeletePedido.resx">
+      <DependentUpon>FrmDeletePedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmDomicilios.resx">
+      <DependentUpon>FrmDomicilios.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmObservacionPedido.resx">
+      <DependentUpon>FrmObservacionPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmCambiarMesa.resx">
+      <DependentUpon>FrmCambiarMesa.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmDetallePedido.resx">
+      <DependentUpon>FrmDetallePedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmFacturarPedido.resx">
+      <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmObservarMesas.resx">
+      <DependentUpon>FrmObservarMesas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmPedido.resx">
+      <DependentUpon>FrmPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FrmRealizarPedido.resx">
+      <DependentUpon>FrmRealizarPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.resx">
+      <DependentUpon>FrmPedidoPlatos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\Controles\PoperContainer.resx">
+      <DependentUpon>PoperContainer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\PruebaDetallePedido.resx">
+      <DependentUpon>PruebaDetallePedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPlatos\FrmAgregarPlato.resx">
+      <DependentUpon>FrmAgregarPlato.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPlatos\FrmObservarPlatos.resx">
+      <DependentUpon>FrmObservarPlatos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfiguracionReportes.resx">
+      <DependentUpon>FrmConfiguracionReportes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FormsManuales\FrmManualEmpleados.resx">
+      <DependentUpon>FrmManualEmpleados.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FormsManuales\FrmManuales.resx">
+      <DependentUpon>FrmManuales.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FrmAdministracionAvanzada.resx">
+      <DependentUpon>FrmAdministracionAvanzada.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FrmFunciones.resx">
+      <DependentUpon>FrmFunciones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FrmIniciarSesion.resx">
+      <DependentUpon>FrmIniciarSesion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FrmPrincipal.resx">
+      <DependentUpon>FrmPrincipal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FrmVentanaInicial.resx">
+      <DependentUpon>FrmVentanaInicial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\Menus\MenuAdministracion.resx">
+      <DependentUpon>MenuAdministracion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\Menus\MenuEmpleados.resx">
+      <DependentUpon>MenuEmpleados.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\OpcionesUsuario.resx">
+      <DependentUpon>OpcionesUsuario.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\PasosError.resx">
+      <DependentUpon>PasosError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsReservas\FrmNuevaReserva.resx">
+      <DependentUpon>FrmNuevaReserva.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsReservas\FrmObservarReservas.resx">
+      <DependentUpon>FrmObservarReservas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsReservas\MenuNotification.resx">
+      <DependentUpon>MenuNotification.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsReservas\ReservaMesaSmall.resx">
+      <DependentUpon>ReservaMesaSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsVentas\Filtrosventa.resx">
+      <DependentUpon>Filtrosventa.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsVentas\FrmDetalleVenta.resx">
+      <DependentUpon>FrmDetalleVenta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsVentas\FrmObservarVentas.resx">
+      <DependentUpon>FrmObservarVentas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsVentas\ResumenVenta.resx">
+      <DependentUpon>ResumenVenta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FrmComprobacion.resx">
+      <DependentUpon>FrmComprobacion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\Comandas\ComandasPedido.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\Comandas\FrmComandas.resx">
+      <DependentUpon>FrmComandas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\Precuenta.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\FacturaFinal.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\FrmFacturaFinal.resx">
+      <DependentUpon>FrmFacturaFinal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.resx">
+      <DependentUpon>FrmReporteNominaEmpleado.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\NominaEmpleado\rptNominaEmpleado.rdlc" />
+    <EmbeddedResource Include="Servicios\FormsCorreoTicket\FrmEmailTicket.resx">
+      <DependentUpon>FrmEmailTicket.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\FrmWait\FrmWait.resx">
+      <DependentUpon>FrmWait.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmInputBox.resx">
+      <DependentUpon>FrmInputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmMensajeError.resx">
+      <DependentUpon>FrmMensajeError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmMensajeErrorCompleto.resx">
+      <DependentUpon>FrmMensajeErrorCompleto.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmMensajeInformacion.resx">
+      <DependentUpon>FrmMensajeInformacion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmMensajeOk.resx">
+      <DependentUpon>FrmMensajeOk.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Servicios\Mensajes\FrmMensajePregunta.resx">
+      <DependentUpon>FrmMensajePregunta.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dsReportes.xsc">
+      <DependentUpon>dsReportes.xsd</DependentUpon>
+    </None>
+    <None Include="dsReportes.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>dsReportes.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="dsReportes.xss">
+      <DependentUpon>dsReportes.xsd</DependentUpon>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\add2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\kghostview.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\writing%281%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SIN IMAGENES.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\toolbar_find.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\negative.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\No hay reserva.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\notification.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\No hay notas.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AlmuerzoEspecial.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lightbrown_coffee_2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\No hay domicilios.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
