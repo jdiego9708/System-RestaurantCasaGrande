@@ -16,5 +16,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             InitializeComponent();
         }
+
+        private void AsignarDatos(ProductBinding product)
+        {
+
+        }
+
+        private ProductBinding productBinding;
+
+        public ProductBinding ProductBinding
+        {
+            get => productBinding;
+            set
+            {
+                productBinding = value;
+            }
+        }
     }
 }

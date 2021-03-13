@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace CapaEntidades.Models
 {
-    public class Pedido
+    public class Pedidos
     {
-        public Pedido()
+        public Pedidos()
         {
 
         }
 
-        public Pedido(DataRow row)
+        public Pedidos(DataRow row)
         {
             try
             {

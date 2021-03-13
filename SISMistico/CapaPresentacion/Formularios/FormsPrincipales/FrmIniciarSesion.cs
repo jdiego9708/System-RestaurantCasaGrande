@@ -70,7 +70,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                             var (rpta, objects) = await NEmpleados.Login(Convert.ToString(id_empleado), this.txtPass.Texto, DateTime.Now.ToString("yyyy-MM-dd"));
                             if (rpta.Equals("OK"))
                             {
-                                Empleado empleado = (Empleado)objects[0];
+                                Empleados empleado = (Empleados)objects[0];
                                 Turno turno = (Turno)objects[1];
 
                                 DatosInicioSesion datos = DatosInicioSesion.GetInstancia();

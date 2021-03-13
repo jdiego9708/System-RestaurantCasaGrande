@@ -38,12 +38,12 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.lblMesero = new System.Windows.Forms.Label();
             this.lblMistico = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.panelTipo = new CapaPresentacion.Controles.CustomGridPanel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.panelResultados = new CapaPresentacion.Controles.CustomGridPanel();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.panelTipos = new CapaPresentacion.Controles.CustomGridPanel();
-            this.panelBusqueda = new CapaPresentacion.Controles.CustomGridPanel();
             this.panelPedidos = new CapaPresentacion.Controles.CustomGridPanel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.txtInfoPedido = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.panelBanner.SuspendLayout();
@@ -148,7 +148,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.groupBox2.Controls.Add(this.panelTipos);
+            this.groupBox2.Controls.Add(this.panelTipo);
             this.groupBox2.Location = new System.Drawing.Point(8, 150);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(166, 422);
@@ -156,17 +156,41 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Tipos";
             // 
+            // panelTipo
+            // 
+            this.panelTipo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelTipo.AutoScroll = true;
+            this.panelTipo.Location = new System.Drawing.Point(5, 24);
+            this.panelTipo.Name = "panelTipo";
+            this.panelTipo.PageSize = 10;
+            this.panelTipo.Size = new System.Drawing.Size(155, 392);
+            this.panelTipo.TabIndex = 9;
+            // 
             // groupBox3
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.groupBox3.Controls.Add(this.panelBusqueda);
+            this.groupBox3.Controls.Add(this.panelResultados);
             this.groupBox3.Location = new System.Drawing.Point(180, 150);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(300, 422);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Búsqueda";
+            // 
+            // panelResultados
+            // 
+            this.panelResultados.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelResultados.AutoScroll = true;
+            this.panelResultados.Location = new System.Drawing.Point(6, 24);
+            this.panelResultados.Name = "panelResultados";
+            this.panelResultados.PageSize = 10;
+            this.panelResultados.Size = new System.Drawing.Size(288, 392);
+            this.panelResultados.TabIndex = 10;
             // 
             // groupBox4
             // 
@@ -181,42 +205,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pedido";
             // 
-            // groupBox5
-            // 
-            this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox5.Controls.Add(this.txtInfoPedido);
-            this.groupBox5.Location = new System.Drawing.Point(486, 60);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(372, 84);
-            this.groupBox5.TabIndex = 8;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Información";
-            // 
-            // panelTipos
-            // 
-            this.panelTipos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelTipos.AutoScroll = true;
-            this.panelTipos.Location = new System.Drawing.Point(5, 24);
-            this.panelTipos.Name = "panelTipos";
-            this.panelTipos.PageSize = 10;
-            this.panelTipos.Size = new System.Drawing.Size(155, 392);
-            this.panelTipos.TabIndex = 9;
-            // 
-            // panelBusqueda
-            // 
-            this.panelBusqueda.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBusqueda.AutoScroll = true;
-            this.panelBusqueda.Location = new System.Drawing.Point(6, 24);
-            this.panelBusqueda.Name = "panelBusqueda";
-            this.panelBusqueda.PageSize = 10;
-            this.panelBusqueda.Size = new System.Drawing.Size(288, 392);
-            this.panelBusqueda.TabIndex = 10;
-            // 
             // panelPedidos
             // 
             this.panelPedidos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -228,6 +216,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelPedidos.PageSize = 10;
             this.panelPedidos.Size = new System.Drawing.Size(360, 392);
             this.panelPedidos.TabIndex = 11;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox5.Controls.Add(this.txtInfoPedido);
+            this.groupBox5.Location = new System.Drawing.Point(486, 60);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(372, 84);
+            this.groupBox5.TabIndex = 8;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Información";
             // 
             // txtInfoPedido
             // 
@@ -289,8 +289,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.GroupBox groupBox5;
-        private CapaPresentacion.Controles.CustomGridPanel panelTipos;
-        private CapaPresentacion.Controles.CustomGridPanel panelBusqueda;
+        private CapaPresentacion.Controles.CustomGridPanel panelTipo;
+        private CapaPresentacion.Controles.CustomGridPanel panelResultados;
         private CapaPresentacion.Controles.CustomGridPanel panelPedidos;
         private System.Windows.Forms.TextBox txtInfoPedido;
     }

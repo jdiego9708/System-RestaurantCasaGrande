@@ -66,7 +66,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             int id_pedido = (int)sender;
 
             if (this.PedidosDomicilios == null)
-                this.PedidosDomicilios = new List<Pedido>();
+                this.PedidosDomicilios = new List<Pedidos>();
 
             this.CargarDomicilios(DateTime.Now.ToString("yyyy-MM-dd"));
         }
@@ -201,7 +201,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         public void CargarDomicilios(string fecha)
         {
-            this.PedidosDomicilios = new List<Pedido>();
+            this.PedidosDomicilios = new List<Pedidos>();
             DataTable dtPedidos = NPedido.BuscarPedidos("DOMICILIOS COMPLETO", fecha);
             if (dtPedidos != null)
             {
@@ -209,7 +209,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 int contadorOtros = 0;
                 foreach (DataRow row in dtPedidos.Rows)
                 {
-                    Pedido pedido = new Pedido(row);
+                    Pedidos pedido = new Pedidos(row);
                     if (pedido.Estado_pedido.Equals("PENDIENTE"))
                     {
                         this.PedidosDomicilios.Add(pedido);
@@ -376,9 +376,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         int numero_mesas;
 
-        private List<Pedido> _pedidosDomicilios;
+        private List<Pedidos> _pedidosDomicilios;
         public int Numero_mesas { get => numero_mesas; set => numero_mesas = value; }
-        public List<Pedido> PedidosDomicilios
+        public List<Pedidos> PedidosDomicilios
         {
             get => _pedidosDomicilios;
             set

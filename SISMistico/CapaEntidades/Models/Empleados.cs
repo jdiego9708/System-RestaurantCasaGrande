@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace CapaEntidades.Models
 {
-    public class Empleado
+    public class Empleados
     {
-        public Empleado()
+        public Empleados()
         {
 
         }
 
-        public Empleado(DataRow row)
+        public Empleados(DataRow row)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace CapaEntidades.Models
             }
         }
 
-        public Empleado(DataTable dt, int fila)
+        public Empleados(DataTable dt, int fila)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace CapaEntidades.Models
             {                
                 this.Id_nomina_empleado = Convert.ToInt32(row["Id_nomina_empleado"]);
                 this.Id_empleado = Convert.ToInt32(row["Id_empleado"]);
-                this.Empleado = new Empleado(row);
+                this.Empleado = new Empleados(row);
                 this.Fecha_nomina = Convert.ToDateTime(row["Fecha_nomina"]);
                 this.Salario = Convert.ToDecimal(row["Salario"]);
                 this.Propinas = Convert.ToDecimal(row["Propinas"]);
@@ -112,7 +112,7 @@ namespace CapaEntidades.Models
 
         public int Id_empleado { get; set; }
 
-        public Empleado Empleado { get; set; }
+        public Empleados Empleado { get; set; }
 
         public DateTime Fecha_nomina { get; set; }
 

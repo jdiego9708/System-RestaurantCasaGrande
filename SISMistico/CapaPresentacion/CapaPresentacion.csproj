@@ -394,6 +394,7 @@
     <Compile Include="Formularios\Controles\PoperContainer.Designer.cs">
       <DependentUpon>PoperContainer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\ProductBinding.cs" />
     <Compile Include="Formularios\FormsPedido\ProductItem.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -793,6 +794,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\PruebaDetallePedido.resx">
       <DependentUpon>PruebaDetallePedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\TipoItem.resx">
+      <DependentUpon>TipoItem.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPlatos\FrmAgregarPlato.resx">
       <DependentUpon>FrmAgregarPlato.cs</DependentUpon>

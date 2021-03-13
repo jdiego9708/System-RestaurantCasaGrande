@@ -62,7 +62,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     List<UserControl> controls = new List<UserControl>();
                     foreach (DataRow row in dtPedidos.Rows)
                     {
-                        Pedido pedido = new Pedido(row);
+                        Pedidos pedido = new Pedidos(row);
                         DomicilioSmall domicilio = new DomicilioSmall
                         {
                             Pedido = pedido,
@@ -95,7 +95,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         private void Domicilio_OnBtnNextClick(object sender, EventArgs e)
         {
-            Pedido pedido = (Pedido)sender;
+            Pedidos pedido = (Pedidos)sender;
             if (pedido.Estado_pedido.Equals("PENDIENTE"))
             {
                 FrmFacturarPedido facturarPedido = new FrmFacturarPedido
@@ -153,7 +153,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 int id_pedido = (int)sender;
 
                 if (frmObservarMesas.PedidosDomicilios == null)
-                    frmObservarMesas.PedidosDomicilios = new List<Pedido>();
+                    frmObservarMesas.PedidosDomicilios = new List<Pedidos>();
 
                 frmObservarMesas.CargarDomicilios(DateTime.Now.ToString("yyyy-MM-dd"));
             }

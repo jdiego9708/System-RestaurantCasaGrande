@@ -310,7 +310,7 @@ namespace CapaDatos
             string rpta = "OK";
 
             List<object> objects = new List<object>();
-            Empleado empleado = new Empleado();
+            Empleados empleado = new Empleados();
             Turno turno = new Turno();
 
             DataSet ds = new DataSet("Login");
@@ -392,7 +392,7 @@ namespace CapaDatos
 
                             //Obtener la credencial
                             if (dtEmpleado.Rows.Count > 0)
-                                empleado = new Empleado(dtEmpleado.Rows[0]);
+                                empleado = new Empleados(dtEmpleado.Rows[0]);
                             else
                                 throw new Exception("No se encontraron las credenciales");
 
@@ -440,11 +440,11 @@ namespace CapaDatos
             return (rpta, objects);
         }
 
-        public async Task<(string rpta, Empleado empleado, DataTable dtEmpleado)> ClaveMaestra(int codigo)
+        public async Task<(string rpta, Empleados empleado, DataTable dtEmpleado)> ClaveMaestra(int codigo)
         {
             string rpta = "OK";
 
-            Empleado empleado = new Empleado();
+            Empleados empleado = new Empleados();
 
             DataTable dt = new DataTable("ClaveMaestra");
             SqlConnection SqlCon = new SqlConnection();
@@ -472,7 +472,7 @@ namespace CapaDatos
 
                 if (dt.Rows.Count > 0)
                 {
-                    empleado = new Empleado(dt.Rows[0]);
+                    empleado = new Empleados(dt.Rows[0]);
                 }
                 else
                     dt = null;

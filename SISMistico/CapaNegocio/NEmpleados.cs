@@ -53,7 +53,7 @@ namespace CapaNegocio
             return await DEmpleados.Login(usuario, pass, fecha);
         }
 
-        public static async Task<(string rpta, Empleado empleado, DataTable dtEmpleado)> ClaveMaestra(int codigo)
+        public static async Task<(string rpta, Empleados empleado, DataTable dtEmpleado)> ClaveMaestra(int codigo)
         {
             DEmpleados DEmpleados = new DEmpleados();
             return await DEmpleados.ClaveMaestra(codigo);

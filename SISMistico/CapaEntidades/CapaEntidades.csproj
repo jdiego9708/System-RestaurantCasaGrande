@@ -41,10 +41,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\Pedido.cs" />
-    <Compile Include="Models\Empleado.cs" />
+    <Compile Include="Models\Mesas.cs" />
+    <Compile Include="Models\Clientes.cs" />
+    <Compile Include="Models\Bebidas.cs" />
+    <Compile Include="Models\Platos.cs" />
+    <Compile Include="Models\Pedidos.cs" />
+    <Compile Include="Models\Empleados.cs" />
     <Compile Include="Models\Egresos.cs" />
     <Compile Include="Models\Ingresos.cs" />
+    <Compile Include="Models\Tipo_platos.cs" />
+    <Compile Include="Models\Tipo_bebidas.cs" />
     <Compile Include="Models\Turno.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

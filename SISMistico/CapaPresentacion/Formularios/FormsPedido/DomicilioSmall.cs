@@ -121,7 +121,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.OnBtnNextClick?.Invoke(this.Pedido, e);      
         }
 
-        private void AsignarDatos(Pedido pedido)
+        private void AsignarDatos(Pedidos pedido)
         {
             if (pedido.Estado_pedido.Equals("PENDIENTE"))
             {
@@ -191,9 +191,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
         public event EventHandler OnBtnNextClick;
         public event EventHandler OnRefresh;
 
-        private Pedido _pedido;
+        private Pedidos _pedido;
 
-        public Pedido Pedido
+        public Pedidos Pedido
         {
             get => _pedido;
             set

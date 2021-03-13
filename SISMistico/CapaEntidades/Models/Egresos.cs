@@ -17,7 +17,7 @@
             {
                 this.Id_egreso = Convert.ToInt32(row["Id_egreso"]);
                 this.Id_empleado = Convert.ToInt32(row["Id_empleado"]);
-                this.Empleado = new Empleado(row);
+                this.Empleado = new Empleados(row);
                 this.Fecha_egreso = Convert.ToDateTime(row["Fecha_egreso"]);
                 this.Valor_egreso = Convert.ToDecimal(row["Valor_egreso"]);
                 this.Descripcion_egreso = Convert.ToString(row["Descripcion_egreso"]);
@@ -33,7 +33,7 @@
 
         public int Id_empleado { get; set; }
 
-        public Empleado Empleado { get; set; }
+        public Empleados Empleado { get; set; }
 
         public DateTime Fecha_egreso{ get; set; } = DateTime.Now;
 
