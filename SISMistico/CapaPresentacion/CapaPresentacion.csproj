@@ -394,6 +394,12 @@
     <Compile Include="Formularios\Controles\PoperContainer.Designer.cs">
       <DependentUpon>PoperContainer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\ProductItem.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\ProductItem.Designer.cs">
+      <DependentUpon>ProductItem.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\PruebaDetallePedido.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -401,6 +407,12 @@
       <DependentUpon>PruebaDetallePedido.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\TablasPedido.cs" />
+    <Compile Include="Formularios\FormsPedido\TipoItem.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\TipoItem.Designer.cs">
+      <DependentUpon>TipoItem.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPlatos\FrmAgregarPlato.cs">
       <SubType>Form</SubType>
     </Compile>
