@@ -33,7 +33,6 @@
             this.btnAdministracion = new System.Windows.Forms.Button();
             this.btnReservas = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnInsumos = new System.Windows.Forms.Button();
             this.lblMistico = new System.Windows.Forms.Label();
             this.btnVentas = new System.Windows.Forms.Button();
             this.btnMesasPedidos = new System.Windows.Forms.Button();
@@ -45,6 +44,7 @@
             this.btnUsuario = new System.Windows.Forms.Button();
             this.btnAdministracionAvanzada = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnInsumos = new System.Windows.Forms.Button();
             this.panelBotones.SuspendLayout();
             this.panelBarraSuperior.SuspendLayout();
             this.SuspendLayout();
@@ -53,7 +53,7 @@
             // 
             this.panelBotones.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.panelBotones.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(193)))), ((int)(((byte)(95)))));
+            this.panelBotones.BackColor = System.Drawing.Color.SteelBlue;
             this.panelBotones.Controls.Add(this.btnAdministracion);
             this.panelBotones.Controls.Add(this.btnReservas);
             this.panelBotones.Controls.Add(this.label1);
@@ -78,13 +78,13 @@
             this.btnAdministracion.Font = new System.Drawing.Font("Segoe UI Semibold", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAdministracion.ForeColor = System.Drawing.Color.White;
             this.btnAdministracion.Image = ((System.Drawing.Image)(resources.GetObject("btnAdministracion.Image")));
-            this.btnAdministracion.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnAdministracion.Location = new System.Drawing.Point(0, 282);
+            this.btnAdministracion.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnAdministracion.Location = new System.Drawing.Point(0, 246);
             this.btnAdministracion.Name = "btnAdministracion";
             this.btnAdministracion.Size = new System.Drawing.Size(124, 33);
             this.btnAdministracion.TabIndex = 14;
             this.btnAdministracion.Text = "Administración";
-            this.btnAdministracion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnAdministracion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnAdministracion.UseVisualStyleBackColor = true;
             // 
             // btnReservas
@@ -116,33 +116,16 @@
             this.label1.TabIndex = 12;
             this.label1.Text = "® Copyright Juan Diego \r\nDuque -\r\njdiego9708@gmail.com";
             // 
-            // btnInsumos
-            // 
-            this.btnInsumos.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnInsumos.FlatAppearance.BorderSize = 0;
-            this.btnInsumos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnInsumos.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnInsumos.ForeColor = System.Drawing.Color.White;
-            this.btnInsumos.Image = ((System.Drawing.Image)(resources.GetObject("btnInsumos.Image")));
-            this.btnInsumos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnInsumos.Location = new System.Drawing.Point(0, 247);
-            this.btnInsumos.Name = "btnInsumos";
-            this.btnInsumos.Size = new System.Drawing.Size(124, 33);
-            this.btnInsumos.TabIndex = 11;
-            this.btnInsumos.Text = "Insumos";
-            this.btnInsumos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnInsumos.UseVisualStyleBackColor = true;
-            // 
             // lblMistico
             // 
             this.lblMistico.AutoSize = true;
             this.lblMistico.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMistico.ForeColor = System.Drawing.Color.White;
-            this.lblMistico.Location = new System.Drawing.Point(21, 6);
+            this.lblMistico.Location = new System.Drawing.Point(3, 6);
             this.lblMistico.Name = "lblMistico";
-            this.lblMistico.Size = new System.Drawing.Size(76, 21);
+            this.lblMistico.Size = new System.Drawing.Size(118, 21);
             this.lblMistico.TabIndex = 10;
-            this.lblMistico.Text = "TÍO PEPE";
+            this.lblMistico.Text = "CASA GRANDE";
             // 
             // btnVentas
             // 
@@ -250,7 +233,7 @@
             // 
             this.panelBarraSuperior.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBarraSuperior.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(193)))), ((int)(((byte)(95)))));
+            this.panelBarraSuperior.BackColor = System.Drawing.Color.SteelBlue;
             this.panelBarraSuperior.Controls.Add(this.btnUsuario);
             this.panelBarraSuperior.Controls.Add(this.btnAdministracionAvanzada);
             this.panelBarraSuperior.Location = new System.Drawing.Point(124, 0);
@@ -300,11 +283,29 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel1.BackgroundImage")));
-            this.panel1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.panel1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.panel1.Location = new System.Drawing.Point(123, 34);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(699, 394);
             this.panel1.TabIndex = 2;
+            // 
+            // btnInsumos
+            // 
+            this.btnInsumos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnInsumos.FlatAppearance.BorderSize = 0;
+            this.btnInsumos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnInsumos.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnInsumos.ForeColor = System.Drawing.Color.White;
+            this.btnInsumos.Image = ((System.Drawing.Image)(resources.GetObject("btnInsumos.Image")));
+            this.btnInsumos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnInsumos.Location = new System.Drawing.Point(-3, 307);
+            this.btnInsumos.Name = "btnInsumos";
+            this.btnInsumos.Size = new System.Drawing.Size(124, 33);
+            this.btnInsumos.TabIndex = 11;
+            this.btnInsumos.Text = "Insumos";
+            this.btnInsumos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnInsumos.UseVisualStyleBackColor = true;
+            this.btnInsumos.Visible = false;
             // 
             // FrmPrincipal
             // 
@@ -318,7 +319,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FrmPrincipal";
-            this.Text = "Restaurante Tío Pepe (Formulario principal)";
+            this.Text = "Restaurante Casa Grande (Formulario principal)";
             this.panelBotones.ResumeLayout(false);
             this.panelBotones.PerformLayout();
             this.panelBarraSuperior.ResumeLayout(false);
@@ -339,10 +340,10 @@
         private System.Windows.Forms.Label lblMistico;
         private System.Windows.Forms.Button btnAdministracionAvanzada;
         public System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnInsumos;
         private System.Windows.Forms.Button btnUsuario;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnReservas;
         private System.Windows.Forms.Button btnAdministracion;
+        private System.Windows.Forms.Button btnInsumos;
     }
 }

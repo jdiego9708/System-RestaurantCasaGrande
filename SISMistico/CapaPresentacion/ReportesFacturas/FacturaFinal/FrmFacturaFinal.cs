@@ -102,12 +102,11 @@ namespace CapaPresentacion
                 if (this.Is_precuenta)
                 {
                     this.reportViewer1.LocalReport.SetParameters(this.reportParameters);
-                    ReportDataSource dsDatosPrincipales = new ReportDataSource("DatosPedido", this.TablaDatosPrincipales);
-                    reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);
+                    ReportDataSource dsDatosPrincipales = new ReportDataSource("DatosPrincipales", this.TablaDatosPrincipales);
 
                     ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
                     reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
-
+                    reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);                
                 }
                 else
                 {

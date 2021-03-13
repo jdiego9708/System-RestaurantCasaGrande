@@ -42,7 +42,7 @@
             // 
             // panel1
             // 
-            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(193)))), ((int)(((byte)(95)))));
+            this.panel1.BackColor = System.Drawing.Color.SteelBlue;
             this.panel1.Controls.Add(this.label1);
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
@@ -54,15 +54,15 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI Semibold", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(110, 17);
+            this.label1.Location = new System.Drawing.Point(82, 17);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(275, 37);
+            this.label1.Size = new System.Drawing.Size(323, 37);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Restaurante Tío PEPE";
+            this.label1.Text = "Restaurante Casa Grande";
             // 
             // panel2
             // 
-            this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(110)))), ((int)(((byte)(193)))), ((int)(((byte)(95)))));
+            this.panel2.BackColor = System.Drawing.Color.SteelBlue;
             this.panel2.Location = new System.Drawing.Point(0, 296);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(491, 32);

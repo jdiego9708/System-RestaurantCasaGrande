@@ -37,7 +37,9 @@ namespace CapaPresentacion
                 string observaciones = "";
                 foreach (DataRow row in this.TablaDetallePedido.Rows)
                 {
-                    observaciones += " - " + Convert.ToString(row["Observaciones"]);
+                    string obs = Convert.ToString(row["Observaciones"]);
+                    if (!string.IsNullOrEmpty(obs))
+                        observaciones += " - " + obs;
                 }
 
                 ReportParameter[] reportParameters = new ReportParameter[2];

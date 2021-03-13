@@ -12,10 +12,10 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Restaurante Tío Pepe - Recibo de caja</Value>
+                    <Value>Restaurante Casa Grande - Recibo de caja</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>12pt</FontSize>
+                      <FontSize>11pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>

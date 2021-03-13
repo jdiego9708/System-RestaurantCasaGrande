@@ -11,55 +11,7 @@
     </DataSource>
   </DataSources>
   <DataSets>
-    <DataSet Name="DetallePedido">
-      <Query>
-        <DataSourceName>dsReportes</DataSourceName>
-        <CommandText>/* Local Query */</CommandText>
-      </Query>
-      <Fields>
-        <Field Name="Id_pedido">
-          <DataField>Id_pedido</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Id_tipo">
-          <DataField>Id_tipo</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Tipo">
-          <DataField>Tipo</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Nombre">
-          <DataField>Nombre</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Precio">
-          <DataField>Precio</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Cantidad">
-          <DataField>Cantidad</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Total">
-          <DataField>Total</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Observaciones">
-          <DataField>Observaciones</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-      </Fields>
-      <rd:DataSetInfo>
-        <rd:DataSetName>dsReportes</rd:DataSetName>
-        <rd:SchemaPath>D:\JUAN DIEGO\Documentos\OneDrive\PROYECTOS\EN CURSO\Mistico\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
-        <rd:TableName>dtDetallePedido</rd:TableName>
-        <rd:TableAdapterFillMethod />
-        <rd:TableAdapterGetDataMethod />
-        <rd:TableAdapterName />
-      </rd:DataSetInfo>
-    </DataSet>
-    <DataSet Name="DatosPedido">
+    <DataSet Name="DatosPrincipales">
       <Query>
         <DataSourceName>dsReportes</DataSourceName>
         <CommandText>/* Local Query */</CommandText>
@@ -108,8 +60,56 @@
       </Fields>
       <rd:DataSetInfo>
         <rd:DataSetName>dsReportes</rd:DataSetName>
-        <rd:SchemaPath>D:\JUAN DIEGO\Documentos\OneDrive\PROYECTOS\EN CURSO\Mistico\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
+        <rd:SchemaPath>F:\JUAN DIEGO\Repositorios\System-RestaurantCasaGrande\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
         <rd:TableName>dtPedido</rd:TableName>
+        <rd:TableAdapterFillMethod />
+        <rd:TableAdapterGetDataMethod />
+        <rd:TableAdapterName />
+      </rd:DataSetInfo>
+    </DataSet>
+    <DataSet Name="DetallePedido">
+      <Query>
+        <DataSourceName>dsReportes</DataSourceName>
+        <CommandText>/* Local Query */</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Id_pedido">
+          <DataField>Id_pedido</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Id_tipo">
+          <DataField>Id_tipo</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Tipo">
+          <DataField>Tipo</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Nombre">
+          <DataField>Nombre</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Precio">
+          <DataField>Precio</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Cantidad">
+          <DataField>Cantidad</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Total">
+          <DataField>Total</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Observaciones">
+          <DataField>Observaciones</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>dsReportes</rd:DataSetName>
+        <rd:SchemaPath>F:\JUAN DIEGO\Repositorios\System-RestaurantCasaGrande\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
+        <rd:TableName>dtDetallePedido</rd:TableName>
         <rd:TableAdapterFillMethod />
         <rd:TableAdapterGetDataMethod />
         <rd:TableAdapterName />
@@ -127,7 +127,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Restaurante Tío Pepe - Precuenta</Value>
+                    <Value>Restaurante Casa Grande - Precuenta</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>12pt</FontSize>
@@ -161,7 +161,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Nit 1037646184</Value>
+                    <Value>Nit 1053803248-1</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>8pt</FontSize>
@@ -206,7 +206,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Dirección Carrera 11 Calle 18 Esquina # 11 - 09 </Value>
+                    <Value>Dirección Calle 65 A# 23 B 40 </Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>8pt</FontSize>
@@ -221,7 +221,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Barrio campo hermoso -  3115747901</Value>
+                    <Value>Barrio palermo - 3045401462 - 8875609 - 8909664</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>8pt</FontSize>
@@ -272,7 +272,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Pedido número: " &amp; Fields!Id_pedido.Value, "DatosPedido")</Value>
+                    <Value>=First("Pedido número: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>
@@ -306,7 +306,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Fecha: " &amp; Fields!Fecha_pedido.Value, "DatosPedido")</Value>
+                    <Value>=First("Fecha: " &amp; Fields!Fecha_pedido.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>
@@ -376,7 +376,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Mesa: " &amp; Fields!Mesa.Value, "DatosPedido")</Value>
+                    <Value>=First("Mesa: " &amp; Fields!Mesa.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>
@@ -410,7 +410,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Atiende: " &amp; Fields!Nombre_empleado.Value, "DatosPedido")</Value>
+                    <Value>=First("Atiende: " &amp; Fields!Nombre_empleado.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>
@@ -444,7 +444,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Cliente: " &amp; Fields!Cliente.Value, "DatosPedido")</Value>
+                    <Value>=First("Cliente: " &amp; Fields!Cliente.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>

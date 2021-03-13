@@ -9,7 +9,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Restaurante Tío Pepe - Factura</Value>
+                <Value>Restaurante Casa Grande - Factura</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>12pt</FontSize>
@@ -43,7 +43,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Nit 1037646184</Value>
+                <Value>Nit 1053803248-1</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>8pt</FontSize>
@@ -88,7 +88,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Dirección Carrera 11 Calle 18 Esquina # 11 - 09 </Value>
+                <Value>Dirección Calle 65 A# 23 B 40 </Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>8pt</FontSize>
@@ -103,7 +103,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Barrio campo hermoso - 3115747901</Value>
+                <Value>Barrio palermo - 3045401462 - 8875609 - 8909664</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>8pt</FontSize>
@@ -1523,7 +1523,7 @@
       </Fields>
       <rd:DataSetInfo>
         <rd:DataSetName>dsReportes</rd:DataSetName>
-        <rd:SchemaPath>D:\JUAN DIEGO\Documentos\OneDrive\PROYECTOS\EN CURSO\Mistico\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
+        <rd:SchemaPath>F:\JUAN DIEGO\Repositorios\System-RestaurantCasaGrande\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
         <rd:TableName>dtDetallePedido</rd:TableName>
         <rd:TableAdapterFillMethod />
         <rd:TableAdapterGetDataMethod />
@@ -1559,7 +1559,7 @@
       </Fields>
       <rd:DataSetInfo>
         <rd:DataSetName>dsReportes</rd:DataSetName>
-        <rd:SchemaPath>D:\JUAN DIEGO\Documentos\OneDrive\PROYECTOS\EN CURSO\Mistico\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
+        <rd:SchemaPath>F:\JUAN DIEGO\Repositorios\System-RestaurantCasaGrande\SISMistico\CapaPresentacion\dsReportes.xsd</rd:SchemaPath>
         <rd:TableName>dtDetallePago</rd:TableName>
         <rd:TableAdapterFillMethod />
         <rd:TableAdapterGetDataMethod />
