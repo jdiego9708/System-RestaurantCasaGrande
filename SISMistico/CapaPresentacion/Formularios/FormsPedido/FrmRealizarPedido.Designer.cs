@@ -47,6 +47,7 @@
             this.chkImprimirComandas = new System.Windows.Forms.CheckBox();
             this.dgvProductosEditar = new System.Windows.Forms.DataGridView();
             this.label1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.panelBanner.SuspendLayout();
             this.panelBotones.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -146,6 +147,7 @@
             this.panelBotones.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelBotones.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
+            this.panelBotones.Controls.Add(this.button1);
             this.panelBotones.Controls.Add(this.btnPlatos);
             this.panelBotones.Controls.Add(this.btnBebidas);
             this.panelBotones.Location = new System.Drawing.Point(0, 54);
@@ -161,7 +163,7 @@
             this.btnPlatos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnPlatos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnPlatos.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnPlatos.Location = new System.Drawing.Point(179, 7);
+            this.btnPlatos.Location = new System.Drawing.Point(208, 6);
             this.btnPlatos.Name = "btnPlatos";
             this.btnPlatos.Size = new System.Drawing.Size(99, 39);
             this.btnPlatos.TabIndex = 0;
@@ -176,7 +178,7 @@
             this.btnBebidas.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnBebidas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBebidas.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBebidas.Location = new System.Drawing.Point(295, 7);
+            this.btnBebidas.Location = new System.Drawing.Point(313, 6);
             this.btnBebidas.Name = "btnBebidas";
             this.btnBebidas.Size = new System.Drawing.Size(99, 39);
             this.btnBebidas.TabIndex = 1;
@@ -215,7 +217,7 @@
             this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.panel2.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel2.BackgroundImage")));
-            this.panel2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.panel2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.panel2.Location = new System.Drawing.Point(0, 106);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(632, 427);
@@ -264,6 +266,21 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Productos para agregar al pedido:";
             // 
+            // button1
+            // 
+            this.button1.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.button1.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
+            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
+            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button1.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(3, 6);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(199, 39);
+            this.button1.TabIndex = 2;
+            this.button1.Text = "Almuerzo personalizado";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
             // FrmRealizarPedido
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -310,5 +327,6 @@
         private System.Windows.Forms.DataGridView dgvProductosEditar;
         private System.Windows.Forms.Button btnQuitarProductosEditado;
         private System.Windows.Forms.CheckBox chkImprimirComandas;
+        private System.Windows.Forms.Button button1;
     }
 }

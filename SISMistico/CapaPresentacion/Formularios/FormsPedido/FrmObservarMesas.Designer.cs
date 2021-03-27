@@ -163,6 +163,7 @@
             this.btnDomicilio.Text = "Domicilio";
             this.btnDomicilio.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnDomicilio.UseVisualStyleBackColor = true;
+            this.btnDomicilio.Visible = false;
             // 
             // FrmObservarMesas
             // 

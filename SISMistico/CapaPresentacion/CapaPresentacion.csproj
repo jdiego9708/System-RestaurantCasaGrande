@@ -308,6 +308,12 @@
     <Compile Include="Formularios\FormsPedido\ContextMenuDatosPedido.Designer.cs">
       <DependentUpon>ContextMenuDatosPedido.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\CustomPlato.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\CustomPlato.Designer.cs">
+      <DependentUpon>CustomPlato.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\DatosUsuario.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -749,6 +755,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\ContextMenuDatosPedido.resx">
       <DependentUpon>ContextMenuDatosPedido.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\CustomPlato.resx">
+      <DependentUpon>CustomPlato.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\DatosUsuario.resx">
       <DependentUpon>DatosUsuario.cs</DependentUpon>

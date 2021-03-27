@@ -808,8 +808,8 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 new ToolStripMenuItem("Actualizar un plato");
             ToolStripMenuItem ObservarPlatos =
                 new ToolStripMenuItem("Observar platos");
-            ToolStripMenuItem DetallePlato =
-                new ToolStripMenuItem("Detalles del plato");
+            //ToolStripMenuItem DetallePlato =
+            //    new ToolStripMenuItem("Detalles del plato");
             ToolStripMenuItem InactivarPlato =
                 new ToolStripMenuItem("Inactivar plato");
 
@@ -831,11 +831,11 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             ObservarPlatos.Font = font;
             ObservarPlatos.Click += ObservarPlatos_Click;
 
-            DetallePlato.BackColor = Color.FromArgb(31, 143, 242);
-            DetallePlato.ForeColor = Color.White;
-            DetallePlato.Name = "DetallePlatos";
-            DetallePlato.Font = font;
-            DetallePlato.Click += DetallePlato_Click;
+            //DetallePlato.BackColor = Color.FromArgb(31, 143, 242);
+            //DetallePlato.ForeColor = Color.White;
+            //DetallePlato.Name = "DetallePlatos";
+            //DetallePlato.Font = font;
+            //DetallePlato.Click += DetallePlato_Click;
 
             InactivarPlato.BackColor = Color.FromArgb(31, 143, 242);
             InactivarPlato.ForeColor = Color.White;
@@ -846,7 +846,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.MenuPlatos.Items.Add(AgregarPlato);
             this.MenuPlatos.Items.Add(EditarPlatos);
             this.MenuPlatos.Items.Add(ObservarPlatos);
-            this.MenuPlatos.Items.Add(DetallePlato);
+            //this.MenuPlatos.Items.Add(DetallePlato);
             this.MenuPlatos.Items.Add(InactivarPlato);
 
             #endregion
