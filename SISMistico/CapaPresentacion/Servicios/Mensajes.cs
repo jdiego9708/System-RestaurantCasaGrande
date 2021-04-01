@@ -39,7 +39,7 @@ namespace CapaPresentacion
             result = FrmMensajePregunta.DialogResult;
         }
 
-        public static void MensajeInformacion(string mensaje, string texto_boton)
+        public static void MensajeInformacion(string mensaje, string texto_boton = "Entendido")
         {
             FrmMensajeInformacion FrmMensajeInformacion = new FrmMensajeInformacion();
             FrmMensajeInformacion.StartPosition = FormStartPosition.CenterScreen;

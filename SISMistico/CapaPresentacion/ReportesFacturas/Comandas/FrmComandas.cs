@@ -1,4 +1,5 @@
-﻿using CapaNegocio;
+﻿using CapaEntidades.Models;
+using CapaNegocio;
 using Microsoft.Reporting.WinForms;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace CapaPresentacion
         {
             try
             {
-               
+
                 //Asignar parámetros de observaciones y horas
 
                 string observaciones = "";
@@ -75,14 +76,39 @@ namespace CapaPresentacion
             string rpta = "";
             this.TablaDatosPedido =
                 NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", Convert.ToString(this.Id_pedido),
-                out this.TablaDetallePedido, out rpta);
+                out this.TablaDetallePedido, out DataTable dtDetallePlatosPedido, out rpta);
+
+            foreach (DataRow row in this.TablaDetallePedido.Rows)
+            {
+                int id_tipo = Convert.ToInt32(row["Id_tipo"]);
+                string tipo = Convert.ToString(row["Tipo"]);
+                string nombre = Convert.ToString(row["Nombre"]);
+
+                if (tipo.Equals("PLATO"))
+                {
+                    StringBuilder info = new StringBuilder();
+                    info.Append(nombre).Append(": ").Append(Environment.NewLine);
+
+                    DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_tipo = {0}", id_tipo));
+                    if (find.Length > 0)
+                    {
+                        foreach (DataRow re in find)
+                        {
+                            Ingredientes ing = new Ingredientes(re);
+                            info.Append(ing.Nombre_ingrediente).Append(Environment.NewLine);
+                        }
+                    }
+
+                    row["Nombre"] = info.ToString();
+                }
+            }
         }
 
         public void AsignarTablas(DataTable detallepedido)
         {
             this.TablaDetallePedido = detallepedido;
 
-            this.TablaDatosPedido = 
+            this.TablaDatosPedido =
                 NPedido.BuscarPedidos("ID PEDIDO", Convert.ToString(this.Id_pedido));
         }
 

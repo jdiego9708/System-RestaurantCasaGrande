@@ -4,41 +4,81 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
+using CapaEntidades.Models;
 
 namespace CapaPresentacion.Formularios
 {
     public partial class CustomButtonMesa : UserControl
     {
+        PoperContainer container;
+        DatosMesaSmall datosMesa;
+
         public CustomButtonMesa()
         {
             InitializeComponent();
             this.btnMesa.MouseEnter += BtnMesa_MouseEnter;
             this.btnMesa.MouseLeave += BtnMesa_MouseLeave;
             this.Load += CustomButtonMesa_Load;
-            this.btnMesa.Click += new EventHandler(Button_Click);
-            this.btnMesa.MouseClick += new MouseEventHandler(MouseButton_Click);
             this.btnMesa.MouseDown += ButtonMouseDown_Click;
         }
 
         #region EVENTOS
 
-        public event EventHandler cambioMesaClick;
-
-        protected void CambioMesa_Click(object sender, EventArgs e)
-        {
-            if (this.cambioMesaClick != null)
-                this.cambioMesaClick(this, e);
-        }
-
+        public event EventHandler OnBtnCambiarMesaClick;
+        public event EventHandler OnBtnCancelarPedidoClick;
+        public event EventHandler OnBtnEditarPedidoClick;
+        public event EventHandler OnBtnFacturarPedidoClick;
 
         protected void ButtonMouseDown_Click(object sender, MouseEventArgs e)
         {
             switch (e.Button)
             {
                 case MouseButtons.Left:
-                    Button btnSender = (Button)sender;
-                    this.MenuOpciones.Show(Cursor.Position);
-                    btnSender.Select();
+
+                    if (this.Estado_mesa.Equals("DISPONIBLE"))
+                    {
+                        DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
+                        FrmPedido FrmPedido = new FrmPedido
+                        {
+                            StartPosition = FormStartPosition.CenterScreen,
+                            Numero_mesa = Convert.ToInt32(this.Numero_mesa),
+                            Tipo_servicio = "MESA",
+                            EmpleadoSelected = datos.EmpleadoClaveMaestra,
+                            ClienteSelected = datos.ClienteDefault,
+                            MesaSelected = new CapaEntidades.Models.Mesas
+                            {
+                                Id_mesa = this.Id_mesa,
+                                Num_mesa = this.Numero_mesa,
+                                Descripcion_mesa = string.Empty,
+                            },
+                            WindowState = FormWindowState.Maximized
+                        };
+                        FrmPedido.ShowDialog();
+                    }
+                    else
+                    {
+                        DataTable dtPedido =
+                        NPedido.BuscarPedidos("ID PEDIDO", this.Id_pedido.ToString());
+                        if (dtPedido != null)
+                        {
+                            this.datosMesa = new DatosMesaSmall
+                            {
+                                Pedido = new Pedidos(dtPedido.Rows[0]),
+                            };
+                            this.datosMesa.OnBtnCambiarMesaClick += DatosMesa_OnBtnCambiarMesaClick;
+                            this.datosMesa.OnBtnCancelarPedidoClick += DatosMesa_OnBtnCancelarPedidoClick;
+                            this.datosMesa.OnBtnEditarPedidoClick += DatosMesa_OnBtnEditarPedidoClick;
+                            this.datosMesa.OnBtnFacturarPedidoClick += DatosMesa_OnBtnFacturarPedidoClick;
+                            this.container = new PoperContainer(this.datosMesa);
+                            this.container.Show(Cursor.Position);
+                        }
+                        else
+                        {
+                            Mensajes.MensajeInformacion("Hubo un error buscando el pedido");
+                        }
+
+                    }
+
                     break;
 
                 case MouseButtons.Right:
@@ -47,67 +87,26 @@ namespace CapaPresentacion.Formularios
             }
         }
 
-        public event MouseEventHandler mouseButtonClick;
-
-        protected void MouseButton_Click(object sender, MouseEventArgs e)
+        private void DatosMesa_OnBtnFacturarPedidoClick(object sender, EventArgs e)
         {
-            //bubble the event up to the parent
-            if (this.mouseButtonClick != null)
-                this.mouseButtonClick(this, e);
+            this.OnBtnFacturarPedidoClick?.Invoke(sender, e);
         }
 
-        public event EventHandler buttonClick;
-
-        protected void Button_Click(object sender, EventArgs e)
+        private void DatosMesa_OnBtnEditarPedidoClick(object sender, EventArgs e)
         {
-            //bubble the event up to the parent
-            if (this.buttonClick != null)
-                this.buttonClick(this, e);
+            this.OnBtnEditarPedidoClick?.Invoke(sender, e);
+        }
+
+        private void DatosMesa_OnBtnCancelarPedidoClick(object sender, EventArgs e)
+        {
+            this.OnBtnCancelarPedidoClick?.Invoke(sender, e);
+        }
+
+        private void DatosMesa_OnBtnCambiarMesaClick(object sender, EventArgs e)
+        {
+            this.OnBtnCambiarMesaClick?.Invoke(sender, e);
         }
         #endregion
-
-        public Panel panelDetalle;
-
-        public ContextMenuStrip MenuOpciones = new ContextMenuStrip();
-
-        private void MenuContextuales()
-        {
-            Font font = new Font("Segoe UI", 9.75F,
-                FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-
-            #region MENU OPCIONES MESA
-            ToolStripMenuItem NuevoPedido =
-                new ToolStripMenuItem("Iniciar un nuevo pedido");
-            ToolStripMenuItem ObservarPedidos =
-                new ToolStripMenuItem("Observar pedidos");
-            ToolStripMenuItem CambioMesa =
-                new ToolStripMenuItem("Cambiar de mesa");
-
-            NuevoPedido.BackColor = Color.Silver;
-            NuevoPedido.ForeColor = Color.Black;
-            NuevoPedido.Font = font;
-            NuevoPedido.Name = "NuevoPedido";
-            NuevoPedido.Click += NuevoPedido_Click;
-
-            ObservarPedidos.BackColor = Color.Silver;
-            ObservarPedidos.ForeColor = Color.Black;
-            ObservarPedidos.Name = "ObservarPedidos";
-            ObservarPedidos.Font = font;
-            ObservarPedidos.Click += ObservarPedidos_Click;
-
-            CambioMesa.BackColor = Color.Silver;
-            CambioMesa.ForeColor = Color.Black;
-            CambioMesa.Name = "CambioMesa";
-            CambioMesa.Font = font;
-            CambioMesa.Click += CambioMesa_Click;
-
-            this.MenuOpciones.Items.Add(NuevoPedido);
-            this.MenuOpciones.Items.Add(ObservarPedidos);
-            this.MenuOpciones.Items.Add(CambioMesa);
-
-            #endregion
-
-        }
 
         public void ObtenerEstado(string estado, int id_pedido, bool isEditar)
         {
@@ -133,34 +132,9 @@ namespace CapaPresentacion.Formularios
             }
         }
 
-        private void ObservarPedidos_Click(object sender, EventArgs e)
-        {
-            if (this.Id_pedido != 0)
-            {
-                FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
-                frm.AbrirDetallePedido(this.Id_pedido);
-            }
-        }
-
-        private void NuevoPedido_Click(object sender, EventArgs e)
-        {
-            if (this.Estado_mesa.Equals("DISPONIBLE"))
-            {
-                FrmRealizarPedido FrmPedido = new FrmRealizarPedido
-                {
-                    StartPosition = FormStartPosition.CenterScreen,
-                    Id_mesa = Convert.ToInt32(this.Id_mesa),
-                    Numero_mesa = Convert.ToInt32(this.Numero_mesa),
-                    WindowState = FormWindowState.Maximized
-                };
-                FrmPedido.ShowDialog();
-            }
-        }
-
         private void CustomButtonMesa_Load(object sender, EventArgs e)
         {
             this.btnMesa.Text = this.Texto;
-            this.MenuContextuales();
             if (this.Estado_mesa.Equals("DISPONIBLE"))
             {
                 this.btnMesa.BackColor = Color.LightGreen;

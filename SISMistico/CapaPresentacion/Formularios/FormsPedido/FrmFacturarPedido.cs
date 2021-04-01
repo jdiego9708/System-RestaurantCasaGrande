@@ -331,7 +331,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             DataTable tablaDetalle;
             DataTable TablaDatosPrincipales =
                 NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", Convert.ToString(this.Id_pedido),
-                out tablaDetalle, out rpta);
+                out tablaDetalle,
+                out DataTable dtDetallePlatosPedido, out rpta);
             this.TablaDetalle = tablaDetalle;
             this.dgvPedido.DataSource = this.TablaDetalle;
 

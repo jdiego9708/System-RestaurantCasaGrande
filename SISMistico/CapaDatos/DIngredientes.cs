@@ -240,7 +240,7 @@ namespace CapaDatos
         public async Task<(string rpta, DataTable dtIngredientes)> BuscarIngredientes(string tipo_busqueda, string texto_busqueda)
         {
             string rpta = "OK";
-            DataTable dtNomina = new DataTable("Ingredientes");
+            DataTable dt = new DataTable("Ingredientes");
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
             SqlCon.FireInfoMessageEventOnUserErrors = true;
@@ -274,7 +274,12 @@ namespace CapaDatos
                 Sqlcmd.Parameters.Add(Texto_busqueda);
 
                 SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
-                await Task.Run(() => SqlData.Fill(dtNomina));
+                SqlData.Fill(dt);
+
+                if (dt.Rows.Count < 1)
+                {
+                    dt = null;
+                }
             }
             catch (SqlException ex)
             {
@@ -290,7 +295,7 @@ namespace CapaDatos
                     SqlCon.Close();
             }
 
-            return (rpta, dtNomina);
+            return (rpta, dt);
         }
 
         #endregion

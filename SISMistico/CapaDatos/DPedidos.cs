@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using System.Data;
 using System.Data.SqlClient;
+using CapaEntidades.Models;
 
 namespace CapaDatos
 {
@@ -56,8 +57,10 @@ namespace CapaDatos
 
         #region METODO INSERTAR PEDIDO
         public string InsertarPedido(List<string> Variables, DataTable Detalles,
-            out int id_pedido)
+            out int id_pedido,
+            out DataTable dtDetallesCompleto)
         {
+            dtDetallesCompleto = new DataTable();
             DataTable TablaDetalle = Detalles;
             int rows = TablaDetalle.Rows.Count;
             id_pedido = 0;
@@ -166,20 +169,26 @@ namespace CapaDatos
                 //Detalles_pedido.Value = TablaDetalle;
                 SqlCmd.Parameters.Add(Detalles_pedido);
 
-                //Ejecutamos nuestro comando
+                //Ejecutamos nuestro comando              
                 //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql
-                rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO se Ingreso el Registro";
+                //rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO se Ingreso el Registro";
 
-                if (rpta != "OK")
+                DataSet ds = new DataSet();
+                SqlDataAdapter SqlData = new SqlDataAdapter(SqlCmd);
+                SqlData.Fill(ds);
+
+                if (ds.Tables.Count > 0)
                 {
-                    if (this.Mensaje_respuesta != null)
+                    if (ds.Tables[0].Rows[0]["Respuesta"].Equals("OK"))
                     {
-                        rpta = this.Mensaje_respuesta;
+                        id_pedido = Convert.ToInt32(ds.Tables[0].Rows[0]["Id_pedido"]);
+                        dtDetallesCompleto = ds.Tables[1];
+                        rpta = "OK";
                     }
                 }
                 else
                 {
-                    id_pedido = Convert.ToInt32(SqlCmd.Parameters["@Id_pedido"].Value);
+                    rpta = "No se encontraron las tablas correspondientes a la respuesta";
                 }
             }
             //Mostramos posible error que tengamos
@@ -201,8 +210,8 @@ namespace CapaDatos
         }
         #endregion
 
-        #region METODO CANCELAR DOMICILIO
-        public string CancelarDomicilio(int id_pedido, string observaciones)
+        #region METODO CANCELAR PEDIDO
+        public string CancelarPedido(int id_pedido, string observaciones)
         {
             //asignamos a una cadena string la variable rpta y la iniciamos en vacía
             string rpta = "";
@@ -354,7 +363,7 @@ namespace CapaDatos
         #endregion
 
         #region METODO ACTUALIZAR DETALLE PEDIDO
-        public string ActualizarDetallePedido(List<string> Variables)
+        public string ActualizarDetallePedido(Detalle_pedido detalle, int id_empleado, string tipo_update)
         {
             int contador = 0;
             //asignamos a una cadena string la variable rpta y la iniciamos en vacía
@@ -380,7 +389,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Id_pedido",
                     SqlDbType = SqlDbType.Int,
-                    Value = Convert.ToInt32(Variables[contador])
+                    Value = detalle.Id_pedido,
                 };
                 SqlCmd.Parameters.Add(Id_pedido);
                 contador += 1;
@@ -389,7 +398,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Id_tipo",
                     SqlDbType = SqlDbType.Int,
-                    Value = Convert.ToInt32(Variables[contador])
+                    Value = detalle.Id_tipo,
                 };
                 SqlCmd.Parameters.Add(Id_tipo);
                 contador += 1;
@@ -399,7 +408,7 @@ namespace CapaDatos
                     ParameterName = "@Tipo",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 50,
-                    Value = Convert.ToString(Variables[contador])
+                    Value = detalle.Tipo,
                 };
                 SqlCmd.Parameters.Add(Tipo);
                 contador += 1;
@@ -408,7 +417,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Precio",
                     SqlDbType = SqlDbType.Int,
-                    Value = Convert.ToInt32(Variables[contador])
+                    Value = detalle.Precio,
                 };
                 SqlCmd.Parameters.Add(Precio);
                 contador += 1;
@@ -417,7 +426,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Cantidad",
                     SqlDbType = SqlDbType.Int,
-                    Value = Convert.ToInt32(Variables[contador])
+                    Value = detalle.Cantidad,
                 };
                 SqlCmd.Parameters.Add(Cantidad);
                 contador += 1;
@@ -427,7 +436,7 @@ namespace CapaDatos
                     ParameterName = "@Observaciones",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 500,
-                    Value = Convert.ToString(Variables[contador])
+                    Value = detalle.Observaciones,
                 };
                 SqlCmd.Parameters.Add(Observaciones);
                 contador += 1;
@@ -436,7 +445,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Id_usuario",
                     SqlDbType = SqlDbType.Int,
-                    Value = Convert.ToInt32(Variables[contador])
+                    Value = id_empleado,
                 };
                 SqlCmd.Parameters.Add(Id_usuario);
                 contador += 1;
@@ -446,7 +455,7 @@ namespace CapaDatos
                     ParameterName = "@Tipo_update",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 50,
-                    Value = Convert.ToString(Variables[contador])
+                    Value = tipo_update,
                 };
                 SqlCmd.Parameters.Add(Tipo_update);
                 contador += 1;
@@ -484,10 +493,12 @@ namespace CapaDatos
 
         #region METODO BUSCAR PEDIDOS Y DETALLE
         public static DataTable BuscarPedidosYDetalle(string tipo_busqueda, string texto_busqueda,
-            out DataTable DtResultadoDetalle, out string rpta)
+            out DataTable DtResultadoDetalle,
+            out DataTable dtDetallePlatoDetallado, out string rpta)
         {
             rpta = "OK";
             DtResultadoDetalle = new DataTable("PedidosDetalle");
+            dtDetallePlatoDetallado = new DataTable("PlatosDetallados");
             DataSet ds = new DataSet();
             DataTable dtPedidosDatosPrincipales = new DataTable("PedidosDatosPrincipales");
             SqlConnection SqlCon = new SqlConnection();
@@ -541,6 +552,7 @@ namespace CapaDatos
                 {
                     dtPedidosDatosPrincipales = ds.Tables[0];
                     DtResultadoDetalle = ds.Tables[1];
+                    dtDetallePlatoDetallado = ds.Tables[2];
                 }
 
                 /**FIN BUSCAR PEDIDO DATOS PRINCIPALES**/
@@ -770,6 +782,65 @@ namespace CapaDatos
                 id_tipo + "','" + tipo + "','" + DateTime.Now.ToString("yyyy-MM-dd") + "','" + DateTime.Now.ToString("HH:mm") + "','" + observaciones + "')";
 
             return Conexion.EjecutarConsultaCadena(consulta, false);
+        }
+        #endregion
+
+        #region METODO INSERTAR DETALLES INGREDIENTES PEDIDO
+        public async Task<string> InsertarDetalleIngredientesPedido(List<Detalle_ingredientes_pedido> detalles)
+        {
+            //asignamos a una cadena string la variable rpta y la iniciamos en vacía
+            string rpta = "";
+            StringBuilder consulta = new StringBuilder();
+            foreach(Detalle_ingredientes_pedido detalle in detalles)
+            {
+                consulta.Append(string.Format("INSERT INTO Detalle_ingredientes_pedido VALUES ({0}, {1}, {2}, '{3}'); ",
+                    detalle.Id_pedido, detalle.Id_tipo, detalle.Id_ingrediente, detalle.Observaciones));
+            }
+
+            SqlConnection SqlCon = new SqlConnection();
+            SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
+            SqlCon.FireInfoMessageEventOnUserErrors = true;
+            //Capturador de errores
+            try
+            {
+                SqlCon.ConnectionString = Conexion.Cn;
+                await SqlCon.OpenAsync();
+                //Establecer comando
+                SqlCommand SqlCmd = new SqlCommand
+                {
+                    Connection = SqlCon,
+                    CommandText = consulta.ToString(),
+                    CommandType = CommandType.Text,
+                };
+
+                //Ejecutamos nuestro comando
+                //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql
+                rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO se Ingreso el Registro";
+
+                if (!rpta.Equals("OK"))
+                {
+                    if (this.Mensaje_respuesta != null)
+                    {
+                        rpta = this.Mensaje_respuesta;
+                    }
+                }
+            }
+            //Mostramos posible error que tengamos
+            catch (SqlException ex)
+            {
+                rpta = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                rpta = ex.Message;
+            }
+            finally
+            {
+                //Si la cadena SqlCon esta abierta la cerramos
+                if (SqlCon.State == ConnectionState.Open)
+                    SqlCon.Close();
+            }
+            return rpta;
         }
         #endregion
     }

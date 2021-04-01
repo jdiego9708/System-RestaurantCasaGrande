@@ -42,6 +42,7 @@
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.btnGuardar = new System.Windows.Forms.Button();
             this.btnCancelar = new System.Windows.Forms.Button();
+            this.chkIngredientes = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -50,7 +51,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(73, 23);
+            this.label1.Size = new System.Drawing.Size(57, 17);
             this.label1.TabIndex = 0;
             this.label1.Text = "Nombre";
             // 
@@ -58,14 +59,14 @@
             // 
             this.txtNombre.Location = new System.Drawing.Point(15, 29);
             this.txtNombre.Name = "txtNombre";
-            this.txtNombre.Size = new System.Drawing.Size(320, 29);
+            this.txtNombre.Size = new System.Drawing.Size(320, 25);
             this.txtNombre.TabIndex = 1;
             // 
             // txtPrecio
             // 
             this.txtPrecio.Location = new System.Drawing.Point(15, 125);
             this.txtPrecio.Name = "txtPrecio";
-            this.txtPrecio.Size = new System.Drawing.Size(119, 29);
+            this.txtPrecio.Size = new System.Drawing.Size(119, 25);
             this.txtPrecio.TabIndex = 3;
             // 
             // label2
@@ -73,7 +74,7 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(12, 105);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(57, 23);
+            this.label2.Size = new System.Drawing.Size(44, 17);
             this.label2.TabIndex = 2;
             this.label2.Text = "Precio";
             // 
@@ -82,7 +83,7 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(12, 57);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(111, 23);
+            this.label3.Size = new System.Drawing.Size(87, 17);
             this.label3.TabIndex = 4;
             this.label3.Text = "Tipo de plato";
             // 
@@ -92,7 +93,7 @@
             this.ListaPlatos.FormattingEnabled = true;
             this.ListaPlatos.Location = new System.Drawing.Point(15, 77);
             this.ListaPlatos.Name = "ListaPlatos";
-            this.ListaPlatos.Size = new System.Drawing.Size(146, 29);
+            this.ListaPlatos.Size = new System.Drawing.Size(146, 25);
             this.ListaPlatos.TabIndex = 5;
             // 
             // adjuntarImagen
@@ -112,7 +113,7 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(12, 457);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(98, 23);
+            this.label4.Size = new System.Drawing.Size(76, 17);
             this.label4.TabIndex = 7;
             this.label4.Text = "Descripción";
             // 
@@ -165,12 +166,23 @@
             this.btnCancelar.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnCancelar.UseVisualStyleBackColor = true;
             // 
+            // chkIngredientes
+            // 
+            this.chkIngredientes.AutoSize = true;
+            this.chkIngredientes.Location = new System.Drawing.Point(140, 126);
+            this.chkIngredientes.Name = "chkIngredientes";
+            this.chkIngredientes.Size = new System.Drawing.Size(152, 21);
+            this.chkIngredientes.TabIndex = 28;
+            this.chkIngredientes.Text = "Habilitar ingredientes";
+            this.chkIngredientes.UseVisualStyleBackColor = true;
+            // 
             // FrmAgregarPlato
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(352, 638);
+            this.Controls.Add(this.chkIngredientes);
             this.Controls.Add(this.btnCancelar);
             this.Controls.Add(this.btnGuardar);
             this.Controls.Add(this.txtDescripcion);
@@ -208,5 +220,6 @@
         private System.Windows.Forms.ErrorProvider errorProvider1;
         private System.Windows.Forms.Button btnGuardar;
         private System.Windows.Forms.Button btnCancelar;
+        private System.Windows.Forms.CheckBox chkIngredientes;
     }
 }

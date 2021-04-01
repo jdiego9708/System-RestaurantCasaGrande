@@ -25,14 +25,19 @@ namespace CapaPresentacion.Formularios
         private string nombre_empleado;
         private string cargo_empleado;
         private Turno _turno;
-        private Empleados _empleado;
-
+        private Empleados _empleadoLogin;
+        private Empleados _empleadoClaveMaestra;
+        private Clientes _clienteDefault;
 
         public int Id_empleado { get => id_empleado; set => id_empleado = value; }
         public string Nombre_empleado { get => nombre_empleado; set => nombre_empleado = value; }
         public string Cargo_empleado { get => cargo_empleado; set => cargo_empleado = value; }
         public Turno Turno { get => _turno; set => _turno = value; }
-        public Empleados Empleado { get => _empleado; set => _empleado = value; }
+        public Empleados EmpleadoLogin 
+        { get => _empleadoLogin; set => _empleadoLogin = value; }
+        public Empleados EmpleadoClaveMaestra 
+        { get => _empleadoClaveMaestra; set => _empleadoClaveMaestra = value; }
+        public Clientes ClienteDefault { get => _clienteDefault; set => _clienteDefault = value; }
 
         public bool Adiministrador()
         {

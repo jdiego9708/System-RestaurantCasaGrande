@@ -197,8 +197,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
-        public void AgregarBebida(int id_bebida, int precio_cobrar, int cantidad_pedido,
-            string observaciones, bool editar)
+        public void AgregarBebida(int id_bebida, int precio_cobrar, 
+            int cantidad_pedido, string observaciones, bool editar)
         {
             //1- Comprobación si existe en la lista de EPlatos
             IEnumerable<EBebidas> bebidaComprobado;
@@ -352,9 +352,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 }
                 if (this.IsEditar & iseditar == false)
                 {
-                    rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
-                                        Convert.ToString(ePlatos.Id_plato), "PLATO", Convert.ToString(ePlatos.Precio_cobrar),
-                                        Convert.ToString(ePlatos.Cantidad_pedido), ePlatos.Observaciones_pedido, id_usuario.ToString(), tipo_update});
+                    //rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
+                    //                    Convert.ToString(ePlatos.Id_plato), "PLATO", Convert.ToString(ePlatos.Precio_cobrar),
+                    //                    Convert.ToString(ePlatos.Cantidad_pedido), ePlatos.Observaciones_pedido, id_usuario.ToString(), tipo_update});
                 }
             }
         }
@@ -405,9 +405,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
                 if (this.IsEditar & iseditar == false)
                 {
-                    rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
-                                    Convert.ToString(eBebidas.Id_bebida), "BEBIDA", Convert.ToString(eBebidas.Precio_cobrar),
-                                    Convert.ToString(eBebidas.Cantidad_pedido), eBebidas.Observaciones_pedido, id_usuario.ToString(), tipo_update});
+                    //rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
+                    //                Convert.ToString(eBebidas.Id_bebida), "BEBIDA", Convert.ToString(eBebidas.Precio_cobrar),
+                    //                Convert.ToString(eBebidas.Cantidad_pedido), eBebidas.Observaciones_pedido, id_usuario.ToString(), tipo_update});
                 }
             }
         }

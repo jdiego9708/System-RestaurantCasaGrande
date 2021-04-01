@@ -21,6 +21,7 @@ namespace CapaEntidades.Models
                 this.Imagen_plato = Convert.ToString(row["Imagen_plato"]);
                 this.Descripcion_plato = Convert.ToString(row["Descripcion_plato"]);
                 this.Estado = Convert.ToString(row["Estado"]);
+                this.Plato_detallado = Convert.ToString(row["Plato_detallado"]);
             }
             catch (Exception ex)
             {
@@ -41,6 +42,8 @@ namespace CapaEntidades.Models
         public string Descripcion_plato { get; set; }
 
         public string Estado { get; set; }
+
+        public string Plato_detallado { get; set; }
 
         public event EventHandler OnError;
     }

@@ -75,7 +75,9 @@ namespace CapaPresentacion
 
                 string rpta;
                 this.TablaDatosPrincipales = NPedido.BuscarPedidosYDetalle("ID PEDIDO",
-                    Convert.ToString(this.Id_pedido), out this.TablaDetallePedido, out rpta);
+                    Convert.ToString(this.Id_pedido), 
+                    out this.TablaDetallePedido,
+                    out DataTable dtDetallePlatosPedido, out rpta);
             }
             catch (Exception ex)
             {

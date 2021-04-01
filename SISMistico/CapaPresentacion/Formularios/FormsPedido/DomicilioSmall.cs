@@ -32,7 +32,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             if (!string.IsNullOrEmpty(this.observaciones.txtObservacion.Text))
             {
-                string rpta = NPedido.CancelarDomicilio(this.Pedido.Id_pedido, this.observaciones.txtObservacion.Text);
+                string rpta = NPedido.CancelarPedido(this.Pedido.Id_pedido, this.observaciones.txtObservacion.Text);
                 if (rpta.Equals("OK"))
                 {
                     Mensajes.MensajeOkForm("Se canceló correctamente el domicilio");
@@ -155,7 +155,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             //Obtener los datos principales
             DataTable TablaDatosPrincipales = NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE",
-                Convert.ToString(pedido.Id_pedido), out DataTable dtDetallePedido, out string rpta);
+                Convert.ToString(pedido.Id_pedido), 
+                out DataTable dtDetallePedido,
+                out DataTable dtDetallePlatosPedido, out string rpta);
             if (TablaDatosPrincipales != null)
             {
                 string cliente = Convert.ToString(TablaDatosPrincipales.Rows[0]["Cliente"]);

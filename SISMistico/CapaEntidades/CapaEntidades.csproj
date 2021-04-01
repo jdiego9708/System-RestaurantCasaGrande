@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\Detalle_ingredientes_pedido.cs" />
+    <Compile Include="Models\Detalle_pedido.cs" />
     <Compile Include="Models\Ingredientes.cs" />
     <Compile Include="Models\Mesas.cs" />
     <Compile Include="Models\Clientes.cs" />

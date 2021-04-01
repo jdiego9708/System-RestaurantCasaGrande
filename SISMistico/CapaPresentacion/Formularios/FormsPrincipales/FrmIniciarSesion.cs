@@ -77,8 +77,21 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                                 datos.Id_empleado = empleado.Id_empleado;
                                 datos.Nombre_empleado = empleado.Nombre_empleado;
                                 datos.Cargo_empleado = empleado.Cargo_empleado;
-                                datos.Empleado = empleado;
+                                datos.EmpleadoLogin = empleado;
                                 datos.Turno = turno;
+                                datos.EmpleadoLogin = empleado;
+                                datos.EmpleadoClaveMaestra = empleado;
+                                datos.ClienteDefault = new Clientes
+                                {
+                                    Id_cliente = 0,
+                                    Nombre_cliente = "NINGUNO",
+                                    Telefono_cliente = "NINGUNO",
+                                    Correo_electronico = string.Empty,
+                                    Direccion_cliente = "NINGUNO",
+                                    Referencia_ubicacion = string.Empty,
+                                    Otras_observaciones = string.Empty,
+                                    Estado_cliente = "ACTIVO",
+                                };
 
                                 FrmPrincipal frmPrincipal = new FrmPrincipal
                                 {

@@ -52,7 +52,7 @@ namespace CapaPresentacion.Servicios
                 dtImagenes.Columns.Add("Ruta_origen", typeof(string));
                 dtImagenes.Columns.Add("Observaciones", typeof(string));
 
-                foreach(UploadImage image in this.panelPasos.controls)
+                foreach(UploadImage image in this.panelPasos.controlsUser)
                 {
                     if (image.Imagen != null)
                     {

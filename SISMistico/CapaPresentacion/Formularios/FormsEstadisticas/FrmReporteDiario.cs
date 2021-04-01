@@ -59,7 +59,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
 
             string informacionEmpleado = "Información de empleado que genera el reporte " +
-                datos.Nombre_empleado + " - Teléfono: " + datos.Empleado.Telefono_empleado;
+                datos.Nombre_empleado + " - Teléfono: " + datos.EmpleadoLogin.Telefono_empleado;
             string cantidadPedidos = "";
             var (rpta, dtPedidos) =
                await NPedido.BuscarPedidos("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));

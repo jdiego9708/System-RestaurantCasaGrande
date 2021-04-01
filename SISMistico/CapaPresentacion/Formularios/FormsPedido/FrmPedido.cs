@@ -1,20 +1,462 @@
-﻿using CapaEntidades.Models;
-using CapaNegocio;
-using CapaPresentacion.Properties;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace CapaPresentacion.Formularios.FormsPedido
+﻿namespace CapaPresentacion.Formularios.FormsPedido
 {
+    using CapaEntidades.Models;
+    using CapaNegocio;
+    using CapaPresentacion.Formularios.FormsPedido.Platos;
+    using CapaPresentacion.Properties;
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Drawing;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Threading;
+    using System.Windows.Forms;
+
     public partial class FrmPedido : Form
     {
         public FrmPedido()
         {
             InitializeComponent();
+            this.txtBusqueda.onKeyPress += TxtBusqueda_OnTextoKeyPress;
+            this.btnPlatos.Click += BtnPlatos_Click;
+            this.btnBebidas.Click += BtnBebidas_Click;
+            this.btnSave.Click += BtnSave_Click;
+            this.Load += FrmPedido_Load;
+        }
+
+        private bool Comprobaciones(out List<string> variablesPedido,
+            out DataTable dtDetallePedido,
+            out List<Detalle_ingredientes_pedido> listDetalleIngredientes)
+        {
+            //Asignar la tabla de los detalles
+            dtDetallePedido = new DataTable("DetallePedido");
+            //Asignar las variables del pedido, es decir los datos principales
+            variablesPedido = new List<string>();
+            //Asignar la lista de ingredientes del detalle del pedido
+            listDetalleIngredientes = new List<Detalle_ingredientes_pedido>();
+
+            if (this.EmpleadoSelected == null)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeInformacion("No hay un empleado seleccionado");
+                return false;
+            }
+
+            if (this.ClienteSelected == null)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeInformacion("No hay un cliente seleccionado");
+                return false;
+            }
+
+            if (this.MesaSelected == null)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeInformacion("No hay una mesa seleccionada");
+                return false;
+            }
+
+            string tipo_pedido;
+            if (this.IsDomicilio)
+                tipo_pedido = "DOMICILIO";
+            else
+                tipo_pedido = "MESA";
+
+            variablesPedido = new List<string>
+            {
+                Convert.ToString(this.MesaSelected.Id_mesa),
+                Convert.ToString(this.EmpleadoSelected.Id_empleado),
+                Convert.ToString(this.ClienteSelected.Id_cliente),
+                "0", tipo_pedido, "",
+            };
+
+            //Comprobar si hay productos seleccionados
+            if (this.ProductsAddSelected == null)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeInformacion("No hay productos seleccionados");
+                return false;
+            }
+
+            dtDetallePedido.Columns.Add("Id_tipo", typeof(string));
+            dtDetallePedido.Columns.Add("Tipo", typeof(string));
+            dtDetallePedido.Columns.Add("Precio", typeof(string));
+            dtDetallePedido.Columns.Add("Cantidad", typeof(string));
+            dtDetallePedido.Columns.Add("Observaciones", typeof(string));
+
+            foreach (ProductBinding pr in this.ProductsAddSelected)
+            {
+                DataRow newRow = dtDetallePedido.NewRow();
+                newRow["Id_tipo"] = pr.Id_producto;
+                newRow["Tipo"] = pr.Tipo_producto;
+                newRow["Precio"] = pr.Precio;
+                newRow["Cantidad"] = pr.Cantidad;
+                newRow["Observaciones"] = pr.Observaciones;
+                dtDetallePedido.Rows.Add(newRow);
+
+                //Agregamos la lista de detalles si es un plato
+                if (pr.Tipo_producto.Equals("PLATO"))
+                {
+                    CapaEntidades.Models.Platos plato =
+                        (CapaEntidades.Models.Platos)pr.Product;
+                    if (plato.Plato_detallado.Equals("ACTIVO"))
+                    {
+                        foreach (ProductDetalleBinding de in pr.ProductDetalles)
+                        {
+                            Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
+                            {
+                                Id_ingrediente = de.Id_ingrediente,
+                                Ingrediente = de.Ingrediente,
+                                Id_pedido = de.Id_pedido,
+                                Id_tipo = pr.Id_producto,
+                            };
+
+                            listDetalleIngredientes.Add(detail);
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private async void BtnSave_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                MensajeEspera.ShowWait("Cargando...");
+                if (this.Comprobaciones(out List<string> variablesPedido,
+                                        out DataTable dtDetallePedido,
+                                        out List<Detalle_ingredientes_pedido> listDetalleIngredientes))
+                {
+                    string rpta = NPedido.InsertarPedido(variablesPedido,
+                        dtDetallePedido, out int id_pedido, out DataTable dtDetallesCompleto);
+                    if (rpta.Equals("OK"))
+                    {
+                        //Cuando tengamos devuelta los detalles vamos a comprobar
+                        //cuales de esos detalles hay que ingresarles el detalle de almuerzo
+
+                        foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
+                        {
+                            //Asignar el id pedido que es igual para todos los detalles
+                            de.Id_pedido = id_pedido;
+                            de.Observaciones = string.Empty;
+                        }
+
+                        rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
+                        if (!rpta.Equals("OK"))
+                        {
+                            Mensajes.MensajeInformacion("No se ingresaron detalles de platos, operación interrumpida");
+                        }
+
+                        if (!this.IsDomicilio)
+                        {
+                            FrmObservarMesas FrmObservarMesas = FrmObservarMesas.GetInstancia();
+                            FrmObservarMesas.ObtenerPedido(id_pedido, this.Numero_mesa, "PENDIENTE");
+                        }
+
+                        this.frmComandas.Id_pedido = id_pedido;
+                        this.frmComandas.AsignarTablas();
+
+                        if (this.chkPrintComandas.Checked)
+                        {
+                            this.frmComandas.ImprimirFactura(1);
+                        }
+                        MensajeEspera.CloseForm();
+                        this.Close();
+                    }
+                    else
+                        throw new Exception(rpta);
+                }
+                MensajeEspera.CloseForm();
+            }
+            catch (Exception ex)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeErrorCompleto(this.Name, "BtnSave_Click",
+                    "Hubo un error guardando el pedido",
+                    ex.Message);
+            }
+        }
+
+        private void TxtBusqueda_OnTextoKeyPress(object sender, KeyPressEventArgs e)
+        {
+            CustomTextBox txt = (CustomTextBox)sender;
+            if (e.KeyChar == (int)Keys.Enter)
+            {
+                if (this.optionSelected.Equals("PLATOS"))
+                {
+                    this.LoadPlatos("NOMBRE PLATO", txt.Texto);
+                }
+                else
+                {
+                    this.LoadPlatos("NOMBRE BEBIDA", txt.Texto);
+                }
+            }
+        }
+
+        private void FrmPedido_Load(object sender, EventArgs e)
+        {
+            MensajeEspera.ShowWait("Cargando...");
+            this.optionSelected = "PLATOS";
+            this.LoadTipoPlatos("COMPLETO", "");
+
+            if (this.ListTipoPlatos != null)
+                this.LoadPlatos("ID TIPO PLATO", this.ListTipoPlatos[0].Id_tipo_plato.ToString());
+
+            if (this.frmComandas == null)
+                this.frmComandas = new FrmComandas();
+
+            this.frmComandas.ObtenerReporte();
+
+            MensajeEspera.CloseForm();
+        }
+
+        private void BtnBebidas_Click(object sender, EventArgs e)
+        {
+            this.optionSelected = "BEBIDAS";
+            this.LoadTipoBebidas("COMPLETO", "");
+        }
+
+        private void BtnPlatos_Click(object sender, EventArgs e)
+        {
+            this.optionSelected = "PLATOS";
+            this.LoadTipoPlatos("COMPLETO", "");
+        }
+
+        private void AddProduct(ProductBinding product,
+            List<ProductDetalleBinding> detalles, bool isEditar)
+        {
+            //Si la lista de productos seleccionados está vacía la inicializamos
+            if (this.ProductsSelected == null)
+                this.ProductsSelected = new List<ProductBinding>();
+
+            //Comprobar existencia del producto en la lista de ProductsSelected
+            List<ProductBinding> productExiste =
+                this.ProductsSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
+            if (productExiste.Count > 0)
+            {
+                /**Si existe el producto en la lista de productos haremos:
+                 * 1- Verificar si es un plato
+                 * 2- Obtener el plato desde el object de la entidad de producto
+                 * 3- Si es un plato detallado, verificar si hay cambios en su detalle
+                 * 4- Si hay cambios, agregar un item nuevo
+                 * 5- Si no hay cambios agregar +1 al producto en la lista existente**/
+
+                if (productExiste[0].Tipo_producto.Equals("PLATO"))
+                {
+                    CapaEntidades.Models.Platos plato =
+                        (CapaEntidades.Models.Platos)productExiste[0].Product;
+                    if (plato.Plato_detallado.Equals("ACTIVO"))
+                    {
+                        if (detalles == null)
+                        {
+                            Mensajes.MensajeInformacion("No se envío ningún detalle");
+                            return;
+                        }
+
+                        if (productExiste[0].ProductDetalles == null)
+                            productExiste[0].ProductDetalles = detalles;
+
+                        bool isNew = false;
+                        foreach (ProductDetalleBinding pr1 in detalles)
+                        {
+                            List<ProductDetalleBinding> find =
+                                productExiste[0].ProductDetalles.Where(x => x.Id_ingrediente == pr1.Id_ingrediente).ToList();
+                            //QUIERE DECIR QUE NO HAY COINCIDENCIAS
+                            if (find.Count == 0)
+                            {
+                                isNew = true;
+                                break;
+                            }
+                        }
+
+                        if (isNew)
+                        {
+                            //Si es new agregamos uno nuevo
+                            ProductBinding pr = new ProductBinding
+                            {
+                                Id_producto = product.Id_producto,
+                                Nombre = product.Nombre,
+                                Tipo_producto = product.Tipo_producto,
+                                Precio = product.Precio,
+                                Observaciones = string.Empty,
+                                NombreImagen = product.NombreImagen,
+                                ProductDetalles = detalles,
+                                IsAddBD = true,
+                                IsEditar = isEditar,
+                                Cantidad = 1,
+                                Product = plato,
+                            };
+                            this.ProductsSelected.Add(pr);
+                        }
+                        else
+                            productExiste[0].Cantidad += 1;
+                    }
+                    else
+                        productExiste[0].Cantidad += 1;
+                }
+                else
+                    productExiste[0].Cantidad += 1;
+            }
+            else
+            {
+                //Si no existe agregamos un producto nuevo a la lista de vista
+                product.ProductDetalles = detalles;
+                product.IsAddBD = true;
+                product.IsEditar = isEditar;
+                product.Cantidad = 1;
+                this.ProductsSelected.Add(product);
+            }
+
+            //Comprobar existencia del producto en ProductsAddSelected
+            productExiste = new List<ProductBinding>();
+
+            if (this.ProductsAddSelected == null)
+                this.ProductsAddSelected = new List<ProductBinding>();
+
+            productExiste =
+                this.ProductsAddSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
+            if (productExiste.Count > 0)
+            {
+                /**Si existe el producto en la lista de productos haremos:
+                 * 1- Agregar +1 al producto en la lista existente**/
+                //productExiste[0].Cantidad += 1;
+            }
+            else
+            {
+                //Si no existe agregamos un producto nuevo
+                product.IsAddBD = true;
+                product.IsEditar = isEditar;
+                product.Cantidad = 1;
+                this.ProductsAddSelected.Add(product);
+            }
+
+            this.LoadProductsSelected(this.ProductsSelected);
+        }
+
+        private void RemoveProduct(ProductBinding product)
+        {
+            DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
+            /**Si el producto IsEditar y IsAddBD es false
+             * Significa que el producto venía desde la BD**/
+            if (product.IsEditar && product.IsAddBD == false)
+            {
+                Detalle_pedido detalle = new Detalle_pedido
+                {
+                    Id_pedido = this.Pedido.Id_pedido,
+                    Id_tipo = product.Id_producto,
+                    Tipo = product.Tipo_producto,
+                    Precio = product.Precio,
+                    Cantidad = product.Cantidad,
+                    Observaciones = product.Observaciones,
+                };
+
+                //Eliminar de la base de datos
+                string rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "DELETE");
+                if (!rpta.Equals("OK"))
+                {
+                    Mensajes.MensajeInformacion("Hubo un error actualizando el detalle del pedido en la bd");
+                }
+            }
+
+            //Comprobar existencia del producto en la lista de ProductsSelected
+            List<ProductBinding> productExiste =
+                this.ProductsSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
+            if (productExiste.Count > 0)
+            {
+                /**Si existe el producto en la lista de productos haremos:
+                 * 1- Comprobar cuánta cantidad tiene el producto en la lista existente
+                 * si la cantidad es 1 se quitará de la lista, si la cantidad es > 0 
+                 * se restará -1.**/
+
+                if (productExiste[0].Cantidad == 1)
+                {
+                    this.ProductsSelected.Remove(productExiste[0]);
+                }
+                else
+                    productExiste[0].Cantidad -= 1;
+            }
+            else
+            {
+                //Si no existe, es porque hay algún error
+                Mensajes.MensajeInformacion("Hubo un error eliminando el producto, " +
+                    "no se encuentra en al lista de productos seleccionados");
+            }
+
+            //Comprobar existencia del producto en ProductsAddSelected
+            if (this.ProductsAddSelected != null &&
+                this.ProductsAddSelected.Count > 0)
+            {
+                productExiste =
+                    this.ProductsAddSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
+                if (productExiste.Count > 0)
+                {
+                    /**Si existe el producto en la lista de productos haremos:
+                     * 1- Comprobar cuánta cantidad tiene el producto en la lista existente
+                     * si la cantidad es 1 se quitará de la lista, si la cantidad es > 0 
+                     * se restará -1.**/
+                    if (productExiste[0].Cantidad == 1)
+                    {
+                        this.ProductsAddSelected.Remove(productExiste[0]);
+                    }
+                    //else
+                    //    productExiste[0].Cantidad -= 1;
+                }
+            }
+
+            this.LoadProductsSelected(this.ProductsSelected);
+        }
+
+        private void LoadProductsSelected(List<ProductBinding> products)
+        {
+            try
+            {
+                this.panelPedido.clearDataSource();
+                StringBuilder info = new StringBuilder();
+                info.Append("Fecha y hora: ").Append(DateTime.Now.ToLongDateString());
+                info.Append(" " + DateTime.Now.ToLongTimeString()).Append(Environment.NewLine);
+                if (products != null)
+                {
+                    decimal subtotal = 0;
+                    this.panelPedido.BackgroundImage = null;
+                    List<UserControl> controls = new List<UserControl>();
+                    foreach (ProductBinding pr in products)
+                    {
+                        subtotal += pr.Precio;
+                        ProductoItem productoItem = new ProductoItem
+                        {
+                            Product = pr,
+                        };
+                        productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
+                        productoItem.OnBtnRemoveClick += ProductoItem_OnBtnRemoveClick;
+                        controls.Add(productoItem);
+                    }
+                    info.Append("Subtotal: ").Append(subtotal.ToString("C"));
+                    this.panelPedido.AddArrayControl(controls);
+
+                    this.threadLoadImages = new Thread(new ThreadStart(() => LoadImagesProductsSelected()))
+                    {
+                        IsBackground = true
+                    };
+                    this.threadLoadImages.SetApartmentState(ApartmentState.STA);
+                    this.threadLoadImages.Start();
+                }
+                else
+                {
+                    info.Append("Subtotal: ").Append(0.ToString("C"));
+                    this.panelPedido.BackgroundImage = Resources.SIN_IMAGENES;
+                    this.panelPedido.BackgroundImageLayout = ImageLayout.Center;
+                }
+                this.txtInfoPedido.Text = info.ToString();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "LoadProductsSelected(List<ProductBinding> products)",
+                    "Hubo un error al cargar los productos seleccionados", ex.Message);
+            }
         }
 
         public void LoadPlatos(string tipo_busqueda, string texto_busqueda)
@@ -25,35 +467,40 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.panelResultados.clearDataSource();
                 if (dtPlatos != null)
                 {
-                    //this.panelResultados.BackgroundImage = null;
-                    //List<UserControl> controls = new List<UserControl>();
-                    //foreach (DataRow row in dtPlatos.Rows)
-                    //{
-                    //    Platos plato = new Platos(row);
+                    this.panelResultados.BackgroundImage = null;
+                    List<UserControl> controls = new List<UserControl>();
+                    foreach (DataRow row in dtPlatos.Rows)
+                    {
+                        CapaEntidades.Models.Platos plato = new CapaEntidades.Models.Platos(row);
 
-                    //    StringBuilder info = new StringBuilder();
-                    //    info.Append("Nombre: " + plato.Nombre_plato + "").Append(Environment.NewLine);
-                    //    info.Append("Precio: " + plato.Precio_plato.ToString("C") + " ");
+                        ProductBinding productBinding = new ProductBinding
+                        {
+                            Nombre = plato.Nombre_plato,
+                            Id_producto = plato.Id_plato,
+                            Tipo_producto = "PLATO",
+                            Precio = plato.Precio_plato,
+                            Observaciones = string.Empty,
+                            Cantidad = 0,
+                            Product = plato,
+                        };
 
-                    //    ProductoItem productoItem = new ProductoItem
-                    //    {
-                    //        TipoProducto = plato,
-                    //        Tipo = "PLATO",
-                    //        Id_tipo = plato.Id_plato,
-                    //        Informacion = info.ToString(),
-                    //        RutaImage = plato.Imagen_plato,
-                    //    };
-                    //    productoItem.OnBtnNext += ProductoItem_OnBtnNext;
-                    //    controls.Add(productoItem);
-                    //}
-                    //this.panelResultados.AddArrayControl(controls);
+                        ProductoItem productoItem = new ProductoItem
+                        {
+                            Product = productBinding,
+                        };
 
-                    //this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
-                    //{
-                    //    IsBackground = true
-                    //};
-                    //this.threadLoadImages.SetApartmentState(ApartmentState.STA);
-                    //this.threadLoadImages.Start();
+                        productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
+
+                        controls.Add(productoItem);
+                    }
+                    this.panelResultados.AddArrayControl(controls);
+
+                    this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
+                    {
+                        IsBackground = true
+                    };
+                    this.threadLoadImages.SetApartmentState(ApartmentState.STA);
+                    this.threadLoadImages.Start();
                 }
                 else
                 {
@@ -80,36 +527,40 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.panelResultados.clearDataSource();
                 if (dtBebidas != null)
                 {
-                    //this.panelResultados.BackgroundImage = null;
-                    //List<UserControl> controls = new List<UserControl>();
-                    //foreach (DataRow row in dtBebidas.Rows)
-                    //{
-                    //    Bebidas
-                    //    StringBuilder info = new StringBuilder();
-                    //    info.Append("Nombre: " + bebida.Nombre_bebida + "").Append(Environment.NewLine);
-                    //    info.Append("Precio: " + bebida.Precio_bebida.ToString("C") + " ");
-                    //    if (bebida.Precio_trago != 0)
-                    //        info.Append("- Precio trago: " + bebida.Precio_trago.ToString("C"));
+                    this.panelResultados.BackgroundImage = null;
+                    List<UserControl> controls = new List<UserControl>();
+                    foreach (DataRow row in dtBebidas.Rows)
+                    {
+                        CapaEntidades.Models.Bebidas bebida = new CapaEntidades.Models.Bebidas(row);
 
-                    //    ProductoItem productoItem = new ProductoItem
-                    //    {
-                    //        TipoProducto = bebida,
-                    //        Tipo = "BEBIDA",
-                    //        Id_tipo = bebida.Id_bebida,
-                    //        Informacion = info.ToString(),
-                    //        RutaImage = bebida.Imagen,
-                    //    };
-                    //    productoItem.OnBtnNext += ProductoItem_OnBtnNext;
-                    //    controls.Add(productoItem);
-                    //}
-                    //this.panelResultados.AddArrayControl(controls);
+                        ProductBinding productBinding = new ProductBinding
+                        {
+                            Nombre = bebida.Nombre_bebida,
+                            Id_producto = bebida.Id_bebida,
+                            Tipo_producto = "BEBIDA",
+                            Precio = bebida.Precio_bebida,
+                            Observaciones = string.Empty,
+                            Cantidad = 0,
+                            Product = bebida,
+                        };
 
-                    //this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
-                    //{
-                    //    IsBackground = true
-                    //};
-                    //this.threadLoadImages.SetApartmentState(ApartmentState.STA);
-                    //this.threadLoadImages.Start();
+                        ProductoItem productoItem = new ProductoItem
+                        {
+                            Product = productBinding,
+                        };
+
+                        productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
+
+                        controls.Add(productoItem);
+                    }
+                    this.panelResultados.AddArrayControl(controls);
+
+                    this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
+                    {
+                        IsBackground = true
+                    };
+                    this.threadLoadImages.SetApartmentState(ApartmentState.STA);
+                    this.threadLoadImages.Start();
                 }
                 else
                 {
@@ -133,6 +584,121 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
+        private void LoadImages()
+        {
+            foreach (UserControl control in this.panelResultados.controlsUser)
+            {
+                if (control is ProductoItem product)
+                {
+                    Image img;
+                    string nombreimagen = product.Product.NombreImagen;
+                    if (!string.IsNullOrEmpty(nombreimagen))
+                    {
+                        if (Directory.Exists(nombreimagen))
+                        {
+                            img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
+                        }
+                        else
+                        {
+                            img = Resources.SIN_IMAGENES;
+                        }
+
+                        if (img != null)
+                            product.ImageProduct = img;
+                    }
+                    else
+                    {
+                        img = Resources.SIN_IMAGENES;
+                        product.ImageProduct = img;
+                    }
+                }
+            }
+
+            if (this.threadLoadImages.IsAlive)
+                this.threadLoadImages.Interrupt();
+        }
+
+        private void LoadImagesProductsSelected()
+        {
+            if (this.ProductsSelected != null)
+            {
+                foreach (UserControl control in this.panelPedido.controlsUser)
+                {
+                    if (control is ProductoItem product)
+                    {
+                        Image img;
+                        string nombreimagen = product.Product.NombreImagen;
+                        if (!string.IsNullOrEmpty(nombreimagen))
+                        {
+                            if (Directory.Exists(nombreimagen))
+                            {
+                                img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
+                            }
+                            else
+                            {
+                                img = Resources.SIN_IMAGENES;
+                            }
+
+                            if (img != null)
+                                product.ImageProduct = img;
+                        }
+                        else
+                        {
+                            img = Resources.SIN_IMAGENES;
+                            product.ImageProduct = img;
+                        }
+                    }
+                }
+
+                if (this.threadLoadImages.IsAlive)
+                    this.threadLoadImages.Interrupt();
+            }
+        }
+
+        private void ProductoItem_OnBtnRemoveClick(object sender, EventArgs e)
+        {
+            ProductBinding product = (ProductBinding)sender;
+            this.RemoveProduct(product);
+        }
+
+        private void ProductoItem_OnBtnAddClick(object sender, EventArgs e)
+        {
+            //Obtenemos y guardamos el producto con sus detalles
+            ProductBinding product = (ProductBinding)sender;
+            if (product.Tipo_producto.Equals("PLATO"))
+            {
+                CapaEntidades.Models.Platos plato =
+                    (CapaEntidades.Models.Platos)product.Product;
+                if (plato.Plato_detallado.Equals("ACTIVO"))
+                {
+                    /**Como abrimos los detalles, se debe de generar el evento guardar 
+                      * para agregarlo correctamente a la lista**/
+                    FrmDetallePedidoPlato frmDetallePedidoPlato = new FrmDetallePedidoPlato
+                    {
+                        StartPosition = FormStartPosition.CenterScreen,
+                        MaximizeBox = false,
+                        MinimizeBox = false,
+                        Product = product,
+                    };
+                    frmDetallePedidoPlato.OnBtnSaveClick += FrmDetallePedidoPlato_OnBtnSaveClick;
+                    frmDetallePedidoPlato.ShowDialog();
+                    return;
+                }
+            }
+
+            //Si es diferente a plato, se guardará sin más.
+            this.AddProduct(product, null, this.IsEditar);
+        }
+
+        private void FrmDetallePedidoPlato_OnBtnSaveClick(object sender, EventArgs e)
+        {
+            object[] objs = (object[])sender;
+            //Obtenemos y guardamos el producto con sus detalles
+            ProductBinding product = (ProductBinding)objs[0];
+            List<ProductDetalleBinding> detalles = (List<ProductDetalleBinding>)objs[1];
+            this.AddProduct(product, detalles, this.IsEditar);
+        }
+
         public void LoadTipoPlatos(string tipo_busqueda, string texto_busqueda)
         {
             try
@@ -145,6 +711,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 {
                     this.ListTipoPlatos = new List<Tipo_platos>();
                     this.panelTipo.BackgroundImage = null;
+
                     List<UserControl> controls = new List<UserControl>();
                     foreach (DataRow row in dtTipos.Rows)
                     {
@@ -238,11 +805,41 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
+        private void AsignarDatos(Pedidos pedido)
+        {
+            this.ClienteSelected = pedido.Cliente;
+            this.EmpleadoSelected = pedido.Empleado;
+            this.MesaSelected = pedido.Mesa;
+
+            this.lblMesero.Text = "Mesero/Empleado " + pedido.Empleado.Nombre_empleado;
+            this.lblTitulo.Text = "Adicionar/Remover productos del pedido número " + pedido.Id_pedido;
+            this.IsEditar = true;
+
+            //Obtener el detalle del pedido
+            DataTable dtDatosPrincipales =
+                NPedido.BuscarPedidosYDetalle("ID PEDIDO", pedido.Id_pedido.ToString(),
+                out DataTable dtDetalles,
+                out DataTable dtDetallePlatosPedido, out string rpta);
+
+            if (dtDetalles != null)
+            {
+                List<ProductBinding> products = new List<ProductBinding>();
+                products = (from DataRow dr in dtDetalles.Rows
+                            select new ProductBinding(dr)
+                            {
+                                IsEditar = true,
+                                IsAddBD = false,
+                            }).ToList();
+
+                this.LoadProductsSelected(products);
+            }
+        }
+
         #region PROPIEDADES Y VARIABLES
         private string _informacion;
         private bool _isEditar;
         private string _tipo_servicio;
-
+        private string optionSelected = string.Empty;
         private Pedidos _pedido;
         public Pedidos Pedido
         {
@@ -254,14 +851,14 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
-        private void AsignarDatos(Pedidos pedido)
-        {
-            
-        }
+        Thread threadLoadImages;
+        //PoperContainer container;
 
         public Clientes ClienteSelected { get; set; }
         public Empleados EmpleadoSelected { get; set; }
         public Mesas MesaSelected { get; set; }
+
+        public FrmComandas frmComandas;
 
         public List<Tipo_platos> ListTipoPlatos { get; set; }
         public List<Tipo_bebidas> ListTipoBebidas { get; set; }
@@ -278,12 +875,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
         }
         public bool IsEditar { get => _isEditar; set => _isEditar = value; }
         public bool IsDomicilio { get; set; }
+        public int Numero_mesa { get; set; }
         public string Tipo_servicio
         {
             get => _tipo_servicio;
-            set => _tipo_servicio = value;
+            set
+            {
+                _tipo_servicio = value;
+                this.lblTitulo.Text = "Nuevo pedido para la mesa " + Numero_mesa;
+            }
         }
-
 
         #endregion
     }

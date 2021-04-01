@@ -199,8 +199,10 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     if (TablaDetallePedido.Rows.Count > 0)
                     {
                         rpta =
-                            NPedido.InsertarPedido(this.Variables(), out id_pedido,
-                            TablaDetallePedido);
+                            NPedido.InsertarPedido(this.Variables(),
+                            TablaDetallePedido, 
+                            out id_pedido,
+                            out _);
                         if (rpta.Equals("OK"))
                         {
                             if (!this.IsDomicilio)
@@ -368,16 +370,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         {
                             if (row["Tipo"].Equals("PLATO"))
                             {
-                                rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
-                                        Convert.ToString(row["Id_tipo"]), "PLATO", Convert.ToString(row["Precio"]),
-                                        Convert.ToString(row["Cantidad"]), Convert.ToString(row["Observaciones"]), "0", "SUMAR"});
+                                //rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
+                                //        Convert.ToString(row["Id_tipo"]), "PLATO", Convert.ToString(row["Precio"]),
+                                //        Convert.ToString(row["Cantidad"]), Convert.ToString(row["Observaciones"]), "0", "SUMAR"});
                                 plato = true;
                             }
                             else
                             {
-                                rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
-                                        Convert.ToString(row["Id_tipo"]), "BEBIDA", Convert.ToString(row["Precio"]),
-                                        Convert.ToString(row["Cantidad"]), Convert.ToString(row["Observaciones"]), "0", "SUMAR"});
+                                //rpta = NPedido.ActualizarDetallePedido(new List<string> { Convert.ToString(this.Id_pedido),
+                                //        Convert.ToString(row["Id_tipo"]), "BEBIDA", Convert.ToString(row["Precio"]),
+                                //        Convert.ToString(row["Cantidad"]), Convert.ToString(row["Observaciones"]), "0", "SUMAR"});
                                 bebida = true;
                             }
                             if (plato && bebida)
@@ -556,7 +558,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         string rpta;
                         DataTable dtDetalle;
                         DataTable dtPedido =
-                            NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", this.Id_pedido.ToString(), out dtDetalle, out rpta);
+                            NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", this.Id_pedido.ToString(), out dtDetalle,
+                            out DataTable dtDetallePlatosPedido, out rpta);
                         if (dtPedido != null)
                         {
                             this.lblMesero.Text = "Mesero: " + Convert.ToString(dtPedido.Rows[0]["Nombre_empleado"]);

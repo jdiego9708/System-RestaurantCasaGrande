@@ -66,7 +66,9 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     Convert.ToString(this.ListaPlatos.SelectedValue),
                     this.txtPrecio.Text,
                     this.adjuntarImagen.Nombre_imagen,
-                    this.txtDescripcion.Text
+                    this.txtDescripcion.Text,
+                    "ACTIVO",
+                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO"
                 };
             }
             else
@@ -77,7 +79,9 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     Convert.ToString(this.ListaPlatos.SelectedValue),
                     this.txtPrecio.Text,
                     this.adjuntarImagen.Nombre_imagen,
-                    this.txtDescripcion.Text
+                    this.txtDescripcion.Text,
+                    "ACTIVO",
+                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO"
                 };
             }
             return variables;

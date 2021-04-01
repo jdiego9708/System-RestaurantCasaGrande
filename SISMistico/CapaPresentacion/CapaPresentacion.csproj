@@ -289,17 +289,23 @@
     <Compile Include="Formularios\FormsNotas\NotaSmall.Designer.cs">
       <DependentUpon>NotaSmall.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Bebidas\EBebidas.cs" />
-    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.cs">
+    <Compile Include="Formularios\FormsPedido\DatosMesaSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\DatosMesaSmall.Designer.cs">
+      <DependentUpon>DatosMesaSmall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FormsBebidas\EBebidas.cs" />
+    <Compile Include="Formularios\FormsPedido\FormsBebidas\FrmPedidoBebidas.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.Designer.cs">
+    <Compile Include="Formularios\FormsPedido\FormsBebidas\FrmPedidoBebidas.Designer.cs">
       <DependentUpon>FrmPedidoBebidas.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.cs">
+    <Compile Include="Formularios\FormsPedido\FormsBebidas\FrmPreciosBebidas.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.Designer.cs">
+    <Compile Include="Formularios\FormsPedido\FormsBebidas\FrmPreciosBebidas.Designer.cs">
       <DependentUpon>FrmPreciosBebidas.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\ContextMenuDatosPedido.cs">
@@ -387,11 +393,17 @@
     <Compile Include="Formularios\FormsPedido\FrmRealizarPedido.Designer.cs">
       <DependentUpon>FrmRealizarPedido.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Platos\EPlatos.cs" />
-    <Compile Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.cs">
+    <Compile Include="Formularios\FormsPedido\FormsPlatos\EPlatos.cs" />
+    <Compile Include="Formularios\FormsPedido\FormsPlatos\FrmDetallePedidoPlato.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.Designer.cs">
+    <Compile Include="Formularios\FormsPedido\FormsPlatos\FrmDetallePedidoPlato.Designer.cs">
+      <DependentUpon>FrmDetallePedidoPlato.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FormsPlatos\FrmPedidoPlatos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\FormsPlatos\FrmPedidoPlatos.Designer.cs">
       <DependentUpon>FrmPedidoPlatos.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\Controles\PoperContainer.cs">
@@ -401,11 +413,11 @@
       <DependentUpon>PoperContainer.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\ProductBinding.cs" />
-    <Compile Include="Formularios\FormsPedido\ProductItem.cs">
+    <Compile Include="Formularios\FormsPedido\ProductoItem.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Formularios\FormsPedido\ProductItem.Designer.cs">
-      <DependentUpon>ProductItem.cs</DependentUpon>
+    <Compile Include="Formularios\FormsPedido\ProductoItem.Designer.cs">
+      <DependentUpon>ProductoItem.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\PruebaDetallePedido.cs">
       <SubType>Form</SubType>
@@ -747,10 +759,13 @@
     <EmbeddedResource Include="Formularios\FormsNotas\NotaSmall.resx">
       <DependentUpon>NotaSmall.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsPedido\Bebidas\FrmPedidoBebidas.resx">
+    <EmbeddedResource Include="Formularios\FormsPedido\DatosMesaSmall.resx">
+      <DependentUpon>DatosMesaSmall.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FormsBebidas\FrmPedidoBebidas.resx">
       <DependentUpon>FrmPedidoBebidas.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsPedido\Bebidas\FrmPreciosBebidas.resx">
+    <EmbeddedResource Include="Formularios\FormsPedido\FormsBebidas\FrmPreciosBebidas.resx">
       <DependentUpon>FrmPreciosBebidas.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\ContextMenuDatosPedido.resx">
@@ -795,11 +810,17 @@
     <EmbeddedResource Include="Formularios\FormsPedido\FrmRealizarPedido.resx">
       <DependentUpon>FrmRealizarPedido.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsPedido\Platos\FrmPedidoPlatos.resx">
+    <EmbeddedResource Include="Formularios\FormsPedido\FormsPlatos\FrmDetallePedidoPlato.resx">
+      <DependentUpon>FrmDetallePedidoPlato.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\FormsPlatos\FrmPedidoPlatos.resx">
       <DependentUpon>FrmPedidoPlatos.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\Controles\PoperContainer.resx">
       <DependentUpon>PoperContainer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\ProductoItem.resx">
+      <DependentUpon>ProductoItem.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\PruebaDetallePedido.resx">
       <DependentUpon>PruebaDetallePedido.cs</DependentUpon>

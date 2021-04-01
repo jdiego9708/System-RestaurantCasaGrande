@@ -130,6 +130,24 @@ namespace CapaDatos
                 };
                 SqlCmd.Parameters.Add(Descripcion_plato);
 
+                SqlParameter Estado_plato = new SqlParameter
+                {
+                    ParameterName = "@Estado_plato",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Estado_plato);
+
+                SqlParameter Plato_detallado = new SqlParameter
+                {
+                    ParameterName = "@Plato_detallado",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Plato_detallado);
+
                 //Ejecutamos nuestro comando
                 //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql
                 rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO se Ingreso el Registro";
@@ -244,6 +262,24 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Descripcion_plato);
+
+                SqlParameter Estado_plato = new SqlParameter
+                {
+                    ParameterName = "@Estado_plato",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Estado_plato);
+
+                SqlParameter Plato_detallado = new SqlParameter
+                {
+                    ParameterName = "@Plato_detallado",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Plato_detallado);
 
                 //Ejecutamos nuestro comando
                 //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql

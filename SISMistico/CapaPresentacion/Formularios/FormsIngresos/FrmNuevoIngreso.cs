@@ -70,8 +70,8 @@ namespace CapaPresentacion.Formularios.FormsIngresos
                 }
             }
 
-            ingreso.Id_empleado = datosInicioSesion.Empleado.Id_empleado;
-            ingreso.Empleado = datosInicioSesion.Empleado;
+            ingreso.Id_empleado = datosInicioSesion.EmpleadoLogin.Id_empleado;
+            ingreso.Empleado = datosInicioSesion.EmpleadoLogin;
             ingreso.Fecha_ingreso = DateTime.Now;
             ingreso.Valor_ingreso = valor;
             ingreso.Descripcion_ingreso = this.txtDescripcion.Text;

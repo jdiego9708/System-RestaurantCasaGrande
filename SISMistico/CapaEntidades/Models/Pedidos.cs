@@ -19,16 +19,18 @@ namespace CapaEntidades.Models
             try
             {
                 this.Id_pedido = Convert.ToInt32(row["Id_pedido"]);
-                this.Id_mesa = Convert.ToInt32(row["Id_mesa"]);
+                this.Mesa = new Mesas(row);
                 this.Id_empleado = Convert.ToInt32(row["Id_empleado"]);
+                this.Empleado = new Empleados(row);
                 this.Id_cliente = Convert.ToInt32(row["Id_cliente"]);
+                this.Cliente = new Clientes(row);
                 this.Estado_pedido = Convert.ToString(row["Estado_pedido"]);
                 this.Fecha_pedido = Convert.ToDateTime(row["Fecha_pedido"]);
                 this.Hora_pedido = Convert.ToString(row["Hora_pedido"]);
                 this.Tipo_pedido = Convert.ToString(row["Tipo_pedido"]);
                 this.Observaciones_pedido = Convert.ToString(row["Observaciones_pedido"]);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }
@@ -38,9 +40,15 @@ namespace CapaEntidades.Models
 
         public int Id_mesa { get; set; }
 
+        public Mesas Mesa { get; set; }
+
         public int Id_empleado { get; set; }
 
+        public Empleados Empleado { get; set; }
+
         public int Id_cliente { get; set; }
+
+        public Clientes Cliente { get; set; }
 
         public string Estado_pedido { get; set; }
 

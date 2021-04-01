@@ -6,26 +6,29 @@ using System.Threading.Tasks;
 
 using System.Data;
 using CapaDatos;
+using CapaEntidades.Models;
 
 namespace CapaNegocio
 {
     public class NPedido
     {
         #region INSERTAR PEDIDO
-        public static string InsertarPedido(List<string> variables, 
-            out int id_pedido, DataTable Detalles)
+        public static string InsertarPedido(List<string> variables, DataTable Detalles,
+            out int id_pedido, 
+            out DataTable dtDetallesCompleto)
         {
             DPedidos DPedidos = new DPedidos();
-            return DPedidos.InsertarPedido(variables, Detalles, out id_pedido);
+            return DPedidos.InsertarPedido(variables, Detalles, out id_pedido, 
+                out dtDetallesCompleto);
         }
 
         #endregion
 
-        #region CANCELAR DOMICILIO
-        public static string CancelarDomicilio(int id_pedido, string observaciones)
+        #region CANCELAR PEDIDO
+        public static string CancelarPedido(int id_pedido, string observaciones)
         {
             DPedidos DPedidos = new DPedidos();
-            return DPedidos.CancelarDomicilio(id_pedido, observaciones);
+            return DPedidos.CancelarPedido(id_pedido, observaciones);
         }
 
         #endregion
@@ -40,10 +43,10 @@ namespace CapaNegocio
         #endregion
 
         #region ACTUALIZAR DETALLE PEDIDO
-        public static string ActualizarDetallePedido(List<string> variables)
+        public static string ActualizarDetallePedido(Detalle_pedido detalle, int id_empleado, string tipo_update)
         {
             DPedidos DPedidos = new DPedidos();
-            return DPedidos.ActualizarDetallePedido(variables);
+            return DPedidos.ActualizarDetallePedido(detalle, id_empleado, tipo_update);
         }
 
         #endregion
@@ -51,9 +54,11 @@ namespace CapaNegocio
         #region BUSCAR PEDIDOS
 
         public static DataTable BuscarPedidosYDetalle(string tipo_busqueda, string texto_busqueda,
-            out DataTable TablaDetalle, out string rpta)
+            out DataTable TablaDetalle,
+            out DataTable dtDetallePlatosDetallado, out string rpta)
         {
-            return DPedidos.BuscarPedidosYDetalle(tipo_busqueda, texto_busqueda, out TablaDetalle, out rpta);
+            return DPedidos.BuscarPedidosYDetalle(tipo_busqueda, texto_busqueda, 
+                out TablaDetalle, out dtDetallePlatosDetallado, out rpta);
         }
 
         public static DataTable BuscarPedidos(string tipo_busqueda, string texto_busqueda)
@@ -77,6 +82,14 @@ namespace CapaNegocio
             int id_tipo, string tipo, string observaciones)
         {
             return DPedidos.InsertarEliminaciónComanda(id_pedido, id_usuario_clave_maestra, id_usuario_sesion, id_tipo, tipo, observaciones);
+        }
+        #endregion
+
+        #region METODO INSERTAR DETALLES INGREDIENTES PEDIDO
+        public static async Task<string> InsertarDetalleIngredientesPedido(List<Detalle_ingredientes_pedido> detalles)
+        {
+            DPedidos DPedidos = new DPedidos();
+            return await DPedidos.InsertarDetalleIngredientesPedido(detalles);
         }
         #endregion
     }

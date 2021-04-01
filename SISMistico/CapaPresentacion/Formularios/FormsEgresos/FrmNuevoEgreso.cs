@@ -79,8 +79,8 @@ namespace CapaPresentacion.Formularios.FormsEgresos
                 }
             }
 
-            egreso.Id_empleado = datosInicioSesion.Empleado.Id_empleado;
-            egreso.Empleado = datosInicioSesion.Empleado;
+            egreso.Id_empleado = datosInicioSesion.EmpleadoLogin.Id_empleado;
+            egreso.Empleado = datosInicioSesion.EmpleadoLogin;
             egreso.Fecha_egreso = DateTime.Now;
             egreso.Valor_egreso = valor;
             egreso.Descripcion_egreso = this.txtDescripcion.Text;
