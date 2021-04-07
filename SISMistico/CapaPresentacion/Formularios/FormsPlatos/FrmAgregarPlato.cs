@@ -51,6 +51,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.adjuntarImagen.AsignarImagen(datos[4]);
             this.txtDescripcion.Text = datos[5];
             this.txtPrecio.Text = datos[3];
+            this.chkIngredientes.Checked = datos[7] == "ACTIVO" ? true : false; 
         }
 
         private string[] Variables()

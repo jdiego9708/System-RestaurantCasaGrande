@@ -298,6 +298,67 @@ namespace CapaDatos
             return (rpta, dt);
         }
 
+        public DataTable BuscarIngredientes(string tipo_busqueda, string texto_busqueda, out string rpta)
+        {
+            rpta = "OK";
+            DataTable dt = new DataTable("Ingredientes");
+            SqlConnection SqlCon = new SqlConnection();
+            SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
+            SqlCon.FireInfoMessageEventOnUserErrors = true;
+            try
+            {
+                SqlCon.ConnectionString = Conexion.Cn;
+                SqlCon.Open();
+                SqlCommand Sqlcmd = new SqlCommand
+                {
+                    Connection = SqlCon,
+                    CommandText = "sp_Buscar_ingredientes",
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                SqlParameter Tipo_busqueda = new SqlParameter
+                {
+                    ParameterName = "@Tipo_busqueda",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = tipo_busqueda.Trim(),
+                };
+                Sqlcmd.Parameters.Add(Tipo_busqueda);
+
+                SqlParameter Texto_busqueda = new SqlParameter
+                {
+                    ParameterName = "@Texto_busqueda",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = texto_busqueda.Trim(),
+                };
+                Sqlcmd.Parameters.Add(Texto_busqueda);
+
+                SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
+                SqlData.Fill(dt);
+
+                if (dt.Rows.Count < 1)
+                {
+                    dt = null;
+                }
+            }
+            catch (SqlException ex)
+            {
+                rpta = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                rpta = ex.Message;
+            }
+            finally
+            {
+                if (SqlCon.State == ConnectionState.Open)
+                    SqlCon.Close();
+            }
+
+            return dt;
+        }
+
         #endregion
     }
 }

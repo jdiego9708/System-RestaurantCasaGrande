@@ -12,6 +12,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
 
     public partial class FrmPedido : Form
@@ -210,6 +211,11 @@
                 this.frmComandas = new FrmComandas();
 
             this.frmComandas.ObtenerReporte();
+
+            if (this.IsEditar)
+            {
+                this.LoadProductsSelected(this.ProductsSelected);
+            }
 
             MensajeEspera.CloseForm();
         }
@@ -817,7 +823,7 @@
 
             //Obtener el detalle del pedido
             DataTable dtDatosPrincipales =
-                NPedido.BuscarPedidosYDetalle("ID PEDIDO", pedido.Id_pedido.ToString(),
+                NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", pedido.Id_pedido.ToString(),
                 out DataTable dtDetalles,
                 out DataTable dtDetallePlatosPedido, out string rpta);
 
@@ -827,12 +833,102 @@
                 products = (from DataRow dr in dtDetalles.Rows
                             select new ProductBinding(dr)
                             {
+                                Nombre = Convert.ToString(dr["Nombre"]),
+                                Precio = Convert.ToDecimal(dr["Precio"]),
+                                Cantidad = Convert.ToInt32(dr["Cantidad"]),
+                                Id_producto = Convert.ToInt32(dr["Id_tipo"]),
+                                Tipo_producto = Convert.ToString(dr["Tipo"]),
+                                Product = this.GetProduct(Convert.ToString(dr["Tipo"]),
+                                Convert.ToInt32(dr["Id_tipo"]), 
+                                dtDetallePlatosPedido,
+                                out string nombre_imagen,
+                                out List<ProductDetalleBinding> detalles),
+                                NombreImagen = nombre_imagen,
+                                ProductDetalles = detalles,
                                 IsEditar = true,
                                 IsAddBD = false,
                             }).ToList();
 
-                this.LoadProductsSelected(products);
+                this.ProductsSelected = new List<ProductBinding>();
+                this.ProductsSelected.AddRange(products);
             }
+        }
+
+        private Ingredientes GetIngrediente(int id_ingrediente)
+        {
+            DataTable dtIngrediente =
+                NIngredientes.BuscarIngredientes("ID INGREDIENTE", id_ingrediente.ToString(), out string rpta);
+            if (dtIngrediente != null)
+            {
+                return new Ingredientes(dtIngrediente.Rows[0]);
+            }
+            else
+                return null;
+        }
+
+        private object GetProduct(string tipo_producto, 
+            int id_producto, 
+            DataTable dtDetallesPlatosPedido,
+            out string nombre_imagen,
+            out List<ProductDetalleBinding> detalles)
+        {
+            detalles = new List<ProductDetalleBinding>();
+            nombre_imagen = string.Empty;
+            if (tipo_producto.Equals("PLATO"))
+            {
+                DataTable dtPlato =
+                    NPlatos.BuscarPlatos("ID PLATO", id_producto.ToString(), "ACTIVO", out string rpta);
+                if (dtPlato != null)
+                {
+                    CapaEntidades.Models.Platos plato =
+                        new CapaEntidades.Models.Platos(dtPlato.Rows[0]);
+                    nombre_imagen = plato.Imagen_plato;
+                    if (plato.Plato_detallado.Equals("ACTIVO"))
+                    {
+                        DataRow[] find = 
+                            dtDetallesPlatosPedido.Select(string.Format("Id_tipo = {0}", plato.Id_plato));
+                        if (find.Length > 0)
+                        {
+                            detalles = new List<ProductDetalleBinding>();
+                            detalles = (from DataRow dr in find
+                                        select new ProductDetalleBinding
+                                        {
+                                            Id_detalle_ingrediente_pedido = 
+                                            Convert.ToInt32(dr["Id_detalle_ingrediente_pedido"]),
+                                            Id_pedido =
+                                            Convert.ToInt32(dr["Id_pedido"]),
+                                            Id_tipo =
+                                            Convert.ToInt32(dr["Id_tipo"]),
+                                            Id_ingrediente =
+                                            Convert.ToInt32(dr["Id_ingrediente"]),
+                                            Ingrediente =
+                                            this.GetIngrediente(Convert.ToInt32(dr["Id_ingrediente"])),
+                                            Observaciones =
+                                            Convert.ToString(dr["Observaciones"]),
+                                        }).ToList();
+                        }
+                    }
+                    return plato;
+                }
+                else
+                    return null;
+            }
+            else if (tipo_producto.Equals("BEBIDA"))
+            {
+                DataTable dtBebida =
+                    NBebidas.BuscarBebida("ID BEBIDA", id_producto.ToString(), "ACTIVO", out string rpta);
+                if (dtBebida != null)
+                {
+                    CapaEntidades.Models.Bebidas bebida =
+                        new CapaEntidades.Models.Bebidas(dtBebida.Rows[0]);
+                    nombre_imagen = bebida.Imagen;
+                    return bebida;
+                }
+                else
+                    return null;
+            }
+            else
+                return null;
         }
 
         #region PROPIEDADES Y VARIABLES

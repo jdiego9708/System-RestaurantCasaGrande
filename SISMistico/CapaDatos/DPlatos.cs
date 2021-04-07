@@ -129,6 +129,7 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Descripcion_plato);
+                contador += 1;
 
                 SqlParameter Estado_plato = new SqlParameter
                 {
@@ -138,6 +139,7 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Estado_plato);
+                contador += 1;
 
                 SqlParameter Plato_detallado = new SqlParameter
                 {
@@ -262,6 +264,7 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Descripcion_plato);
+                contador += 1;
 
                 SqlParameter Estado_plato = new SqlParameter
                 {
@@ -271,6 +274,7 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Estado_plato);
+                contador += 1;
 
                 SqlParameter Plato_detallado = new SqlParameter
                 {

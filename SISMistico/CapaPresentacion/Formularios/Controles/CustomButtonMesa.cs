@@ -94,6 +94,7 @@ namespace CapaPresentacion.Formularios
 
         private void DatosMesa_OnBtnEditarPedidoClick(object sender, EventArgs e)
         {
+            this.container.Close();
             this.OnBtnEditarPedidoClick?.Invoke(sender, e);
         }
 

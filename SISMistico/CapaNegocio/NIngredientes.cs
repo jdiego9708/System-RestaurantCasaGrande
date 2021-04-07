@@ -40,6 +40,12 @@ namespace CapaNegocio
             return await DIngredientes.BuscarIngredientes(tipo_busqueda, texto_busqueda);
         }
 
+        public static DataTable BuscarIngredientes(string tipo_busqueda, string texto_busqueda, out string rpta)
+        {
+            DIngredientes DIngredientes = new DIngredientes();
+            return DIngredientes.BuscarIngredientes(tipo_busqueda, texto_busqueda, out rpta);
+        }
+
         #endregion        
     }
 }

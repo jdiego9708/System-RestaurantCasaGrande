@@ -1,4 +1,5 @@
 ﻿using CapaEntidades.Models;
+using CapaNegocio;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -54,6 +55,36 @@ namespace CapaPresentacion.Formularios.FormsPedido
             info.Append(pedido.Hora_pedido).Append(Environment.NewLine);
             info.Append("Mesa: " + pedido.Mesa.Num_mesa).Append(Environment.NewLine);
             info.Append("Atiende: ").Append(pedido.Empleado.Nombre_empleado).Append(Environment.NewLine);
+
+            DataTable dtDatosPedido =
+               NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", pedido.Id_pedido.ToString(),
+               out DataTable dtDetallePedido, out DataTable dtDetallePlatosPedido, out string rpta);
+
+            foreach (DataRow row in dtDetallePedido.Rows)
+            {
+                int id_tipo = Convert.ToInt32(row["Id_tipo"]);
+                string tipo = Convert.ToString(row["Tipo"]);
+                string nombre = Convert.ToString(row["Nombre"]);
+
+                if (tipo.Equals("PLATO"))
+                {
+                    info.Append("-" + nombre).Append(": ").Append(Environment.NewLine);
+
+                    DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_tipo = {0}", id_tipo));
+                    if (find.Length > 0)
+                    {
+                        foreach (DataRow re in find)
+                        {
+                            Ingredientes ing = new Ingredientes(re);
+                            info.Append("*" + ing.Nombre_ingrediente).Append(Environment.NewLine);
+                        }
+                    }
+
+                    //row["Nombre"] = info.ToString();
+                }
+            }
+
+            this.txtInfo.Text = info.ToString();
         }
 
         private Pedidos _pedido;
