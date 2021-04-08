@@ -269,6 +269,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 MesaSelected = pedido.Mesa,
                 WindowState = FormWindowState.Maximized,
                 Pedido = pedido,
+                IsEditar = true,
             };
             FrmPedido.ShowDialog();
         }

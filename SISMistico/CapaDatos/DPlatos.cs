@@ -321,7 +321,8 @@ namespace CapaDatos
             string estado_plato, out string rpta)
         {
             StringBuilder consulta = new StringBuilder();
-            consulta.Append("SELECT * FROM Platos pl INNER JOIN Tipo_platos tpl ON pl.Id_tipo_plato = tpl.Id_tipo_plato ");
+            consulta.Append("SELECT * FROM Platos pl " +
+                "INNER JOIN Tipo_platos tpl ON pl.Id_tipo_plato = tpl.Id_tipo_plato ");
 
             if (tipo_busqueda.Equals("COMPLETO"))
             {
@@ -338,6 +339,10 @@ namespace CapaDatos
             else if (tipo_busqueda.Equals("NOMBRE"))
             {
                 consulta.Append("WHERE pl.Nombre_plato like '%" + texto_busqueda + "%' and pl.Estado = '" + estado_plato + "' ");
+            }
+            else if (tipo_busqueda.Equals("ID TIPO PLATO"))
+            {
+                consulta.Append("WHERE tpl.Id_tipo_plato = " + texto_busqueda + " and pl.Estado = '" + estado_plato + "' ");
             }
 
             consulta.Append("ORDER BY Id_plato DESC");

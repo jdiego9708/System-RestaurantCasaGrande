@@ -379,6 +379,10 @@ namespace CapaDatos
             {
                 consulta.Append("WHERE be.Nombre_bebida like '%" + texto_busqueda + "%' and be.Estado = '" + estado_bebida + "' ");
             }
+            else if (tipo_busqueda.Equals("ID TIPO BEBIDA"))
+            {
+                consulta.Append("WHERE tpb.Id_tipo_bebida = '" + texto_busqueda + "' and be.Estado = '" + estado_bebida + "' ");
+            }
 
             consulta.Append("ORDER BY Id_bebida DESC");
             return Conexion.EjecutarConsultaDt(Convert.ToString(consulta), out rpta);

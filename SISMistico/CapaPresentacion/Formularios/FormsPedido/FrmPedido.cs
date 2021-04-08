@@ -66,12 +66,13 @@
                 tipo_pedido = "MESA";
 
             variablesPedido = new List<string>
-            {
+                {
                 Convert.ToString(this.MesaSelected.Id_mesa),
                 Convert.ToString(this.EmpleadoSelected.Id_empleado),
                 Convert.ToString(this.ClienteSelected.Id_cliente),
                 "0", tipo_pedido, "",
-            };
+                };
+
 
             //Comprobar si hay productos seleccionados
             if (this.ProductsAddSelected == null)
@@ -104,17 +105,20 @@
                         (CapaEntidades.Models.Platos)pr.Product;
                     if (plato.Plato_detallado.Equals("ACTIVO"))
                     {
-                        foreach (ProductDetalleBinding de in pr.ProductDetalles)
+                        if (pr.ProductDetalles != null)
                         {
-                            Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
+                            foreach (ProductDetalleBinding de in pr.ProductDetalles)
                             {
-                                Id_ingrediente = de.Id_ingrediente,
-                                Ingrediente = de.Ingrediente,
-                                Id_pedido = de.Id_pedido,
-                                Id_tipo = pr.Id_producto,
-                            };
+                                Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
+                                {
+                                    Id_ingrediente = de.Id_ingrediente,
+                                    Ingrediente = de.Ingrediente,
+                                    Id_pedido = de.Id_pedido,
+                                    Id_tipo = pr.Id_producto,
+                                };
 
-                            listDetalleIngredientes.Add(detail);
+                                listDetalleIngredientes.Add(detail);
+                            }
                         }
                     }
                 }
@@ -132,8 +136,19 @@
                                         out DataTable dtDetallePedido,
                                         out List<Detalle_ingredientes_pedido> listDetalleIngredientes))
                 {
-                    string rpta = NPedido.InsertarPedido(variablesPedido,
-                        dtDetallePedido, out int id_pedido, out DataTable dtDetallesCompleto);
+                    string rpta = "OK";
+                    int id_pedido = 0;
+
+                    if (!this.IsEditar)
+                    {
+                        rpta = NPedido.InsertarPedido(variablesPedido,
+                           dtDetallePedido, out id_pedido, out DataTable dtDetallesCompleto);
+                    }
+                    else
+                    {
+                        id_pedido = this.Pedido.Id_pedido;
+                    }
+
                     if (rpta.Equals("OK"))
                     {
                         //Cuando tengamos devuelta los detalles vamos a comprobar
@@ -831,7 +846,7 @@
             {
                 List<ProductBinding> products = new List<ProductBinding>();
                 products = (from DataRow dr in dtDetalles.Rows
-                            select new ProductBinding(dr)
+                            select new ProductBinding
                             {
                                 Nombre = Convert.ToString(dr["Nombre"]),
                                 Precio = Convert.ToDecimal(dr["Precio"]),
@@ -839,7 +854,7 @@
                                 Id_producto = Convert.ToInt32(dr["Id_tipo"]),
                                 Tipo_producto = Convert.ToString(dr["Tipo"]),
                                 Product = this.GetProduct(Convert.ToString(dr["Tipo"]),
-                                Convert.ToInt32(dr["Id_tipo"]), 
+                                Convert.ToInt32(dr["Id_tipo"]),
                                 dtDetallePlatosPedido,
                                 out string nombre_imagen,
                                 out List<ProductDetalleBinding> detalles),
@@ -866,8 +881,8 @@
                 return null;
         }
 
-        private object GetProduct(string tipo_producto, 
-            int id_producto, 
+        private object GetProduct(string tipo_producto,
+            int id_producto,
             DataTable dtDetallesPlatosPedido,
             out string nombre_imagen,
             out List<ProductDetalleBinding> detalles)
@@ -885,7 +900,7 @@
                     nombre_imagen = plato.Imagen_plato;
                     if (plato.Plato_detallado.Equals("ACTIVO"))
                     {
-                        DataRow[] find = 
+                        DataRow[] find =
                             dtDetallesPlatosPedido.Select(string.Format("Id_tipo = {0}", plato.Id_plato));
                         if (find.Length > 0)
                         {
@@ -893,7 +908,7 @@
                             detalles = (from DataRow dr in find
                                         select new ProductDetalleBinding
                                         {
-                                            Id_detalle_ingrediente_pedido = 
+                                            Id_detalle_ingrediente_pedido =
                                             Convert.ToInt32(dr["Id_detalle_ingrediente_pedido"]),
                                             Id_pedido =
                                             Convert.ToInt32(dr["Id_pedido"]),
