@@ -67,10 +67,24 @@ namespace CapaPresentacion.Formularios.FormsPedido
             if (product.IsAddBD)
             {
                 this.btnRemove.Visible = true;
+                this.btnAdd.Visible = false;
+                this.pxImage.Enabled = false;
             }
             else
             {
-                this.btnRemove.Visible = false;
+                if (product.IsEditar)
+                {
+                    this.btnRemove.Visible = true;
+                    this.btnAdd.Visible = false;
+                    this.pxImage.Enabled = false;
+                }
+                else
+                {
+                    this.btnRemove.Visible = false;
+                    this.btnAdd.Visible = true;
+                    this.pxImage.Enabled = true;
+                }
+
             }
         }
 

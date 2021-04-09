@@ -87,7 +87,7 @@ namespace CapaPresentacion
                 if (tipo.Equals("PLATO"))
                 {
                     StringBuilder info = new StringBuilder();
-                    info.Append(nombre).Append(": ").Append(Environment.NewLine);
+                    info.Append("-" + nombre).Append(": ").Append(Environment.NewLine);
 
                     DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_tipo = {0}", id_tipo));
                     if (find.Length > 0)

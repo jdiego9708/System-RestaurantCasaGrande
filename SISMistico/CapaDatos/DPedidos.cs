@@ -60,6 +60,15 @@ namespace CapaDatos
             out int id_pedido,
             out DataTable dtDetallesCompleto)
         {
+            if (Detalles.Columns.Contains("Id_pedido"))
+                Detalles.Columns.Remove("Id_pedido");
+
+            if (Detalles.Columns.Contains("Nombre"))
+                Detalles.Columns.Remove("Nombre");
+
+            if (Detalles.Columns.Contains("Total"))
+                Detalles.Columns.Remove("Total");
+
             dtDetallesCompleto = new DataTable();
             DataTable TablaDetalle = Detalles;
             int rows = TablaDetalle.Rows.Count;

@@ -27,6 +27,27 @@
             this.Load += FrmPedido_Load;
         }
 
+        private DialogResult Comprobacion()
+        {
+            FrmComprobacion frm = new FrmComprobacion
+            {
+                StartPosition = FormStartPosition.CenterScreen
+            };
+            frm.FormClosed += FrmComprobacion_FormClosed;
+            frm.ShowDialog();
+            return frm.DialogResult;
+        }
+
+        private void FrmComprobacion_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            FrmComprobacion frm = (FrmComprobacion)sender;
+            if (frm.DialogResult == DialogResult.OK)
+            {
+                DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
+                datos.EmpleadoClaveMaestra = frm.EmpleadoSelected;
+            }
+        }
+
         private bool Comprobaciones(out List<string> variablesPedido,
             out DataTable dtDetallePedido,
             out List<Detalle_ingredientes_pedido> listDetalleIngredientes)
@@ -82,21 +103,31 @@
                 return false;
             }
 
-            dtDetallePedido.Columns.Add("Id_tipo", typeof(string));
+            dtDetallePedido.Columns.Add("Id_pedido", typeof(int));
+            dtDetallePedido.Columns.Add("Id_tipo", typeof(int));
             dtDetallePedido.Columns.Add("Tipo", typeof(string));
+            dtDetallePedido.Columns.Add("Nombre", typeof(string));
             dtDetallePedido.Columns.Add("Precio", typeof(string));
             dtDetallePedido.Columns.Add("Cantidad", typeof(string));
+            dtDetallePedido.Columns.Add("Total", typeof(string));
             dtDetallePedido.Columns.Add("Observaciones", typeof(string));
 
             foreach (ProductBinding pr in this.ProductsAddSelected)
             {
                 DataRow newRow = dtDetallePedido.NewRow();
+
+                if (this.IsEditar)
+                    newRow["Id_pedido"] = this.Pedido.Id_pedido;
+                else
+                    newRow["Id_pedido"] = 0;
+
                 newRow["Id_tipo"] = pr.Id_producto;
                 newRow["Tipo"] = pr.Tipo_producto;
+                newRow["Nombre"] = pr.Nombre;
                 newRow["Precio"] = pr.Precio;
                 newRow["Cantidad"] = pr.Cantidad;
+                newRow["Total"] = pr.Cantidad * pr.Precio;
                 newRow["Observaciones"] = pr.Observaciones;
-                dtDetallePedido.Rows.Add(newRow);
 
                 //Agregamos la lista de detalles si es un plato
                 if (pr.Tipo_producto.Equals("PLATO"))
@@ -107,6 +138,9 @@
                     {
                         if (pr.ProductDetalles != null)
                         {
+                            StringBuilder info = new StringBuilder();
+                            info.Append("-" + plato.Nombre_plato).Append(": ").Append(Environment.NewLine);
+
                             foreach (ProductDetalleBinding de in pr.ProductDetalles)
                             {
                                 Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
@@ -117,11 +151,15 @@
                                     Id_tipo = pr.Id_producto,
                                 };
 
+                                info.Append(de.Ingrediente.Nombre_ingrediente).Append(Environment.NewLine);
+                                newRow["Nombre"] = info.ToString();
                                 listDetalleIngredientes.Add(detail);
                             }
                         }
                     }
                 }
+
+                dtDetallePedido.Rows.Add(newRow);
             }
 
             return true;
@@ -136,6 +174,8 @@
                                         out DataTable dtDetallePedido,
                                         out List<Detalle_ingredientes_pedido> listDetalleIngredientes))
                 {
+                    DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
+
                     string rpta = "OK";
                     int id_pedido = 0;
 
@@ -147,21 +187,33 @@
                     else
                     {
                         id_pedido = this.Pedido.Id_pedido;
+                        foreach (DataRow row in dtDetallePedido.Rows)
+                        {
+                            Detalle_pedido de = new Detalle_pedido(row);
+                            rpta = NPedido.ActualizarDetallePedido(de, datos.EmpleadoClaveMaestra.Id_empleado, "");
+                            if (!rpta.Equals("OK"))
+                            {
+                                throw new Exception(rpta);
+                            }
+                        }
                     }
 
                     if (rpta.Equals("OK"))
                     {
                         //Cuando tengamos devuelta los detalles vamos a comprobar
                         //cuales de esos detalles hay que ingresarles el detalle de almuerzo
-
-                        foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
+                        if (listDetalleIngredientes != null)
                         {
-                            //Asignar el id pedido que es igual para todos los detalles
-                            de.Id_pedido = id_pedido;
-                            de.Observaciones = string.Empty;
+                            foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
+                            {
+                                //Asignar el id pedido que es igual para todos los detalles
+                                de.Id_pedido = id_pedido;
+                                de.Observaciones = string.Empty;
+                            }
+
+                            rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
                         }
 
-                        rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
                         if (!rpta.Equals("OK"))
                         {
                             Mensajes.MensajeInformacion("No se ingresaron detalles de platos, operación interrumpida");
@@ -173,8 +225,16 @@
                             FrmObservarMesas.ObtenerPedido(id_pedido, this.Numero_mesa, "PENDIENTE");
                         }
 
-                        this.frmComandas.Id_pedido = id_pedido;
-                        this.frmComandas.AsignarTablas();
+                        if (this.IsEditar)
+                        {
+                            this.frmComandas.Id_pedido = id_pedido;
+                            this.frmComandas.AsignarTablas(dtDetallePedido);
+                        }
+                        else
+                        {
+                            this.frmComandas.Id_pedido = id_pedido;
+                            this.frmComandas.AsignarTablas();
+                        }
 
                         if (this.chkPrintComandas.Checked)
                         {
@@ -204,35 +264,41 @@
             {
                 if (this.optionSelected.Equals("PLATOS"))
                 {
-                    this.LoadPlatos("NOMBRE PLATO", txt.Texto);
+                    this.LoadPlatos("NOMBRE", txt.Texto);
                 }
                 else
                 {
-                    this.LoadPlatos("NOMBRE BEBIDA", txt.Texto);
+                    this.LoadBebidas("NOMBRE", txt.Texto);
                 }
             }
         }
 
         private void FrmPedido_Load(object sender, EventArgs e)
         {
-            MensajeEspera.ShowWait("Cargando...");
-            this.optionSelected = "PLATOS";
-            this.LoadTipoPlatos("COMPLETO", "");
-
-            if (this.ListTipoPlatos != null)
-                this.LoadPlatos("ID TIPO PLATO", this.ListTipoPlatos[0].Id_tipo_plato.ToString());
-
-            if (this.frmComandas == null)
-                this.frmComandas = new FrmComandas();
-
-            this.frmComandas.ObtenerReporte();
-
-            if (this.IsEditar)
+            DialogResult dialog = this.Comprobacion();
+            if (dialog == DialogResult.OK)
             {
-                this.LoadProductsSelected(this.ProductsSelected);
-            }
+                MensajeEspera.ShowWait("Cargando...");
+                this.optionSelected = "PLATOS";
+                this.LoadTipoPlatos("COMPLETO", "");
 
-            MensajeEspera.CloseForm();
+                if (this.ListTipoPlatos != null)
+                    this.LoadPlatos("ID TIPO PLATO", this.ListTipoPlatos[0].Id_tipo_plato.ToString());
+
+                if (this.frmComandas == null)
+                    this.frmComandas = new FrmComandas();
+
+                this.frmComandas.ObtenerReporte();
+
+                if (this.IsEditar)
+                {
+                    this.LoadProductsSelected(this.ProductsSelected);
+                }
+
+                MensajeEspera.CloseForm();
+            }
+            else
+                this.Close();
         }
 
         private void BtnBebidas_Click(object sender, EventArgs e)
@@ -325,26 +391,31 @@
             else
             {
                 //Si no existe agregamos un producto nuevo a la lista de vista
-                product.ProductDetalles = detalles;
+
                 product.IsAddBD = true;
                 product.IsEditar = isEditar;
                 product.Cantidad = 1;
+
+                if (product.ProductDetalles == null)
+                    product.ProductDetalles = detalles;
+
                 this.ProductsSelected.Add(product);
             }
 
             //Comprobar existencia del producto en ProductsAddSelected
-            productExiste = new List<ProductBinding>();
+            List<ProductBinding> productExisteAdd = new List<ProductBinding>();
 
             if (this.ProductsAddSelected == null)
                 this.ProductsAddSelected = new List<ProductBinding>();
 
-            productExiste =
+            productExisteAdd =
                 this.ProductsAddSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
-            if (productExiste.Count > 0)
+            if (productExisteAdd.Count > 0)
             {
                 /**Si existe el producto en la lista de productos haremos:
                  * 1- Agregar +1 al producto en la lista existente**/
-                //productExiste[0].Cantidad += 1;
+                //productExisteAdd[0].Cantidad += 1;
+                //this.ProductsAddSelected.Add(productExiste[0]);
             }
             else
             {
@@ -352,9 +423,12 @@
                 product.IsAddBD = true;
                 product.IsEditar = isEditar;
                 product.Cantidad = 1;
+                if (product.ProductDetalles == null)
+                    product.ProductDetalles = detalles;
                 this.ProductsAddSelected.Add(product);
             }
 
+            //Cargar los productos desde la lista de seleccionados general
             this.LoadProductsSelected(this.ProductsSelected);
         }
 
@@ -365,22 +439,28 @@
              * Significa que el producto venía desde la BD**/
             if (product.IsEditar && product.IsAddBD == false)
             {
-                Detalle_pedido detalle = new Detalle_pedido
+                DialogResult dialog = this.Comprobacion();
+                if (dialog == DialogResult.OK)
                 {
-                    Id_pedido = this.Pedido.Id_pedido,
-                    Id_tipo = product.Id_producto,
-                    Tipo = product.Tipo_producto,
-                    Precio = product.Precio,
-                    Cantidad = product.Cantidad,
-                    Observaciones = product.Observaciones,
-                };
+                    Detalle_pedido detalle = new Detalle_pedido
+                    {
+                        Id_pedido = this.Pedido.Id_pedido,
+                        Id_tipo = product.Id_producto,
+                        Tipo = product.Tipo_producto,
+                        Precio = product.Precio,
+                        Cantidad = product.Cantidad,
+                        Observaciones = product.Observaciones,
+                    };
 
-                //Eliminar de la base de datos
-                string rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "DELETE");
-                if (!rpta.Equals("OK"))
-                {
-                    Mensajes.MensajeInformacion("Hubo un error actualizando el detalle del pedido en la bd");
+                    //Eliminar de la base de datos
+                    string rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "DELETE");
+                    if (!rpta.Equals("OK"))
+                    {
+                        Mensajes.MensajeInformacion("Hubo un error actualizando el detalle del pedido en la bd");
+                    }
                 }
+                else
+                    return;
             }
 
             //Comprobar existencia del producto en la lista de ProductsSelected
@@ -446,7 +526,7 @@
                     List<UserControl> controls = new List<UserControl>();
                     foreach (ProductBinding pr in products)
                     {
-                        subtotal += pr.Precio;
+                        subtotal += pr.Precio * pr.Cantidad;
                         ProductoItem productoItem = new ProductoItem
                         {
                             Product = pr,

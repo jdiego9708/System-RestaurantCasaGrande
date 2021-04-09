@@ -1,4 +1,5 @@
-﻿using CapaNegocio;
+﻿using CapaEntidades.Models;
+using CapaNegocio;
 using System;
 using System.Data;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace CapaPresentacion.Formularios
         private string _cargo_empleado;
         private int _id_empleado;
         private string _nombre_empleado;
+        public Empleados EmpleadoSelected { get; set; }
 
         public string Cargo_empleado { get => _cargo_empleado; set => _cargo_empleado = value; }
         public int Id_empleado { get => _id_empleado; set => _id_empleado = value; }
@@ -42,22 +44,26 @@ namespace CapaPresentacion.Formularios
                     }
 
                     var (rpta, empleado, dtEmpleado) = await NEmpleados.ClaveMaestra(codigo);
-                    if (rpta.Equals("OK"))
-                    {
+                    if (dtEmpleado != null)
+                    {                       
                         this.Id_empleado = empleado.Id_empleado;
                         this.Nombre_empleado = empleado.Nombre_empleado;
                         this.Cargo_empleado = empleado.Cargo_empleado;
+                        this.EmpleadoSelected = empleado;
                         this.DialogResult = DialogResult.OK;
                         this.Tag = dtEmpleado;
                         this.Close();
                     }
-                    else if (rpta.Equals(""))
-                    {
-                        Mensajes.MensajeInformacion("El código no corresponde a ninguno de nuestros empleados", "Entendido");
-                    }
                     else
                     {
-                        throw new Exception(rpta);
+                        if (rpta.Equals("OK"))
+                        {
+                            Mensajes.MensajeInformacion("El código no corresponde a ninguno de nuestros empleados", "Entendido");
+                            this.DialogResult = DialogResult.Abort;
+                            this.Close();
+                        }
+                        else
+                            throw new Exception(rpta);
                     }
                 }
             }

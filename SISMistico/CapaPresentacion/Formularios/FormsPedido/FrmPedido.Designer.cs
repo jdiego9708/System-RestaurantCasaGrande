@@ -31,22 +31,22 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmPedido));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtBusqueda = new CapaPresentacion.CustomTextBox();
             this.btnBebidas = new System.Windows.Forms.Button();
             this.btnPlatos = new System.Windows.Forms.Button();
             this.panelBanner = new System.Windows.Forms.Panel();
             this.lblMesero = new System.Windows.Forms.Label();
             this.lblTitulo = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.txtInfoPedido = new System.Windows.Forms.TextBox();
-            this.panelPedido = new CapaPresentacion.Controles.CustomGridPanel();
-            this.panelResultados = new CapaPresentacion.Controles.CustomGridPanel();
             this.panelTipo = new CapaPresentacion.Controles.CustomGridPanel();
-            this.txtBusqueda = new CapaPresentacion.CustomTextBox();
-            this.btnSave = new System.Windows.Forms.Button();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.panelResultados = new CapaPresentacion.Controles.CustomGridPanel();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.panelPedido = new CapaPresentacion.Controles.CustomGridPanel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.chkPrintComandas = new System.Windows.Forms.CheckBox();
+            this.btnSave = new System.Windows.Forms.Button();
+            this.txtInfoPedido = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.panelBanner.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -66,6 +66,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Platos y bebidas";
+            // 
+            // txtBusqueda
+            // 
+            this.txtBusqueda.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.txtBusqueda.BackColor = System.Drawing.Color.White;
+            this.txtBusqueda.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtBusqueda.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.txtBusqueda.Location = new System.Drawing.Point(216, 38);
+            this.txtBusqueda.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtBusqueda.Name = "txtBusqueda";
+            this.txtBusqueda.Size = new System.Drawing.Size(405, 20);
+            this.txtBusqueda.TabIndex = 3;
+            this.txtBusqueda.Texto = "Búsqueda";
+            this.txtBusqueda.Texto_inicial = "Búsqueda";
+            this.txtBusqueda.Visible_px = true;
             // 
             // btnBebidas
             // 
@@ -143,6 +158,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Tipos";
             // 
+            // panelTipo
+            // 
+            this.panelTipo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelTipo.AutoScroll = true;
+            this.panelTipo.Location = new System.Drawing.Point(9, 24);
+            this.panelTipo.Name = "panelTipo";
+            this.panelTipo.PageSize = 10;
+            this.panelTipo.Size = new System.Drawing.Size(177, 392);
+            this.panelTipo.TabIndex = 0;
+            // 
             // groupBox3
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -154,6 +181,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Búsqueda";
+            // 
+            // panelResultados
+            // 
+            this.panelResultados.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelResultados.AutoScroll = true;
+            this.panelResultados.Location = new System.Drawing.Point(3, 21);
+            this.panelResultados.Name = "panelResultados";
+            this.panelResultados.PageSize = 10;
+            this.panelResultados.Size = new System.Drawing.Size(419, 395);
+            this.panelResultados.TabIndex = 0;
             // 
             // groupBox4
             // 
@@ -167,6 +206,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox4.TabIndex = 8;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pedido";
+            // 
+            // panelPedido
+            // 
+            this.panelPedido.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelPedido.AutoScroll = true;
+            this.panelPedido.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panelPedido.BackgroundImage")));
+            this.panelPedido.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.panelPedido.Location = new System.Drawing.Point(3, 21);
+            this.panelPedido.Name = "panelPedido";
+            this.panelPedido.PageSize = 10;
+            this.panelPedido.Size = new System.Drawing.Size(209, 395);
+            this.panelPedido.TabIndex = 0;
             // 
             // groupBox5
             // 
@@ -182,74 +235,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Información";
             // 
-            // txtInfoPedido
+            // chkPrintComandas
             // 
-            this.txtInfoPedido.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtInfoPedido.BackColor = System.Drawing.Color.White;
-            this.txtInfoPedido.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtInfoPedido.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtInfoPedido.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.txtInfoPedido.Location = new System.Drawing.Point(163, 24);
-            this.txtInfoPedido.Multiline = true;
-            this.txtInfoPedido.Name = "txtInfoPedido";
-            this.txtInfoPedido.ReadOnly = true;
-            this.txtInfoPedido.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtInfoPedido.Size = new System.Drawing.Size(49, 54);
-            this.txtInfoPedido.TabIndex = 0;
-            this.txtInfoPedido.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // panelPedido
-            // 
-            this.panelPedido.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelPedido.AutoScroll = true;
-            this.panelPedido.Location = new System.Drawing.Point(3, 21);
-            this.panelPedido.Name = "panelPedido";
-            this.panelPedido.PageSize = 10;
-            this.panelPedido.Size = new System.Drawing.Size(209, 395);
-            this.panelPedido.TabIndex = 0;
-            // 
-            // panelResultados
-            // 
-            this.panelResultados.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelResultados.AutoScroll = true;
-            this.panelResultados.Location = new System.Drawing.Point(3, 21);
-            this.panelResultados.Name = "panelResultados";
-            this.panelResultados.PageSize = 10;
-            this.panelResultados.Size = new System.Drawing.Size(419, 395);
-            this.panelResultados.TabIndex = 0;
-            // 
-            // panelTipo
-            // 
-            this.panelTipo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelTipo.AutoScroll = true;
-            this.panelTipo.Location = new System.Drawing.Point(9, 24);
-            this.panelTipo.Name = "panelTipo";
-            this.panelTipo.PageSize = 10;
-            this.panelTipo.Size = new System.Drawing.Size(177, 392);
-            this.panelTipo.TabIndex = 0;
-            // 
-            // txtBusqueda
-            // 
-            this.txtBusqueda.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.txtBusqueda.BackColor = System.Drawing.Color.White;
-            this.txtBusqueda.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtBusqueda.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.txtBusqueda.Location = new System.Drawing.Point(216, 38);
-            this.txtBusqueda.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.txtBusqueda.Name = "txtBusqueda";
-            this.txtBusqueda.Size = new System.Drawing.Size(405, 20);
-            this.txtBusqueda.TabIndex = 3;
-            this.txtBusqueda.Texto = "Búsqueda";
-            this.txtBusqueda.Texto_inicial = "Búsqueda";
-            this.txtBusqueda.Visible_px = true;
+            this.chkPrintComandas.AutoSize = true;
+            this.chkPrintComandas.Checked = true;
+            this.chkPrintComandas.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkPrintComandas.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.chkPrintComandas.Location = new System.Drawing.Point(70, 32);
+            this.chkPrintComandas.Name = "chkPrintComandas";
+            this.chkPrintComandas.Size = new System.Drawing.Size(87, 38);
+            this.chkPrintComandas.TabIndex = 28;
+            this.chkPrintComandas.Text = "Imprimir\r\ncomandas";
+            this.chkPrintComandas.UseVisualStyleBackColor = true;
             // 
             // btnSave
             // 
@@ -268,18 +265,23 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnSave.TabIndex = 27;
             this.btnSave.UseVisualStyleBackColor = true;
             // 
-            // chkPrintComandas
+            // txtInfoPedido
             // 
-            this.chkPrintComandas.AutoSize = true;
-            this.chkPrintComandas.Checked = true;
-            this.chkPrintComandas.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkPrintComandas.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.chkPrintComandas.Location = new System.Drawing.Point(70, 32);
-            this.chkPrintComandas.Name = "chkPrintComandas";
-            this.chkPrintComandas.Size = new System.Drawing.Size(87, 38);
-            this.chkPrintComandas.TabIndex = 28;
-            this.chkPrintComandas.Text = "Imprimir\r\ncomandas";
-            this.chkPrintComandas.UseVisualStyleBackColor = true;
+            this.txtInfoPedido.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtInfoPedido.BackColor = System.Drawing.Color.White;
+            this.txtInfoPedido.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtInfoPedido.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtInfoPedido.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.txtInfoPedido.Location = new System.Drawing.Point(163, 24);
+            this.txtInfoPedido.Multiline = true;
+            this.txtInfoPedido.Name = "txtInfoPedido";
+            this.txtInfoPedido.ReadOnly = true;
+            this.txtInfoPedido.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtInfoPedido.Size = new System.Drawing.Size(49, 54);
+            this.txtInfoPedido.TabIndex = 0;
+            this.txtInfoPedido.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // FrmPedido
             // 

@@ -94,17 +94,25 @@ namespace CapaPresentacion.Formularios
 
         private void DatosMesa_OnBtnEditarPedidoClick(object sender, EventArgs e)
         {
-            this.container.Close();
+            if (this.container != null)
+                this.container.Close(); 
+
             this.OnBtnEditarPedidoClick?.Invoke(sender, e);
         }
 
         private void DatosMesa_OnBtnCancelarPedidoClick(object sender, EventArgs e)
         {
+            if (this.container != null)
+                this.container.Close();
+
             this.OnBtnCancelarPedidoClick?.Invoke(sender, e);
         }
 
         private void DatosMesa_OnBtnCambiarMesaClick(object sender, EventArgs e)
         {
+            if (this.container != null)
+                this.container.Close();
+
             this.OnBtnCambiarMesaClick?.Invoke(sender, e);
         }
         #endregion

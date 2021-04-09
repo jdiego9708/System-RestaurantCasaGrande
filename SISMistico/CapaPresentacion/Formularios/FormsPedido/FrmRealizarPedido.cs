@@ -626,6 +626,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             FrmComprobacion frm = (FrmComprobacion)sender;
             if (frm.DialogResult == DialogResult.OK)
             {
+
                 this.Id_empleado = frm.Id_empleado;
                 this.Nombre_empleado = frm.Nombre_empleado;
                 this.Cargo_empleado = frm.Cargo_empleado;
