@@ -204,14 +204,17 @@
                         //cuales de esos detalles hay que ingresarles el detalle de almuerzo
                         if (listDetalleIngredientes != null)
                         {
-                            foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
+                            if (listDetalleIngredientes.Count > 0)
                             {
-                                //Asignar el id pedido que es igual para todos los detalles
-                                de.Id_pedido = id_pedido;
-                                de.Observaciones = string.Empty;
-                            }
+                                foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
+                                {
+                                    //Asignar el id pedido que es igual para todos los detalles
+                                    de.Id_pedido = id_pedido;
+                                    de.Observaciones = string.Empty;
+                                }
 
-                            rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
+                                rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
+                            }
                         }
 
                         if (!rpta.Equals("OK"))
