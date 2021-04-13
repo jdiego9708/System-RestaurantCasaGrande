@@ -29,6 +29,7 @@ namespace CapaPresentacion.Formularios
         private Empleados _empleadoClaveMaestra;
         private Clientes _clienteDefault;
 
+        public int NumeroComandas { get; set; }
         public int Id_empleado { get => id_empleado; set => id_empleado = value; }
         public string Nombre_empleado { get => nombre_empleado; set => nombre_empleado = value; }
         public string Cargo_empleado { get => cargo_empleado; set => cargo_empleado = value; }

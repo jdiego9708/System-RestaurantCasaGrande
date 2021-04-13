@@ -96,7 +96,7 @@
 
 
             //Comprobar si hay productos seleccionados
-            if (this.ProductsAddSelected == null)
+            if (this.ProductsAddSelected == null && !this.IsEditar)
             {
                 MensajeEspera.CloseForm();
                 Mensajes.MensajeInformacion("No hay productos seleccionados");
@@ -107,60 +107,65 @@
             dtDetallePedido.Columns.Add("Id_tipo", typeof(int));
             dtDetallePedido.Columns.Add("Tipo", typeof(string));
             dtDetallePedido.Columns.Add("Nombre", typeof(string));
-            dtDetallePedido.Columns.Add("Precio", typeof(string));
-            dtDetallePedido.Columns.Add("Cantidad", typeof(string));
+            dtDetallePedido.Columns.Add("Precio", typeof(decimal));
+            dtDetallePedido.Columns.Add("Cantidad", typeof(int));
             dtDetallePedido.Columns.Add("Total", typeof(string));
             dtDetallePedido.Columns.Add("Observaciones", typeof(string));
 
-            foreach (ProductBinding pr in this.ProductsAddSelected)
+            if (this.ProductsAddSelected != null)
             {
-                DataRow newRow = dtDetallePedido.NewRow();
-
-                if (this.IsEditar)
-                    newRow["Id_pedido"] = this.Pedido.Id_pedido;
-                else
-                    newRow["Id_pedido"] = 0;
-
-                newRow["Id_tipo"] = pr.Id_producto;
-                newRow["Tipo"] = pr.Tipo_producto;
-                newRow["Nombre"] = pr.Nombre;
-                newRow["Precio"] = pr.Precio;
-                newRow["Cantidad"] = pr.Cantidad;
-                newRow["Total"] = pr.Cantidad * pr.Precio;
-                newRow["Observaciones"] = pr.Observaciones;
-
-                //Agregamos la lista de detalles si es un plato
-                if (pr.Tipo_producto.Equals("PLATO"))
+                foreach (ProductBinding pr in this.ProductsAddSelected)
                 {
-                    CapaEntidades.Models.Platos plato =
-                        (CapaEntidades.Models.Platos)pr.Product;
-                    if (plato.Plato_detallado.Equals("ACTIVO"))
+                    DataRow newRow = dtDetallePedido.NewRow();
+
+                    if (this.IsEditar)
+                        newRow["Id_pedido"] = this.Pedido.Id_pedido;
+                    else
+                        newRow["Id_pedido"] = 0;
+
+                    newRow["Id_tipo"] = pr.Id_producto;
+                    newRow["Tipo"] = pr.Tipo_producto;
+                    newRow["Nombre"] = pr.Nombre;
+                    newRow["Precio"] = pr.Precio;
+                    newRow["Cantidad"] = pr.Cantidad;
+                    newRow["Total"] = pr.Cantidad * pr.Precio;
+                    newRow["Observaciones"] = pr.Observaciones;
+
+                    //Agregamos la lista de detalles si es un plato
+                    if (pr.Tipo_producto.Equals("PLATO"))
                     {
-                        if (pr.ProductDetalles != null)
+                        CapaEntidades.Models.Platos plato =
+                            (CapaEntidades.Models.Platos)pr.Product;
+                        if (plato.Plato_detallado.Equals("ACTIVO"))
                         {
-                            StringBuilder info = new StringBuilder();
-                            info.Append("-" + plato.Nombre_plato).Append(": ").Append(Environment.NewLine);
-
-                            foreach (ProductDetalleBinding de in pr.ProductDetalles)
+                            if (pr.ProductDetalles != null)
                             {
-                                Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
-                                {
-                                    Id_ingrediente = de.Id_ingrediente,
-                                    Ingrediente = de.Ingrediente,
-                                    Id_pedido = de.Id_pedido,
-                                    Id_tipo = pr.Id_producto,
-                                };
+                                StringBuilder info = new StringBuilder();
+                                info.Append("-" + plato.Nombre_plato).Append(": ").Append(Environment.NewLine);
 
-                                info.Append(de.Ingrediente.Nombre_ingrediente).Append(Environment.NewLine);
-                                newRow["Nombre"] = info.ToString();
-                                listDetalleIngredientes.Add(detail);
+                                foreach (ProductDetalleBinding de in pr.ProductDetalles)
+                                {
+                                    Detalle_ingredientes_pedido detail = new Detalle_ingredientes_pedido
+                                    {
+                                        Id_ingrediente = de.Id_ingrediente,
+                                        Ingrediente = de.Ingrediente,
+                                        Id_pedido = de.Id_pedido,
+                                        Id_tipo = pr.Id_producto,
+                                    };
+
+                                    info.Append(de.Ingrediente.Nombre_ingrediente).Append(Environment.NewLine);
+                                    newRow["Nombre"] = info.ToString();
+                                    listDetalleIngredientes.Add(detail);
+                                }
                             }
                         }
                     }
-                }
 
-                dtDetallePedido.Rows.Add(newRow);
+                    dtDetallePedido.Rows.Add(newRow);
+                }
             }
+            else
+                dtDetallePedido = null;
 
             return true;
         }
@@ -187,13 +192,16 @@
                     else
                     {
                         id_pedido = this.Pedido.Id_pedido;
-                        foreach (DataRow row in dtDetallePedido.Rows)
+                        if (dtDetallePedido != null)
                         {
-                            Detalle_pedido de = new Detalle_pedido(row);
-                            rpta = NPedido.ActualizarDetallePedido(de, datos.EmpleadoClaveMaestra.Id_empleado, "");
-                            if (!rpta.Equals("OK"))
+                            foreach (DataRow row in dtDetallePedido.Rows)
                             {
-                                throw new Exception(rpta);
+                                Detalle_pedido de = new Detalle_pedido(row);
+                                rpta = NPedido.ActualizarDetallePedido(de, datos.EmpleadoClaveMaestra.Id_empleado, "");
+                                if (!rpta.Equals("OK"))
+                                {
+                                    throw new Exception(rpta);
+                                }
                             }
                         }
                     }
@@ -230,8 +238,11 @@
 
                         if (this.IsEditar)
                         {
-                            this.frmComandas.Id_pedido = id_pedido;
-                            this.frmComandas.AsignarTablas(dtDetallePedido);
+                            if (dtDetallePedido != null)
+                            {
+                                this.frmComandas.Id_pedido = id_pedido;
+                                this.frmComandas.AsignarTablas(dtDetallePedido);
+                            }
                         }
                         else
                         {
@@ -451,8 +462,8 @@
                         Id_tipo = product.Id_producto,
                         Tipo = product.Tipo_producto,
                         Precio = product.Precio,
-                        Cantidad = product.Cantidad,
-                        Observaciones = product.Observaciones,
+                        Cantidad = product.Cantidad - 1,
+                        Observaciones = product.Observaciones == null ? string.Empty : product.Observaciones,
                     };
 
                     //Eliminar de la base de datos

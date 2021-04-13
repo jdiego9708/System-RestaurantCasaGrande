@@ -1,5 +1,6 @@
 ﻿using CapaEntidades.Models;
 using CapaNegocio;
+using CapaPresentacion.Formularios;
 using Microsoft.Reporting.WinForms;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,8 @@ namespace CapaPresentacion
             {
 
                 //Asignar parámetros de observaciones y horas
+                DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
+                int num = datos.NumeroComandas + 1;
 
                 string observaciones = "";
                 foreach (DataRow row in this.TablaDetallePedido.Rows)
@@ -43,9 +46,10 @@ namespace CapaPresentacion
                         observaciones += " - " + obs;
                 }
 
-                ReportParameter[] reportParameters = new ReportParameter[2];
+                ReportParameter[] reportParameters = new ReportParameter[3];
                 reportParameters[0] = new ReportParameter("parameterObservaciones", observaciones);
                 reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
+                reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
 
                 ReportDataSource dsDatosPedido = new ReportDataSource("DatosPedido", this.TablaDatosPedido);
@@ -58,7 +62,7 @@ namespace CapaPresentacion
 
                 int contador = 0;
                 while (contador != Repetir)
-                {
+                {                   
                     objImpresion.Imprimir(reportViewer1.LocalReport);
                     objImpresion.Dispose();
 
@@ -73,10 +77,9 @@ namespace CapaPresentacion
 
         public void AsignarTablas()
         {
-            string rpta = "";
             this.TablaDatosPedido =
                 NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", Convert.ToString(this.Id_pedido),
-                out this.TablaDetallePedido, out DataTable dtDetallePlatosPedido, out rpta);
+                out this.TablaDetallePedido, out DataTable dtDetallePlatosPedido, out string rpta);
 
             foreach (DataRow row in this.TablaDetallePedido.Rows)
             {
@@ -87,11 +90,12 @@ namespace CapaPresentacion
                 if (tipo.Equals("PLATO"))
                 {
                     StringBuilder info = new StringBuilder();
-                    info.Append("-" + nombre).Append(": ").Append(Environment.NewLine);
+                    info.Append("-" + nombre);
 
                     DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_tipo = {0}", id_tipo));
                     if (find.Length > 0)
                     {
+                        info.Append(": ").Append(Environment.NewLine);
                         foreach (DataRow re in find)
                         {
                             Ingredientes ing = new Ingredientes(re);
@@ -99,6 +103,7 @@ namespace CapaPresentacion
                         }
                     }
 
+                    info.Append(Environment.NewLine);
                     row["Nombre"] = info.ToString();
                 }
             }
