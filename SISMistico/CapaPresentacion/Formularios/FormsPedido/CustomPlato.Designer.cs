@@ -35,18 +35,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.listaSopa = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.listaArroz = new System.Windows.Forms.ComboBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.listaProteina = new System.Windows.Forms.ComboBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.listaAcompanante = new System.Windows.Forms.ComboBox();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.gbBebida = new System.Windows.Forms.GroupBox();
             this.listaBebidas = new System.Windows.Forms.ComboBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            this.groupBox6.SuspendLayout();
+            this.gbBebida.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -57,7 +54,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(547, 7);
+            this.panel1.Size = new System.Drawing.Size(441, 7);
             this.panel1.TabIndex = 0;
             // 
             // groupBox1
@@ -89,7 +86,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox2.Controls.Add(this.listaArroz);
             this.groupBox2.Location = new System.Drawing.Point(194, 9);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(163, 60);
+            this.groupBox2.Size = new System.Drawing.Size(176, 60);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Arroz";
@@ -105,39 +102,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.listaArroz.FormattingEnabled = true;
             this.listaArroz.Location = new System.Drawing.Point(6, 22);
             this.listaArroz.Name = "listaArroz";
-            this.listaArroz.Size = new System.Drawing.Size(151, 29);
+            this.listaArroz.Size = new System.Drawing.Size(164, 29);
             this.listaArroz.TabIndex = 0;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.listaProteina);
-            this.groupBox3.Location = new System.Drawing.Point(3, 69);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(185, 60);
-            this.groupBox3.TabIndex = 4;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Proteína";
-            // 
-            // listaProteina
-            // 
-            this.listaProteina.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listaProteina.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.listaProteina.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.listaProteina.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.listaProteina.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.listaProteina.FormattingEnabled = true;
-            this.listaProteina.Location = new System.Drawing.Point(6, 22);
-            this.listaProteina.Name = "listaProteina";
-            this.listaProteina.Size = new System.Drawing.Size(173, 29);
-            this.listaProteina.TabIndex = 0;
             // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.listaAcompanante);
-            this.groupBox4.Location = new System.Drawing.Point(363, 9);
+            this.groupBox4.Location = new System.Drawing.Point(3, 72);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(176, 60);
+            this.groupBox4.Size = new System.Drawing.Size(185, 60);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Acompañantes";
@@ -153,18 +126,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.listaAcompanante.FormattingEnabled = true;
             this.listaAcompanante.Location = new System.Drawing.Point(6, 22);
             this.listaAcompanante.Name = "listaAcompanante";
-            this.listaAcompanante.Size = new System.Drawing.Size(164, 29);
+            this.listaAcompanante.Size = new System.Drawing.Size(173, 29);
             this.listaAcompanante.TabIndex = 0;
             // 
-            // groupBox6
+            // gbBebida
             // 
-            this.groupBox6.Controls.Add(this.listaBebidas);
-            this.groupBox6.Location = new System.Drawing.Point(194, 69);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(163, 60);
-            this.groupBox6.TabIndex = 7;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "Bebida";
+            this.gbBebida.Controls.Add(this.listaBebidas);
+            this.gbBebida.Location = new System.Drawing.Point(194, 72);
+            this.gbBebida.Name = "gbBebida";
+            this.gbBebida.Size = new System.Drawing.Size(176, 60);
+            this.gbBebida.TabIndex = 7;
+            this.gbBebida.TabStop = false;
+            this.gbBebida.Text = "Bebida";
             // 
             // listaBebidas
             // 
@@ -177,7 +150,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.listaBebidas.FormattingEnabled = true;
             this.listaBebidas.Location = new System.Drawing.Point(6, 22);
             this.listaBebidas.Name = "listaBebidas";
-            this.listaBebidas.Size = new System.Drawing.Size(151, 29);
+            this.listaBebidas.Size = new System.Drawing.Size(164, 29);
             this.listaBebidas.TabIndex = 0;
             // 
             // btnSave
@@ -191,7 +164,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSave.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSave.Location = new System.Drawing.Point(489, 79);
+            this.btnSave.Location = new System.Drawing.Point(376, 82);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(50, 50);
             this.btnSave.TabIndex = 25;
@@ -203,9 +176,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.btnSave);
-            this.Controls.Add(this.groupBox6);
+            this.Controls.Add(this.gbBebida);
             this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.panel1);
@@ -213,12 +185,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "CustomPlato";
-            this.Size = new System.Drawing.Size(547, 135);
+            this.Size = new System.Drawing.Size(441, 135);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
-            this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
-            this.groupBox6.ResumeLayout(false);
+            this.gbBebida.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -230,11 +201,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.ComboBox listaSopa;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.ComboBox listaArroz;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.ComboBox listaProteina;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.ComboBox listaAcompanante;
-        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.GroupBox gbBebida;
         private System.Windows.Forms.ComboBox listaBebidas;
         private System.Windows.Forms.Button btnSave;
     }

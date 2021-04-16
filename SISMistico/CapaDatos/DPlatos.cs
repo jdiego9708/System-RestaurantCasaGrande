@@ -149,6 +149,16 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Plato_detallado);
+                contador += 1;
+
+                SqlParameter Plato_carta = new SqlParameter
+                {
+                    ParameterName = "@Plato_carta",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Plato_carta);
 
                 //Ejecutamos nuestro comando
                 //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql
@@ -284,6 +294,15 @@ namespace CapaDatos
                     Value = DPlatos.Variables[contador].Trim()
                 };
                 SqlCmd.Parameters.Add(Plato_detallado);
+
+                SqlParameter Plato_carta = new SqlParameter
+                {
+                    ParameterName = "@Plato_carta",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = DPlatos.Variables[contador].Trim()
+                };
+                SqlCmd.Parameters.Add(Plato_carta);
 
                 //Ejecutamos nuestro comando
                 //Se puede ejecutar este metodo pero ya tenemos el mensaje que devuelve sql

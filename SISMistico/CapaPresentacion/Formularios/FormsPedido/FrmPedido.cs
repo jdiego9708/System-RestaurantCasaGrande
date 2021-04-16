@@ -788,12 +788,15 @@
                 {
                     /**Como abrimos los detalles, se debe de generar el evento guardar 
                       * para agregarlo correctamente a la lista**/
+                    bool isEnabledBebida = plato.Plato_carta.Equals("ACTIVO") ? false : true;
+
                     FrmDetallePedidoPlato frmDetallePedidoPlato = new FrmDetallePedidoPlato
                     {
                         StartPosition = FormStartPosition.CenterScreen,
                         MaximizeBox = false,
                         MinimizeBox = false,
                         Product = product,
+                        IsEnabledBebida = isEnabledBebida,
                     };
                     frmDetallePedidoPlato.OnBtnSaveClick += FrmDetallePedidoPlato_OnBtnSaveClick;
                     frmDetallePedidoPlato.ShowDialog();

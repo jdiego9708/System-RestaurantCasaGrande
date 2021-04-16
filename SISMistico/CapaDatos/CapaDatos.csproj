@@ -48,6 +48,7 @@
     <Compile Include="Conexion.cs" />
     <Compile Include="DBebidas.cs" />
     <Compile Include="DClientes.cs" />
+    <Compile Include="DTurnos.cs" />
     <Compile Include="DIngresos.cs" />
     <Compile Include="DEgresos.cs" />
     <Compile Include="DIngredientes.cs" />

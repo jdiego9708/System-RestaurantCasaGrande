@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using CapaEntidades.Models;
 using CapaNegocio;
 
 namespace CapaPresentacion.Formularios.FormsPlatos
@@ -38,6 +38,14 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.txtPrecio.SelectAll();
         }
 
+        private void AsignarDatos(Platos plato)
+        {
+            this.IsEditar = true;
+            this.adjuntarImagen.IsEditar = true;
+            this.ListaPlatos =
+              LlenarListas.LlenarListaTipoPlatos(this.ListaPlatos);
+        }
+
         public void ObtenerDatos(List<string> datos)
         {
             this.IsEditar = true;
@@ -51,12 +59,19 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.adjuntarImagen.AsignarImagen(datos[4]);
             this.txtDescripcion.Text = datos[5];
             this.txtPrecio.Text = datos[3];
-            this.chkIngredientes.Checked = datos[7] == "ACTIVO" ? true : false; 
+            this.chkIngredientes.Checked = datos[7] == "ACTIVO" ? true : false;
         }
 
-        private string[] Variables()
+        private bool Comprobaciones(out string[] variables)
         {
-            string[] variables = null;
+            bool result = true;
+            variables = null;
+
+            if (!int.TryParse(Convert.ToString(this.ListaPlatos.SelectedValue), out int id_tipo_plato))
+            {
+                Mensajes.MensajeInformacion("Verifique el tipo de plato seleccionado");
+                return false;
+            }
 
             if (this.IsEditar)
             {
@@ -64,12 +79,13 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                 {
                     Convert.ToString(this.Tag),
                     this.txtNombre.Text,
-                    Convert.ToString(this.ListaPlatos.SelectedValue),
+                    id_tipo_plato.ToString(),
                     this.txtPrecio.Text,
                     this.adjuntarImagen.Nombre_imagen,
                     this.txtDescripcion.Text,
                     "ACTIVO",
-                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO"
+                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO",
+                    this.chkCarta.Checked ? "ACTIVO" : "INACTIVO"
                 };
             }
             else
@@ -77,20 +93,16 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                 variables = new string[]
                 {
                     this.txtNombre.Text,
-                    Convert.ToString(this.ListaPlatos.SelectedValue),
+                    id_tipo_plato.ToString(),
                     this.txtPrecio.Text,
                     this.adjuntarImagen.Nombre_imagen,
                     this.txtDescripcion.Text,
                     "ACTIVO",
-                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO"
+                    this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO",
+                    this.chkCarta.Checked ? "ACTIVO" : "INACTIVO"
                 };
             }
-            return variables;
-        }
 
-        private bool Comprobaciones()
-        {
-            bool result = true;
             List<Control> listaControles = new List<Control>();
             listaControles.Add(this.txtNombre);
             listaControles.Add(this.ListaPlatos);
@@ -128,17 +140,17 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             string mensaje = "";
             try
             {
-                if (this.Comprobaciones())
+                if (this.Comprobaciones(out string[] variables))
                 {
                     int id_plato = 0;
                     if (this.IsEditar)
                     {
-                        rpta = NPlatos.EditarPlatos(this.Variables());
+                        rpta = NPlatos.EditarPlatos(variables);
                         mensaje = "actualizó";
                     }
                     else
                     {
-                        rpta = NPlatos.InsertarPlatos(this.Variables(), out id_plato);
+                        rpta = NPlatos.InsertarPlatos(variables, out id_plato);
                         mensaje = "agregó";
                     }
 
@@ -162,11 +174,6 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                         }
                     }
                 }
-                else
-                {
-                    throw new Exception(rpta);
-                }
-
             }
             catch (Exception ex)
             {
@@ -211,6 +218,19 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             }
         }
 
+        private CapaEntidades.Models.Platos _plato; 
+
         private bool IsEditar = false;
+
+        public Platos Plato
+        {
+            get => _plato;
+            set
+            {
+                _plato = value;
+                this.AsignarDatos(value);
+            }
+        }
+
     }
 }

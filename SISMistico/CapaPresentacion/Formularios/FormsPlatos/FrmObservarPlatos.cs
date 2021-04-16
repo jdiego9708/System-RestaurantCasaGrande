@@ -47,15 +47,15 @@ namespace CapaPresentacion.Formularios.FormsPlatos
         {
             try
             {
-                DataGridViewRow row = this.dgvPlatos.CurrentRow;
+                DataGridViewRow rowGrid = this.dgvPlatos.CurrentRow;
+                DataRow row = ((DataRowView)rowGrid.DataBoundItem).Row;
                 if (this.dgvPlatos.Enabled && this.dgvPlatos.Focused && row != null)
                 {
                     string rpta = "OK";
                     int fila = this.dgvPlatos.CurrentRow.Cells[0].RowIndex;
                     if (this.FrmAgregarPlato != null)
                     {
-                        this.FrmAgregarPlato.ObtenerDatos
-                            (DatagridString.ReturnValuesOfCells(sender, fila, out rpta));
+                        this.FrmAgregarPlato.Plato = new CapaEntidades.Models.Platos(row);
                     }
                     else if (this.agregarDetallePlato != null)
                     {
@@ -68,7 +68,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                             "Continuar", "Cancelar", out DialogResult dialog);
                         if (dialog == DialogResult.Yes)
                         {
-                            int id_plato = Convert.ToInt32(row.Cells["Id_plato"].Value);
+                            int id_plato = Convert.ToInt32(row["Id_plato"]);
                             rpta = NPlatos.InactivarPlato(id_plato);
                             if (rpta.Equals("OK"))
                             {
@@ -117,12 +117,12 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     string[] columns_header_text =
                     {
                         "Id plato", "Nombre", "Id tipo", "Precio", "Imagen",
-                        "Descripción", "Estado", "Id tipo", "Tipo"
+                        "Descripción", "Estado","Plato detallado", "Plato carta", "Id tipo", "Tipo"
                     };
 
                     bool[] columns_visible =
 {
-                        false, true, false, true, false, true, false, false, true
+                        false, true, false, true, false, true, false, false, false, false, true
                     };
 
                     this.dgvPlatos =

@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="NBebidas.cs" />
     <Compile Include="NClientes.cs" />
+    <Compile Include="NTurnos.cs" />
     <Compile Include="NEgresos.cs" />
     <Compile Include="NIngresos.cs" />
     <Compile Include="NIngredientes.cs" />

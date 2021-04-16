@@ -157,7 +157,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 {
                     resumenResultados.Append("No se encontraron detalles");
                 }
-
             }
             else
             {
@@ -181,19 +180,65 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
             if (dtEgresos != null)
             {
-                infoEgresos.Append("Descripción de los egresos: ").Append(Environment.NewLine);
-                int contador = 0;
-                foreach (DataRow row in dtEgresos.Rows)
+                if (dtEgresos.Rows.Count == 0)
                 {
-                    contador += 1;
-                    Egresos egreso = new Egresos(row);
-                    infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
-                    infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
-                    infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
+                    infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
+                }
+                else
+                {
+                    infoEgresos.Append("Descripción de los egresos: ").Append(Environment.NewLine);
+                    int contador = 0;
+                    foreach (DataRow row in dtEgresos.Rows)
+                    {
+                        contador += 1;
+                        Egresos egreso = new Egresos(row);
+                        infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
+                        infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
+                        infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
+                    }
                 }
             }
             else
-                infoEgresos.Append("No hay descrición adicional");
+                infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
+
+            DataTable dtNomina;
+
+            if (isRango)
+            {
+                var result = await NNomina.BuscarNomina("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+                dtNomina = result.dtNomina;
+            }
+            else
+            {
+                var result = await NNomina.BuscarNomina("FECHA", date1.ToString("yyyy-MM-dd"));
+                dtNomina = result.dtNomina;
+            }
+
+            if (dtNomina != null)
+            {
+                if (dtNomina.Rows.Count == 0)
+                {
+                    infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
+                }
+                else
+                {
+                    infoEgresos.Append("Descripción de la nómina: ").Append(Environment.NewLine);
+                    int contador = 0;
+                    foreach (DataRow row in dtNomina.Rows)
+                    {
+                        contador += 1;
+                        EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
+                        if (nomina.Estado_nomina.Equals("TERMINADO"))
+                        {
+                            infoEgresos.Append(contador + ") Fecha: ").Append(nomina.Fecha_nomina.ToLongDateString()).Append(" - ");
+                            infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(" - ");
+                            infoEgresos.Append("Observaciones: ").Append(nomina.Observaciones).Append(Environment.NewLine);
+                        }
+                    }
+                }
+            }
+            else
+                infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
 
             this.InformacionEmpleado = informacionEmpleado;
             this.CantidadPedidos = cantidadPedidos;
@@ -225,7 +270,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             };
             this.gbReporte.Controls.Add(this.reportViewer1);
             this.reportViewer1.LocalReport.ReportEmbeddedResource =
-            "CapaPresentacion.Formularios.FormsEstadisticas.rptReporteDiario.rdlc";
+            "CapaPresentacion.Formularios.FormsEstadisticas.FrmReporteDiario.rptReporteDiario.rdlc";
 
             ReportParameter[] reportParameters = new ReportParameter[6];
             reportParameters[0] = new ReportParameter("InformacionEmpleado", InformacionEmpleado);

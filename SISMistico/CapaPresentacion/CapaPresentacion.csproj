@@ -221,11 +221,29 @@
     <Compile Include="Formularios\FormsEmpleados\FrmObservarEmpleados.Designer.cs">
       <DependentUpon>FrmObservarEmpleados.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario.cs">
+    <Compile Include="Formularios\FormsEstadisticas\FrmCentroEstadisticas.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario.Designer.cs">
+    <Compile Include="Formularios\FormsEstadisticas\FrmCentroEstadisticas.Designer.cs">
+      <DependentUpon>FrmCentroEstadisticas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario\FrmReporteDiario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteDiario\FrmReporteDiario.Designer.cs">
       <DependentUpon>FrmReporteDiario.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteEgresos\FrmReporteEgresos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteEgresos\FrmReporteEgresos.Designer.cs">
+      <DependentUpon>FrmReporteEgresos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteNomina\FrmReporteNomina.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsEstadisticas\FrmReporteNomina\FrmReporteNomina.Designer.cs">
+      <DependentUpon>FrmReporteNomina.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsIngresos\FrmNuevoIngreso.cs">
       <SubType>Form</SubType>
@@ -517,6 +535,12 @@
     <Compile Include="Formularios\FormsReservas\ReservaMesaSmall.Designer.cs">
       <DependentUpon>ReservaMesaSmall.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReportesFacturas\GastosTurno\FrmReporteGastos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportesFacturas\GastosTurno\FrmReporteGastos.Designer.cs">
+      <DependentUpon>FrmReporteGastos.cs</DependentUpon>
+    </Compile>
     <Compile Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -725,10 +749,20 @@
     <EmbeddedResource Include="Formularios\FormsEmpleados\FrmObservarEmpleados.resx">
       <DependentUpon>FrmObservarEmpleados.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteDiario.resx">
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmCentroEstadisticas.resx">
+      <DependentUpon>FrmCentroEstadisticas.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteDiario\FrmReporteDiario.resx">
       <DependentUpon>FrmReporteDiario.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsEstadisticas\rptReporteDiario.rdlc" />
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteDiario\rptReporteDiario.rdlc" />
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteEgresos\FrmReporteEgresos.resx">
+      <DependentUpon>FrmReporteEgresos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteEgresos\rptReporteEgresos.rdlc" />
+    <EmbeddedResource Include="Formularios\FormsEstadisticas\FrmReporteNomina\FrmReporteNomina.resx">
+      <DependentUpon>FrmReporteNomina.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsIngresos\FrmNuevoIngreso.resx">
       <DependentUpon>FrmNuevoIngreso.cs</DependentUpon>
     </EmbeddedResource>
@@ -916,6 +950,10 @@
     <EmbeddedResource Include="ReportesFacturas\FacturaFinal\FrmFacturaFinal.resx">
       <DependentUpon>FrmFacturaFinal.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\GastosTurno\FrmReporteGastos.resx">
+      <DependentUpon>FrmReporteGastos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\GastosTurno\rptComprobanteGasto.rdlc" />
     <EmbeddedResource Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.resx">
       <DependentUpon>FrmReporteNominaEmpleado.cs</DependentUpon>
     </EmbeddedResource>
@@ -994,6 +1032,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\No hay domicilios.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Formularios\FormsEstadisticas\FrmReporteIngresos\" />
+    <Folder Include="Formularios\FormsEstadisticas\FrmReporteVentas\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

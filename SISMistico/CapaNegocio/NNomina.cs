@@ -39,6 +39,13 @@ namespace CapaNegocio
             return await DNomina.BuscarNomina(tipo_busqueda, texto_busqueda);
         }
 
+        public static async Task<(string rpta, DataTable dtNomina)> BuscarNomina(string tipo_busqueda, string texto_busqueda1, 
+            string texto_busqueda2)
+        {
+            DNomina DNomina = new DNomina();
+            return await DNomina.BuscarNomina(tipo_busqueda, texto_busqueda1, texto_busqueda2);
+        }
+
         #endregion
 
         #region BUSCAR ESTADISTICA DIARIA

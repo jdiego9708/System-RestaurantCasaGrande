@@ -127,7 +127,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Restaurante Casa Grande - Precuenta</Value>
+                    <Value>Restaurante Casa Grande</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>12pt</FontSize>
@@ -176,7 +176,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Regimen simplificado</Value>
+                    <Value>Regimen común</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>8pt</FontSize>
@@ -272,7 +272,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=First("Pedido número: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
+                    <Value>=First("Documento equivalente: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>Normal</FontWeight>
@@ -525,7 +525,7 @@
                           <rd:DefaultName>Textbox9</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -560,7 +560,7 @@
                           <rd:DefaultName>Textbox10</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -595,7 +595,7 @@
                           <rd:DefaultName>Textbox11</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -630,7 +630,7 @@
                           <rd:DefaultName>Textbox12</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -668,7 +668,7 @@
                           <rd:DefaultName>Nombre</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -703,7 +703,7 @@
                           <rd:DefaultName>Precio</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -738,7 +738,7 @@
                           <rd:DefaultName>Cantidad</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -773,7 +773,7 @@
                           <rd:DefaultName>Total</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>LightGrey</Color>
+                              <Color>DimGray</Color>
                               <Style>Solid</Style>
                             </Border>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -1055,18 +1055,6 @@
                 </TextRuns>
                 <Style />
               </Paragraph>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>Autorización resolución DIAN 18762002374004 del 2017/02/27</Value>
-                    <Style>
-                      <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style />
-              </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox17</rd:DefaultName>
             <Top>9.66038cm</Top>
@@ -1102,7 +1090,7 @@
                 </Style>
               </Paragraph>
             </Paragraphs>
-            <Top>3.5639cm</Top>
+            <Top>3.59918cm</Top>
             <Left>0.07055cm</Left>
             <Height>0.52063cm</Height>
             <Width>3.89555cm</Width>

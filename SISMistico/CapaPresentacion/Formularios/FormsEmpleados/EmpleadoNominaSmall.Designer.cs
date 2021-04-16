@@ -99,7 +99,6 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             this.txtTotalPropinas.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.txtTotalPropinas.Location = new System.Drawing.Point(6, 22);
             this.txtTotalPropinas.Name = "txtTotalPropinas";
-            this.txtTotalPropinas.ReadOnly = true;
             this.txtTotalPropinas.Size = new System.Drawing.Size(120, 20);
             this.txtTotalPropinas.TabIndex = 0;
             this.txtTotalPropinas.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;

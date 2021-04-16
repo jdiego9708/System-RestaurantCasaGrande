@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CapaDatos;
 using System.Data;
 using CapaEntidades.Models;
+using CapaEntidades.Helpers;
 
 namespace CapaNegocio
 {
@@ -43,6 +44,12 @@ namespace CapaNegocio
         {
             DEgresos DEgresos = new DEgresos();
             return await DEgresos.BuscarEgreso(tipo_busqueda, texto_busqueda1, texto_busqueda2);
+        }
+
+        public static async Task<(string rpta, DataTable dtEgresos)> BuscarEgresos(ModelHelperSearch modelSearch)
+        {
+            DEgresos DEgresos = new DEgresos();
+            return await DEgresos.BuscarEgreso(modelSearch);
         }
 
         #endregion

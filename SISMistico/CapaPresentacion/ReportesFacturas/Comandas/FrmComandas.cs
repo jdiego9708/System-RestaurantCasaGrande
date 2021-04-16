@@ -38,16 +38,8 @@ namespace CapaPresentacion
                 DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
                 int num = datos.NumeroComandas + 1;
 
-                string observaciones = "";
-                foreach (DataRow row in this.TablaDetallePedido.Rows)
-                {
-                    string obs = Convert.ToString(row["Observaciones"]);
-                    if (!string.IsNullOrEmpty(obs))
-                        observaciones += " - " + obs;
-                }
-
                 ReportParameter[] reportParameters = new ReportParameter[3];
-                reportParameters[0] = new ReportParameter("parameterObservaciones", observaciones);
+                reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
                 reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
                 reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
@@ -62,7 +54,7 @@ namespace CapaPresentacion
 
                 int contador = 0;
                 while (contador != Repetir)
-                {                   
+                {
                     objImpresion.Imprimir(reportViewer1.LocalReport);
                     objImpresion.Dispose();
 
@@ -81,12 +73,16 @@ namespace CapaPresentacion
                 NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE", Convert.ToString(this.Id_pedido),
                 out this.TablaDetallePedido, out DataTable dtDetallePlatosPedido, out string rpta);
 
+            int cantidad_productos = 0;
             foreach (DataRow row in this.TablaDetallePedido.Rows)
             {
                 int id_tipo = Convert.ToInt32(row["Id_tipo"]);
                 string tipo = Convert.ToString(row["Tipo"]);
                 string nombre = Convert.ToString(row["Nombre"]);
-
+                string observaciones = Convert.ToString(row["Observaciones"]);
+                int cantidad = Convert.ToInt32(row["Cantidad"]);
+                cantidad_productos += cantidad;
+            
                 if (tipo.Equals("PLATO"))
                 {
                     StringBuilder info = new StringBuilder();
@@ -101,16 +97,50 @@ namespace CapaPresentacion
                             Ingredientes ing = new Ingredientes(re);
                             info.Append(ing.Nombre_ingrediente).Append(Environment.NewLine);
                         }
+
+                        if (!string.IsNullOrEmpty(observaciones))
+                            info.Append("**" + observaciones);
+                    }
+                    else
+                    {
+                        info.Append(Environment.NewLine);
+
+                        if (!string.IsNullOrEmpty(observaciones))
+                            info.Append("**" + observaciones);
                     }
 
-                    info.Append(Environment.NewLine);
                     row["Nombre"] = info.ToString();
                 }
+                else
+                {
+                    if (!string.IsNullOrEmpty(observaciones))
+                        nombre += Environment.NewLine + "**" + observaciones;
+
+                    row["Nombre"] = nombre;
+                }
             }
+
+            this.ObservacionesGeneral = "Cantidad de platos/bebidas " + cantidad_productos;
         }
 
         public void AsignarTablas(DataTable detallepedido)
         {
+            int cantidad_productos = 0;
+            foreach (DataRow row in detallepedido.Rows)
+            {
+                int cantidad = Convert.ToInt32(row["Cantidad"]);
+                string nombre = Convert.ToString(row["Nombre"]);
+                string observaciones = Convert.ToString(row["Observaciones"]);
+                cantidad_productos += cantidad;
+
+                if (!string.IsNullOrEmpty(observaciones))
+                    nombre += Environment.NewLine + "**" + observaciones;
+
+                row["Nombre"] = nombre;
+            }
+
+            this.ObservacionesGeneral = "Cantidad de platos/bebidas " + cantidad_productos;
+
             this.TablaDetallePedido = detallepedido;
 
             this.TablaDatosPedido =
@@ -122,7 +152,7 @@ namespace CapaPresentacion
         DataTable TablaDetallePedido;
         DataTable TablaDatosPedido;
         private int _id_pedido;
-
+        public string ObservacionesGeneral { get; set; }
         public int Id_pedido
         {
             get

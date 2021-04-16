@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 using CapaEntidades.Models;
+using CapaEntidades.Helpers;
 
 namespace CapaDatos
 {
@@ -378,6 +379,56 @@ namespace CapaDatos
                     Value = texto_busqueda2.Trim(),
                 };
                 Sqlcmd.Parameters.Add(Texto_busqueda2);
+
+                SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
+                await Task.Run(() => SqlData.Fill(dtNomina));
+            }
+            catch (SqlException ex)
+            {
+                rpta = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                rpta = ex.Message;
+            }
+            finally
+            {
+                if (SqlCon.State == ConnectionState.Open)
+                    SqlCon.Close();
+            }
+
+            return (rpta, dtNomina);
+        }
+
+        public async Task<(string rpta, DataTable dtEgresos)> BuscarEgreso(ModelHelperSearch modelSearch)
+        {
+            string rpta = "OK";
+            DataTable dtNomina = new DataTable("Egresos");
+            SqlConnection SqlCon = new SqlConnection();
+            SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
+            SqlCon.FireInfoMessageEventOnUserErrors = true;
+            try
+            {
+                SqlCon.ConnectionString = Conexion.Cn;
+                await SqlCon.OpenAsync();
+                SqlCommand Sqlcmd = new SqlCommand
+                {
+                    Connection = SqlCon,
+                    CommandText = "sp_Buscar_egreso",
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                foreach (ParameterSQLModel param in modelSearch.ParametrosBusqueda)
+                {
+                    SqlParameter sqlParameter = new SqlParameter
+                    {
+                        ParameterName = param.ParameterName,
+                        SqlDbType = ValidationType.ConvertTypeParameter(param.ParameterValue),
+                        Value = param.ParameterValue,
+                    };
+
+                    Sqlcmd.Parameters.Add(sqlParameter);
+                }
 
                 SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
                 await Task.Run(() => SqlData.Fill(dtNomina));

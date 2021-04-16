@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\ModelHelperSearch.cs" />
+    <Compile Include="Helpers\ValidationType.cs" />
     <Compile Include="Models\Detalle_ingredientes_pedido.cs" />
     <Compile Include="Models\Detalle_pedido.cs" />
     <Compile Include="Models\Ingredientes.cs" />
@@ -52,13 +54,12 @@
     <Compile Include="Models\Empleados.cs" />
     <Compile Include="Models\Egresos.cs" />
     <Compile Include="Models\Ingresos.cs" />
+    <Compile Include="Models\Response.cs" />
     <Compile Include="Models\Tipo_platos.cs" />
     <Compile Include="Models\Tipo_bebidas.cs" />
     <Compile Include="Models\Turno.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

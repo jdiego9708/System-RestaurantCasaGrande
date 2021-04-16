@@ -28,6 +28,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
             CustomPlato customPlato = new CustomPlato
             {
                 Dock = DockStyle.Fill,
+                IsEnabledBebida = this.IsEnabledBebida,
             };
             await customPlato.LoadIngredientes();
             customPlato.OnBtnSaveClick += CustomPlato_OnBtnSaveClick;
@@ -45,5 +46,15 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
         }
 
         public ProductBinding Product { get; set; }
+
+        private bool _isEnabledBebida;
+        public bool IsEnabledBebida
+        {
+            get => _isEnabledBebida;
+            set
+            {
+                _isEnabledBebida = value;
+            }
+        }
     }
 }

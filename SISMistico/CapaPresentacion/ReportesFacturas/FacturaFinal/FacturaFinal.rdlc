@@ -9,7 +9,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Restaurante Casa Grande - Factura</Value>
+                <Value>Restaurante Casa Grande</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>12pt</FontSize>
@@ -58,7 +58,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>Regimen simplificado</Value>
+                <Value>Regimen común</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>8pt</FontSize>
@@ -154,7 +154,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-                <Value>=First("Pedido número: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
+                <Value>=First("Documento equivalente: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>8pt</FontSize>
@@ -413,7 +413,7 @@
                       <rd:DefaultName>Textbox9</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -449,7 +449,7 @@
                       <rd:DefaultName>Textbox10</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -485,7 +485,7 @@
                       <rd:DefaultName>Textbox11</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -521,7 +521,7 @@
                       <rd:DefaultName>Textbox12</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -559,7 +559,7 @@
                       <rd:DefaultName>Nombre</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -594,7 +594,7 @@
                       <rd:DefaultName>Precio</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -629,7 +629,7 @@
                       <rd:DefaultName>Cantidad</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -664,7 +664,7 @@
                       <rd:DefaultName>Total</rd:DefaultName>
                       <Style>
                         <Border>
-                          <Color>LightGrey</Color>
+                          <Color>DimGray</Color>
                           <Style>Solid</Style>
                         </Border>
                         <PaddingLeft>2pt</PaddingLeft>
@@ -771,7 +771,7 @@
           </Paragraph>
         </Paragraphs>
         <Top>5.88453cm</Top>
-        <Left>3.94847cm</Left>
+        <Left>3.92201cm</Left>
         <Height>0.6cm</Height>
         <Width>3.87799cm</Width>
         <ZIndex>14</ZIndex>
@@ -1002,30 +1002,6 @@
             <TextRuns>
               <TextRun>
                 <Value>SI____   NO_____  MONTO: _____________</Value>
-                <Style>
-                  <FontFamily>Segoe UI</FontFamily>
-                  <FontSize>7pt</FontSize>
-                </Style>
-              </TextRun>
-            </TextRuns>
-            <Style />
-          </Paragraph>
-          <Paragraph>
-            <TextRuns>
-              <TextRun>
-                <Value />
-                <Style>
-                  <FontFamily>Segoe UI</FontFamily>
-                  <FontSize>7pt</FontSize>
-                </Style>
-              </TextRun>
-            </TextRuns>
-            <Style />
-          </Paragraph>
-          <Paragraph>
-            <TextRuns>
-              <TextRun>
-                <Value>Autorización resolución DIAN 18762002374004 del 2017/02/27</Value>
                 <Style>
                   <FontFamily>Segoe UI</FontFamily>
                   <FontSize>7pt</FontSize>

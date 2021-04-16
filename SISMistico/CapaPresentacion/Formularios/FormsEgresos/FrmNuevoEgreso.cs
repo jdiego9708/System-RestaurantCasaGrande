@@ -1,5 +1,6 @@
 ﻿using CapaEntidades.Models;
 using CapaNegocio;
+using CapaPresentacion.ReportesFacturas.GastosTurno;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -100,6 +101,26 @@ namespace CapaPresentacion.Formularios.FormsEgresos
                     {
                         Mensajes.MensajeInformacion("Se guardó correctamente el egreso", "Entendido");
                         egreso.Id_egreso = id_egreso;
+
+                        StringBuilder infoEmpleado = new StringBuilder();
+                        infoEmpleado.Append("Nombre de quien genera el egreso " + egreso.Empleado.Nombre_empleado).Append(Environment.NewLine);
+                        infoEmpleado.Append("Identificación " + egreso.Empleado.Identificacion_empleado).Append(Environment.NewLine);
+
+                        StringBuilder infoGasto = new StringBuilder();
+                        infoEmpleado.Append("Concepto/Observaciones del egreso:").Append(Environment.NewLine);
+                        infoEmpleado.Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
+
+                        FrmReporteGastos frmReporteGastos = new FrmReporteGastos
+                        {
+                            FechaHora = egreso.Fecha_egreso.ToLongDateString() + " - " + DateTime.Now.ToLongTimeString(),
+                            InformacionEmpleado = infoEmpleado.ToString(),
+                            InformacionGasto = infoGasto.ToString(),
+                            Valor_gasto = egreso.Valor_egreso.ToString("C"),
+                            Observaciones = string.Empty,
+                        };
+                        frmReporteGastos.ObtenerReporte();
+                        frmReporteGastos.ImprimirFactura(1);
+
                         this.OnEgresoSuccess?.Invoke(egreso, e);
                         this.Close();
                     }

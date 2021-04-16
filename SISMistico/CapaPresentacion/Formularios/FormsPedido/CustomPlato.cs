@@ -103,31 +103,31 @@
             }
 
             //OBTENER EL ID DE LA PROTEINA
-            if (!int.TryParse(Convert.ToString(this.listaProteina.SelectedValue), out int id_proteina))
-            {
-                Mensajes.MensajeInformacion("Compruebe la proteína seleccionada");
-                return false;
-            }
-            else
-            {
-                //OBTENER LA ENTIDAD DE LA PROTEINA
-                DataRow[] rows =
-                    this.DtIngredientes.Select(string.Format("Id_ingrediente = {0}", id_proteina));
-                if (rows.Length > 0)
-                {
-                    detalles.Add(new ProductDetalleBinding
-                    {
-                        Id_ingrediente = id_proteina,
-                        Ingrediente = new CapaEntidades.Models.Ingredientes(rows[0]),
-                        Observaciones = string.Empty,
-                    });
-                }
-                else
-                {
-                    Mensajes.MensajeInformacion("Hubo un error obteniendo el tipo de ingrediente");
-                    return false;
-                }
-            }
+            //if (!int.TryParse(Convert.ToString(this.listaProteina.SelectedValue), out int id_proteina))
+            //{
+            //    Mensajes.MensajeInformacion("Compruebe la proteína seleccionada");
+            //    return false;
+            //}
+            //else
+            //{
+            //    //OBTENER LA ENTIDAD DE LA PROTEINA
+            //    DataRow[] rows =
+            //        this.DtIngredientes.Select(string.Format("Id_ingrediente = {0}", id_proteina));
+            //    if (rows.Length > 0)
+            //    {
+            //        detalles.Add(new ProductDetalleBinding
+            //        {
+            //            Id_ingrediente = id_proteina,
+            //            Ingrediente = new CapaEntidades.Models.Ingredientes(rows[0]),
+            //            Observaciones = string.Empty,
+            //        });
+            //    }
+            //    else
+            //    {
+            //        Mensajes.MensajeInformacion("Hubo un error obteniendo el tipo de ingrediente");
+            //        return false;
+            //    }
+            //}
 
             //OBTENER EL ID DE LA BEBIDA
             if (!int.TryParse(Convert.ToString(this.listaBebidas.SelectedValue), out int id_bebida))
@@ -177,7 +177,6 @@
                 {
                     this.DtIngredientes = dtIngredientes;
                     this.listaSopa.DataSource = null;
-                    this.listaProteina.DataSource = null;
                     this.listaBebidas.DataSource = null;
                     this.listaArroz.DataSource = null;
                     this.listaAcompanante.DataSource = null;
@@ -216,15 +215,15 @@
                     }
 
                     //Cargar las proteinas
-                    view = new DataView(dtIngredientes);
-                    view.RowFilter = string.Format("Tipo_ingrediente = '{0}'", "PROTEINA");
-                    if (view.Count > 1)
-                    {
-                        this.listaProteina.DataSource = view;
-                        this.listaProteina.ValueMember = "Id_ingrediente";
-                        this.listaProteina.DisplayMember = "Nombre_ingrediente";
-                        view = null;
-                    }
+                    //view = new DataView(dtIngredientes);
+                    //view.RowFilter = string.Format("Tipo_ingrediente = '{0}'", "PROTEINA");
+                    //if (view.Count > 1)
+                    //{
+                    //    this.listaProteina.DataSource = view;
+                    //    this.listaProteina.ValueMember = "Id_ingrediente";
+                    //    this.listaProteina.DisplayMember = "Nombre_ingrediente";
+                    //    view = null;
+                    //}
 
                     //Cargar las bebidas
                     view = new DataView(dtIngredientes);
@@ -255,6 +254,7 @@
 
         private ProductDetalleBinding _productDetalle;
         private bool _isEditar;
+        private bool _isEnabledBebida;
 
         public ProductDetalleBinding ProductDetalle
         {
@@ -276,5 +276,15 @@
         }
 
         public DataTable DtIngredientes { get; set; }
+
+        public bool IsEnabledBebida
+        {
+            get => _isEnabledBebida;
+            set
+            {
+                _isEnabledBebida = value;
+                this.gbBebida.Visible = value;
+            }
+        }
     }
 }
