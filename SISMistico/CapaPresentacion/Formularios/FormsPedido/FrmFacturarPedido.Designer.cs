@@ -390,7 +390,7 @@
             // 
             this.panelDescuentos.Location = new System.Drawing.Point(565, 12);
             this.panelDescuentos.Name = "panelDescuentos";
-            this.panelDescuentos.Size = new System.Drawing.Size(428, 517);
+            this.panelDescuentos.Size = new System.Drawing.Size(626, 572);
             this.panelDescuentos.TabIndex = 25;
             // 
             // FrmFacturarPedido
@@ -398,7 +398,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(995, 533);
+            this.ClientSize = new System.Drawing.Size(1199, 592);
             this.Controls.Add(this.panelDescuentos);
             this.Controls.Add(this.txtCantidadPedidosCliente);
             this.Controls.Add(this.panelSubTotal);

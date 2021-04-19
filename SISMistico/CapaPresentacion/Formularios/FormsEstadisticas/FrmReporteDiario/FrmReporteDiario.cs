@@ -21,6 +21,12 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.Load += FrmReporteDiario_Load;
             this.date1.ValueChanged += Date1_ValueChanged;
             this.date2.ValueChanged += Date2_ValueChanged;
+            this.btnRefresh.Click += BtnRefresh_Click;
+        }
+
+        private async void BtnRefresh_Click(object sender, EventArgs e)
+        {
+            await this.LoadEstadistica(this.date1.Value, this.date2.Value);
         }
 
         private async void Date2_ValueChanged(object sender, EventArgs e)
@@ -73,6 +79,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
             DataTable dtEstadistica;
             DataTable dtDetalle;
+            DataTable dtPagos;
             bool isRango = false;
 
             if (date1.ToString("yyyy-MM-dd") == date2.ToString("yyyy-MM-dd"))
@@ -82,6 +89,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 await NNomina.EstadisticasDiarias(datos.Turno.Id_turno, date1.ToString("yyyy-MM-dd"));
                 dtEstadistica = result.dtEstadistica;
                 dtDetalle = result.dtDetalle;
+                dtPagos = result.dtPagos;
             }
             else
             {
@@ -90,73 +98,82 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 await NNomina.EstadisticasDiarias(date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
                 dtEstadistica = result.dtEstadistica;
                 dtDetalle = result.dtDetalle;
+                dtPagos = result.dtPagos;
             }
-
 
             if (dtEstadistica != null)
             {
                 Turno turno = new Turno(dtEstadistica.Rows[0]);
                 id_turno = "Identificación del turno: " + turno.Id_turno.ToString();
 
-
                 if (!isRango)
-                    resumenResultados.Append("Valor inicial: ").Append(turno.Valor_inicial.ToString("C")).Append(Environment.NewLine);
+                    resumenResultados.Append("Fecha: ").Append(turno.Fecha_turno.ToLongDateString()).Append(Environment.NewLine);
                 else
                     resumenResultados.Append("Entre ").Append(date1.ToLongDateString() + " y ").Append(date2.ToLongDateString()).Append(" se registra la siguiente información:").Append(Environment.NewLine);
 
                 resumenResultados.Append("Total ingresos: ").Append(turno.Total_ingresos.ToString("C")).Append(Environment.NewLine);
-                resumenResultados.Append("Total egresos: ").Append(turno.Total_egresos.ToString("C")).Append(Environment.NewLine);
+
+                if (this.chkInfoGastos.Checked)
+                    resumenResultados.Append("Total egresos: ").Append(turno.Total_egresos.ToString("C")).Append(Environment.NewLine);
+
                 resumenResultados.Append("Total ventas: ").Append(turno.Total_ventas.ToString("C")).Append(Environment.NewLine);
-                resumenResultados.Append("Total nomina: ").Append(turno.Total_nomina.ToString("C")).Append(Environment.NewLine);
+
+                if (this.chkInfoNomina.Checked)
+                    resumenResultados.Append("Total nomina: ").Append(turno.Total_nomina.ToString("C")).Append(Environment.NewLine);
+
                 resumenResultados.Append("Total: ").Append(turno.Total_turno.ToString("C")).Append(Environment.NewLine);
 
-                List<TipoResumen> resumen = new List<TipoResumen>();
-                //PLATOS Y BEBIDAS
-                foreach (DataRow row in dtDetalle.Rows)
+                if (this.chkInfoDetalleVentas.Checked)
                 {
-                    int id_tipo = Convert.ToInt32(row["Id_tipo"]);
-                    int cantidad = Convert.ToInt32(row["Cantidad"]);
-                    string nombre = Convert.ToString(row["Nombre"]);
-                    decimal precio = Convert.ToDecimal(row["Precio"]) * cantidad;
-
-                    List<TipoResumen> results = resumen.Where(x => x.Id_tipo == id_tipo).ToList();
-                    if (results.Count > 0)
+                    List<TipoResumen> resumen = new List<TipoResumen>();
+                    //PLATOS Y BEBIDAS
+                    foreach (DataRow row in dtDetalle.Rows)
                     {
-                        results[0].Cantidad += cantidad;
-                        results[0].Valor_total += precio;
+                        int id_tipo = Convert.ToInt32(row["Id_tipo"]);
+                        int cantidad = Convert.ToInt32(row["Cantidad"]);
+                        string nombre = Convert.ToString(row["Nombre"]);
+                        decimal precio = Convert.ToDecimal(row["Precio"]) * cantidad;
+
+                        List<TipoResumen> results = resumen.Where(x => x.Id_tipo == id_tipo).ToList();
+                        if (results.Count > 0)
+                        {
+                            results[0].Cantidad += cantidad;
+                            results[0].Valor_total += precio;
+                        }
+                        else
+                        {
+                            TipoResumen tipo = new TipoResumen
+                            {
+                                Id_tipo = id_tipo,
+                                Nombre = nombre,
+                                Cantidad = cantidad,
+                                Valor_total = precio,
+                            };
+                            resumen.Add(tipo);
+                        }
+                    }
+
+                    if (resumen.Count > 0)
+                    {
+                        IOrderedEnumerable<TipoResumen> detallesOrdenados = from s in resumen
+                                                                            orderby s.Cantidad descending
+                                                                            select s;
+
+                        resumenResultados.Append("Detalles del día: ").Append(Environment.NewLine);
+
+                        foreach (TipoResumen re in detallesOrdenados)
+                        {
+                            resumenResultados.Append("* " + re.Nombre + " - Cantidad ").Append(re.Cantidad);
+                            resumenResultados.Append(" - Valor total: ").Append(re.Valor_total.ToString("C"));
+                            resumenResultados.Append(Environment.NewLine);
+                        }
                     }
                     else
                     {
-                        TipoResumen tipo = new TipoResumen
-                        {
-                            Id_tipo = id_tipo,
-                            Nombre = nombre,
-                            Cantidad = cantidad,
-                            Valor_total = precio,
-                        };
-                        resumen.Add(tipo);
+                        resumenResultados.Append("No se encontraron detalles");
                     }
                 }
 
-                if (resumen.Count > 0)
-                {
-                    IOrderedEnumerable<TipoResumen> detallesOrdenados = from s in resumen
-                                            orderby s.Cantidad descending
-                                                  select s;
-
-                    resumenResultados.Append("Detalles del día: ").Append(Environment.NewLine);
-
-                    foreach (TipoResumen re in detallesOrdenados)
-                    {
-                        resumenResultados.Append("* " + re.Nombre + " - Cantidad ").Append(re.Cantidad);
-                        resumenResultados.Append(" - Valor total: ").Append(re.Valor_total.ToString("C"));
-                        resumenResultados.Append(Environment.NewLine);
-                    }
-                }
-                else
-                {
-                    resumenResultados.Append("No se encontraron detalles");
-                }
             }
             else
             {
@@ -164,81 +181,100 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             }
 
             StringBuilder infoEgresos = new StringBuilder();
-
-            DataTable dtEgresos = null;
-
-            if (isRango)
+            if (this.chkInfoGastos.Checked)
             {
-                var result = await NEgresos.BuscarEgresos("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
-                dtEgresos = result.dtEgresos;
-            }
-            else
-            {
-                var result = await NEgresos.BuscarEgresos("FECHA", date1.ToString("yyyy-MM-dd"));
-                dtEgresos = result.dtEgresos;
-            }
+                DataTable dtEgresos = null;
 
-            if (dtEgresos != null)
-            {
-                if (dtEgresos.Rows.Count == 0)
+                if (isRango)
                 {
-                    infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
+                    var result = await NEgresos.BuscarEgresos("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+                    dtEgresos = result.dtEgresos;
                 }
                 else
                 {
-                    infoEgresos.Append("Descripción de los egresos: ").Append(Environment.NewLine);
-                    int contador = 0;
-                    foreach (DataRow row in dtEgresos.Rows)
+                    var result = await NEgresos.BuscarEgresos("FECHA", date1.ToString("yyyy-MM-dd"));
+                    dtEgresos = result.dtEgresos;
+                }
+
+                if (dtEgresos != null)
+                {
+                    if (dtEgresos.Rows.Count == 0)
                     {
-                        contador += 1;
-                        Egresos egreso = new Egresos(row);
-                        infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
-                        infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
-                        infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
+                        infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
                     }
-                }
-            }
-            else
-                infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
-
-            DataTable dtNomina;
-
-            if (isRango)
-            {
-                var result = await NNomina.BuscarNomina("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
-                dtNomina = result.dtNomina;
-            }
-            else
-            {
-                var result = await NNomina.BuscarNomina("FECHA", date1.ToString("yyyy-MM-dd"));
-                dtNomina = result.dtNomina;
-            }
-
-            if (dtNomina != null)
-            {
-                if (dtNomina.Rows.Count == 0)
-                {
-                    infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
-                }
-                else
-                {
-                    infoEgresos.Append("Descripción de la nómina: ").Append(Environment.NewLine);
-                    int contador = 0;
-                    foreach (DataRow row in dtNomina.Rows)
+                    else
                     {
-                        contador += 1;
-                        EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
-                        if (nomina.Estado_nomina.Equals("TERMINADO"))
+                        infoEgresos.Append("Descripción de los egresos: ").Append(Environment.NewLine);
+                        int contador = 0;
+                        foreach (DataRow row in dtEgresos.Rows)
                         {
-                            infoEgresos.Append(contador + ") Fecha: ").Append(nomina.Fecha_nomina.ToLongDateString()).Append(" - ");
-                            infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(" - ");
-                            infoEgresos.Append("Observaciones: ").Append(nomina.Observaciones).Append(Environment.NewLine);
+                            contador += 1;
+                            Egresos egreso = new Egresos(row);
+                            infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
+                            infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
+                            infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
                         }
                     }
                 }
+                else
+                    infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
             }
-            else
-                infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
+
+            if (this.chkInfoNomina.Checked)
+            {
+                DataTable dtNomina;
+
+                if (isRango)
+                {
+                    var result = await NNomina.BuscarNomina("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+                    dtNomina = result.dtNomina;
+                }
+                else
+                {
+                    var result = await NNomina.BuscarNomina("FECHA", date1.ToString("yyyy-MM-dd"));
+                    dtNomina = result.dtNomina;
+                }
+
+                if (dtNomina != null)
+                {
+                    if (dtNomina.Rows.Count == 0)
+                    {
+                        infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
+                    }
+                    else
+                    {
+                        infoEgresos.Append("Descripción de la nómina: ").Append(Environment.NewLine);
+                        int contador = 0;
+                        foreach (DataRow row in dtNomina.Rows)
+                        {
+                            contador += 1;
+                            EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
+                            if (nomina.Estado_nomina.Equals("TERMINADO"))
+                            {
+                                infoEgresos.Append(contador + ") Fecha: ").Append(nomina.Fecha_nomina.ToLongDateString()).Append(" - ");
+                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(" - ");
+                                infoEgresos.Append("Observaciones: ").Append(nomina.Observaciones).Append(Environment.NewLine);
+                            }
+                        }
+                    }
+                }
+                else
+                    infoEgresos.Append("No hay nómina paga.").Append(Environment.NewLine);
+            }
+
+            if (this.chkInfoPagos.Checked)
+            {
+                StringBuilder infoPagos = new StringBuilder();
+                infoPagos.Append("Métodos de pago: ").Append(Environment.NewLine);
+                foreach (DataRow rowPago in dtPagos.Rows)
+                {
+                    int cantidad = Convert.ToInt32(rowPago["Cantidad"]);
+                    string metodo = Convert.ToString(rowPago["Metodo_pago"]);
+                    decimal total = Convert.ToInt32(rowPago["Total"]);
+                    infoPagos.Append("*").Append(metodo).Append(" - Cantidad " + cantidad + " por valor de " + total.ToString("C")).Append(Environment.NewLine);
+                }
+                resumenResultados.Append(infoPagos);
+            }
 
             this.InformacionEmpleado = informacionEmpleado;
             this.CantidadPedidos = cantidadPedidos;

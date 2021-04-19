@@ -492,12 +492,13 @@ namespace CapaDatos
         #endregion
 
         #region METODO ESTADÍSTICAS DIARIAS
-        public async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle)> BuscarEstadistica(int id_turno, string fecha)
+        public async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle, DataTable dtPagos)> BuscarEstadistica(int id_turno, string fecha)
         {
             string rpta = "OK";
             DataSet dsResultados = new DataSet();
             DataTable dtNomina = new DataTable("EstadisticaDiaria");
             DataTable dtDetalles = new DataTable("Detalles");
+            DataTable dtPagos = new DataTable("Pagos");
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
             SqlCon.FireInfoMessageEventOnUserErrors = true;
@@ -540,18 +541,21 @@ namespace CapaDatos
                 {
                     dtNomina = dsResultados.Tables[0];
                     dtDetalles = dsResultados.Tables[1];
+                    dtPagos = dsResultados.Tables[2];
                 }
             }
             catch (SqlException ex)
             {
                 dtDetalles = null;
                 dtNomina = null;
+                dtPagos = null;
                 rpta = ex.Message;
             }
             catch (Exception ex)
             {
                 dtDetalles = null;
                 dtNomina = null;
+                dtPagos = null;
                 rpta = ex.Message;
             }
             finally
@@ -560,15 +564,16 @@ namespace CapaDatos
                     SqlCon.Close();
             }
 
-            return (rpta, dtNomina, dtDetalles);
+            return (rpta, dtNomina, dtDetalles, dtPagos);
         }
 
-        public async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle)> BuscarEstadistica(string fecha1, string fecha2)
+        public async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle, DataTable dtPagos)> BuscarEstadistica(string fecha1, string fecha2)
         {
             string rpta = "OK";
             DataSet dsResultados = new DataSet();
             DataTable dtNomina = new DataTable("EstadisticaDiaria");
             DataTable dtDetalles = new DataTable("Detalles");
+            DataTable dtPagos = new DataTable("Pagos");
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
             SqlCon.FireInfoMessageEventOnUserErrors = true;
@@ -611,18 +616,21 @@ namespace CapaDatos
                 {
                     dtNomina = dsResultados.Tables[0];
                     dtDetalles = dsResultados.Tables[1];
+                    dtPagos = dsResultados.Tables[2];
                 }
             }
             catch (SqlException ex)
             {
                 dtDetalles = null;
                 dtNomina = null;
+                dtPagos = null;
                 rpta = ex.Message;
             }
             catch (Exception ex)
             {
                 dtDetalles = null;
                 dtNomina = null;
+                dtPagos = null;
                 rpta = ex.Message;
             }
             finally
@@ -631,7 +639,7 @@ namespace CapaDatos
                     SqlCon.Close();
             }
 
-            return (rpta, dtNomina, dtDetalles);
+            return (rpta, dtNomina, dtDetalles, dtPagos);
         }
 
         #endregion

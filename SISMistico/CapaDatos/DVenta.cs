@@ -195,26 +195,26 @@ namespace CapaDatos
                 {
                     if (detalle_pago != null)
                     {
+                        StringBuilder query = new StringBuilder();
                         foreach (DataRow row in detalle_pago.Rows)
                         {
                             string pago = Convert.ToString(row["Pago"]);
-                            int valor_pago = Convert.ToInt32(row["Valor_pago"]);
+                            decimal valor_pago = Convert.ToDecimal(row["Valor_pago"]);
                             string vaucher = Convert.ToString(row["Vaucher"]);
                             string observaciones = Convert.ToString(row["Observaciones"]);
 
-                            string query = "INSERT INTO Detalle_venta VALUES('" + id_venta + "','" + pago + "','" +
-                                valor_pago + "','" + vaucher + "','" + observaciones + "') ";
-
-                            SqlCmd = new SqlCommand
-                            {
-                                Connection = SqlCon,
-                                CommandText = query,
-                                CommandType = CommandType.Text
-                            };
-                            rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "ERROR";
-                            if (!rpta.Equals("OK"))
-                                break;
+                            query.Append("INSERT INTO Detalle_venta VALUES(" + id_venta + ",'" + pago + "'," +
+                                valor_pago + ",'" + vaucher + "','" + observaciones + "'); ");
+                           
                         }
+
+                        SqlCmd = new SqlCommand
+                        {
+                            Connection = SqlCon,
+                            CommandText = query.ToString(),
+                            CommandType = CommandType.Text
+                        };
+                        rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "ERROR";
                     }
                 }
                 else

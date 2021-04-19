@@ -50,13 +50,13 @@ namespace CapaNegocio
 
         #region BUSCAR ESTADISTICA DIARIA
 
-        public static async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle)> EstadisticasDiarias(int id_turno, string fecha)
+        public static async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle, DataTable dtPagos)> EstadisticasDiarias(int id_turno, string fecha)
         {
             DNomina DNomina = new DNomina();
             return await DNomina.BuscarEstadistica(id_turno, fecha);
         }
 
-        public static async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle)> EstadisticasDiarias(string fecha1, string fecha2)
+        public static async Task<(string rpta, DataTable dtEstadistica, DataTable dtDetalle, DataTable dtPagos)> EstadisticasDiarias(string fecha1, string fecha2)
         {
             DNomina DNomina = new DNomina();
             return await DNomina.BuscarEstadistica(fecha1, fecha2);

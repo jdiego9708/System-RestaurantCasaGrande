@@ -47,28 +47,19 @@
             this.label4 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.btnDefault = new System.Windows.Forms.Button();
-            this.txtDebito = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.txtEfectivo = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.chkEfectivo = new System.Windows.Forms.CheckBox();
-            this.rdCredito = new System.Windows.Forms.RadioButton();
-            this.rdDebito = new System.Windows.Forms.RadioButton();
             this.chkDesechables = new System.Windows.Forms.CheckBox();
             this.txtPrecioDesechables = new System.Windows.Forms.TextBox();
             this.txtDomicilio = new System.Windows.Forms.TextBox();
             this.chkDomicilio = new System.Windows.Forms.CheckBox();
+            this.panelMetodosPago = new CapaPresentacion.Controles.CustomGridPanel();
             this.gbCupon.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(2, 137);
+            this.label1.Location = new System.Drawing.Point(5, 87);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(176, 21);
@@ -82,7 +73,7 @@
             this.ListaDescuentos.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.ListaDescuentos.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ListaDescuentos.FormattingEnabled = true;
-            this.ListaDescuentos.Location = new System.Drawing.Point(5, 162);
+            this.ListaDescuentos.Location = new System.Drawing.Point(8, 112);
             this.ListaDescuentos.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.ListaDescuentos.Name = "ListaDescuentos";
             this.ListaDescuentos.Size = new System.Drawing.Size(128, 29);
@@ -91,7 +82,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(218, 24);
+            this.label2.Location = new System.Drawing.Point(359, 24);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(123, 21);
@@ -100,7 +91,7 @@
             // 
             // txtPropina
             // 
-            this.txtPropina.Location = new System.Drawing.Point(223, 50);
+            this.txtPropina.Location = new System.Drawing.Point(364, 50);
             this.txtPropina.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtPropina.Name = "txtPropina";
             this.txtPropina.Size = new System.Drawing.Size(125, 29);
@@ -110,7 +101,7 @@
             // gbCupon
             // 
             this.gbCupon.Controls.Add(this.txtCupon);
-            this.gbCupon.Location = new System.Drawing.Point(204, 129);
+            this.gbCupon.Location = new System.Drawing.Point(364, 87);
             this.gbCupon.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.gbCupon.Name = "gbCupon";
             this.gbCupon.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -150,17 +141,17 @@
             // 
             // txtObservaciones
             // 
-            this.txtObservaciones.Location = new System.Drawing.Point(2, 454);
+            this.txtObservaciones.Location = new System.Drawing.Point(4, 497);
             this.txtObservaciones.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtObservaciones.Multiline = true;
             this.txtObservaciones.Name = "txtObservaciones";
-            this.txtObservaciones.Size = new System.Drawing.Size(420, 52);
+            this.txtObservaciones.Size = new System.Drawing.Size(613, 60);
             this.txtObservaciones.TabIndex = 25;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(2, 430);
+            this.label3.Location = new System.Drawing.Point(4, 473);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(115, 21);
@@ -193,7 +184,7 @@
             // 
             this.lblSubtotal.AutoSize = true;
             this.lblSubtotal.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSubtotal.Location = new System.Drawing.Point(291, 95);
+            this.lblSubtotal.Location = new System.Drawing.Point(84, 165);
             this.lblSubtotal.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSubtotal.Name = "lblSubtotal";
             this.lblSubtotal.Size = new System.Drawing.Size(83, 17);
@@ -203,7 +194,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(219, 92);
+            this.label6.Location = new System.Drawing.Point(5, 161);
             this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(71, 21);
@@ -215,7 +206,7 @@
             this.lblPropinaSugerida.AutoSize = true;
             this.lblPropinaSugerida.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lblPropinaSugerida.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPropinaSugerida.Location = new System.Drawing.Point(358, 3);
+            this.lblPropinaSugerida.Location = new System.Drawing.Point(499, 3);
             this.lblPropinaSugerida.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblPropinaSugerida.Name = "lblPropinaSugerida";
             this.lblPropinaSugerida.Size = new System.Drawing.Size(53, 17);
@@ -226,7 +217,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(218, 3);
+            this.label4.Location = new System.Drawing.Point(359, 3);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(131, 21);
@@ -235,122 +226,15 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.panel1);
+            this.groupBox1.Controls.Add(this.panelMetodosPago);
             this.groupBox1.Location = new System.Drawing.Point(0, 236);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.groupBox1.Size = new System.Drawing.Size(423, 190);
+            this.groupBox1.Size = new System.Drawing.Size(617, 233);
             this.groupBox1.TabIndex = 33;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Método de pago";
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.btnDefault);
-            this.panel1.Controls.Add(this.txtDebito);
-            this.panel1.Controls.Add(this.label8);
-            this.panel1.Controls.Add(this.txtEfectivo);
-            this.panel1.Controls.Add(this.label7);
-            this.panel1.Controls.Add(this.chkEfectivo);
-            this.panel1.Controls.Add(this.rdCredito);
-            this.panel1.Controls.Add(this.rdDebito);
-            this.panel1.Location = new System.Drawing.Point(0, 29);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(416, 155);
-            this.panel1.TabIndex = 0;
-            // 
-            // btnDefault
-            // 
-            this.btnDefault.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnDefault.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
-            this.btnDefault.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
-            this.btnDefault.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
-            this.btnDefault.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDefault.Location = new System.Drawing.Point(92, 113);
-            this.btnDefault.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.btnDefault.Name = "btnDefault";
-            this.btnDefault.Size = new System.Drawing.Size(182, 34);
-            this.btnDefault.TabIndex = 15;
-            this.btnDefault.Text = "Valores por defecto";
-            this.btnDefault.UseVisualStyleBackColor = true;
-            // 
-            // txtDebito
-            // 
-            this.txtDebito.Location = new System.Drawing.Point(232, 76);
-            this.txtDebito.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.txtDebito.Name = "txtDebito";
-            this.txtDebito.Size = new System.Drawing.Size(128, 29);
-            this.txtDebito.TabIndex = 7;
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(230, 50);
-            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(115, 21);
-            this.label8.TabIndex = 6;
-            this.label8.Text = "Valor de debito";
-            // 
-            // txtEfectivo
-            // 
-            this.txtEfectivo.Location = new System.Drawing.Point(11, 76);
-            this.txtEfectivo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.txtEfectivo.Name = "txtEfectivo";
-            this.txtEfectivo.Size = new System.Drawing.Size(128, 29);
-            this.txtEfectivo.TabIndex = 5;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(7, 50);
-            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(125, 21);
-            this.label7.TabIndex = 4;
-            this.label7.Text = "Valor de efectivo";
-            // 
-            // chkEfectivo
-            // 
-            this.chkEfectivo.AutoSize = true;
-            this.chkEfectivo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.chkEfectivo.Location = new System.Drawing.Point(7, 10);
-            this.chkEfectivo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.chkEfectivo.Name = "chkEfectivo";
-            this.chkEfectivo.Size = new System.Drawing.Size(83, 25);
-            this.chkEfectivo.TabIndex = 3;
-            this.chkEfectivo.Text = "Efectivo";
-            this.chkEfectivo.UseVisualStyleBackColor = true;
-            // 
-            // rdCredito
-            // 
-            this.rdCredito.AutoSize = true;
-            this.rdCredito.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.rdCredito.Location = new System.Drawing.Point(245, 10);
-            this.rdCredito.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.rdCredito.Name = "rdCredito";
-            this.rdCredito.Size = new System.Drawing.Size(146, 25);
-            this.rdCredito.TabIndex = 2;
-            this.rdCredito.TabStop = true;
-            this.rdCredito.Tag = "CREDITO";
-            this.rdCredito.Text = "Tarjeta de crédito";
-            this.rdCredito.UseVisualStyleBackColor = true;
-            // 
-            // rdDebito
-            // 
-            this.rdDebito.AutoSize = true;
-            this.rdDebito.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.rdDebito.Location = new System.Drawing.Point(108, 10);
-            this.rdDebito.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.rdDebito.Name = "rdDebito";
-            this.rdDebito.Size = new System.Drawing.Size(121, 25);
-            this.rdDebito.TabIndex = 1;
-            this.rdDebito.TabStop = true;
-            this.rdDebito.Tag = "DEBITO";
-            this.rdDebito.Text = "Tarjeta débito";
-            this.rdDebito.UseVisualStyleBackColor = true;
             // 
             // chkDesechables
             // 
@@ -376,7 +260,7 @@
             // 
             // txtDomicilio
             // 
-            this.txtDomicilio.Location = new System.Drawing.Point(7, 104);
+            this.txtDomicilio.Location = new System.Drawing.Point(180, 50);
             this.txtDomicilio.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtDomicilio.Name = "txtDomicilio";
             this.txtDomicilio.Size = new System.Drawing.Size(125, 29);
@@ -388,13 +272,25 @@
             // 
             this.chkDomicilio.AutoSize = true;
             this.chkDomicilio.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.chkDomicilio.Location = new System.Drawing.Point(7, 81);
+            this.chkDomicilio.Location = new System.Drawing.Point(180, 27);
             this.chkDomicilio.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.chkDomicilio.Name = "chkDomicilio";
             this.chkDomicilio.Size = new System.Drawing.Size(145, 25);
             this.chkDomicilio.TabIndex = 36;
             this.chkDomicilio.Text = "Cobrar domicilio";
             this.chkDomicilio.UseVisualStyleBackColor = true;
+            // 
+            // panelMetodosPago
+            // 
+            this.panelMetodosPago.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelMetodosPago.AutoScroll = true;
+            this.panelMetodosPago.Location = new System.Drawing.Point(7, 28);
+            this.panelMetodosPago.Name = "panelMetodosPago";
+            this.panelMetodosPago.PageSize = 10;
+            this.panelMetodosPago.Size = new System.Drawing.Size(598, 199);
+            this.panelMetodosPago.TabIndex = 0;
             // 
             // DescuentosOpcionesPedido
             // 
@@ -426,12 +322,10 @@
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "DescuentosOpcionesPedido";
-            this.Size = new System.Drawing.Size(428, 517);
+            this.Size = new System.Drawing.Size(626, 572);
             this.gbCupon.ResumeLayout(false);
             this.gbCupon.PerformLayout();
             this.groupBox1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -450,14 +344,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.RadioButton rdDebito;
-        private System.Windows.Forms.RadioButton rdCredito;
-        private System.Windows.Forms.CheckBox chkEfectivo;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox txtEfectivo;
-        private System.Windows.Forms.TextBox txtDebito;
-        private System.Windows.Forms.Label label8;
         public System.Windows.Forms.ComboBox ListaDescuentos;
         public System.Windows.Forms.TextBox txtPropina;
         public System.Windows.Forms.TextBox txtCupon;
@@ -465,10 +351,10 @@
         public System.Windows.Forms.Label lblSubtotal;
         public System.Windows.Forms.Label lblPropinaSugerida;
         public System.Windows.Forms.TextBox txtObservaciones;
-        public System.Windows.Forms.Button btnDefault;
         private System.Windows.Forms.CheckBox chkDesechables;
         public System.Windows.Forms.TextBox txtPrecioDesechables;
         public System.Windows.Forms.TextBox txtDomicilio;
         private System.Windows.Forms.CheckBox chkDomicilio;
+        private CapaPresentacion.Controles.CustomGridPanel panelMetodosPago;
     }
 }

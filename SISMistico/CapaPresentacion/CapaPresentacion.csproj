@@ -430,6 +430,13 @@
     <Compile Include="Formularios\Controles\PoperContainer.Designer.cs">
       <DependentUpon>PoperContainer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\MetodoPagoModel.cs" />
+    <Compile Include="Formularios\FormsPedido\MetodoPagoSmall.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\MetodoPagoSmall.Designer.cs">
+      <DependentUpon>MetodoPagoSmall.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\ProductBinding.cs" />
     <Compile Include="Formularios\FormsPedido\ProductoItem.cs">
       <SubType>UserControl</SubType>
@@ -852,6 +859,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\Controles\PoperContainer.resx">
       <DependentUpon>PoperContainer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPedido\MetodoPagoSmall.resx">
+      <DependentUpon>MetodoPagoSmall.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\ProductoItem.resx">
       <DependentUpon>ProductoItem.cs</DependentUpon>

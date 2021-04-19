@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 
@@ -15,12 +16,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtPropina.KeyPress += Txt_KeyPress;
             this.ListaDescuentos.SelectedValueChanged += ListaDescuentos_SelectedValueChanged;
             this.lblPropinaSugerida.Click += LblPropinaSugerida_Click;
-            this.chkEfectivo.CheckedChanged += ChkEfectivo_CheckedChanged;
-            this.rdCredito.CheckedChanged += Rd_CheckedChanged;
-            this.rdDebito.CheckedChanged += Rd_CheckedChanged;
-            this.txtDebito.KeyPress += Txt_KeyPress;
-            this.txtDebito.GotFocus += Txt_GotFocus;
-            this.txtDebito.LostFocus += Txt_LostFocus;
 
             this.txtPrecioDesechables.KeyPress += Txt_KeyPress;
             this.txtPrecioDesechables.GotFocus += Txt_GotFocus;
@@ -29,13 +24,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtDomicilio.KeyPress += Txt_KeyPress;
             this.txtDomicilio.GotFocus += Txt_GotFocus;
             this.txtDomicilio.LostFocus += Txt_LostFocus;
-
-            this.txtEfectivo.KeyPress += Txt_KeyPress;
-            this.txtEfectivo.GotFocus += Txt_GotFocus;
-            this.txtEfectivo.LostFocus += Txt_LostFocus;
-            this.txtDebito.TextChanged += TxtDebito_TextChanged;
-            this.txtEfectivo.TextChanged += TxtEfectivo_TextChanged;
-            this.btnDefault.Click += BtnDefault_Click;
 
             this.chkDesechables.CheckedChanged += ChkDesechables_CheckedChanged;
             this.chkDomicilio.CheckedChanged += ChkDomicilio_CheckedChanged;
@@ -59,18 +47,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.txtPrecioDesechables.Visible = false;
         }
 
-        private void BtnDefault_Click(object sender, EventArgs e)
-        {
-            this.chkEfectivo.Checked = true;
-            this.rdCredito.Checked = false;
-            this.rdDebito.Checked = false;
-            this.txtEfectivo.Tag = this.Total;
-            this.txtEfectivo.Text = this.Total.ToString("C");
-            int debito = 0;
-            this.txtDebito.Text = debito.ToString("C");
-            this.txtDebito.Tag = debito;
-        }
-
         public DataTable TablaPago()
         {
             DataTable table = new DataTable();
@@ -79,162 +55,120 @@ namespace CapaPresentacion.Formularios.FormsPedido
             table.Columns.Add("Vaucher", typeof(string));
             table.Columns.Add("Observaciones", typeof(string));
 
-            if (this.chkEfectivo.Checked)
+            bool result = this.ObtenerMetodosPago(out List<MetodoPagoModel> MetodosPago);
+
+            if (result)
             {
-                DataRow row = table.NewRow();
-                row["Pago"] = "EFECTIVO";
-                row["Valor_pago"] = this.txtEfectivo.Tag;
-                row["Vaucher"] = "";
-                row["Observaciones"] = "Ninguna";
-                table.Rows.Add(row);
-            }
-
-            string otro_pago = this.ObtenerValorPanel(this.panel1);
-            if (!otro_pago.Equals(""))
-            {
-                DataRow row = table.NewRow();
-                row["Pago"] = otro_pago;
-                row["Valor_pago"] = this.txtDebito.Tag;
-                row["Vaucher"] = "";
-                row["Observaciones"] = "Ninguna";
-                table.Rows.Add(row);
-            }
-            return table;
-        }
-
-        private void TxtEfectivo_TextChanged(object sender, EventArgs e)
-        {
-            TextBox txt = (TextBox)sender;
-            if (!this.ObtenerValorPanel(this.panel1).Equals(""))
-            {
-                int precio_digitado;
-                bool result = int.TryParse(txt.Text, out precio_digitado);
-                if (result)
+                foreach (MetodoPagoModel metodo in MetodosPago)
                 {
-                    int pago_debito = Convert.ToInt32(this.Total) - precio_digitado;
-                    this.txtDebito.Text = pago_debito.ToString("C");
-                    this.txtDebito.Tag = pago_debito;
-                }
-            }
-        }
-
-        private void TxtDebito_TextChanged(object sender, EventArgs e)
-        {
-            TextBox txt = (TextBox)sender;
-            if (this.chkEfectivo.Checked)
-            {
-                int precio_digitado;
-                bool result = int.TryParse(txt.Text, out precio_digitado);
-                if (result)
-                {
-                    int pago_efectivo = Convert.ToInt32(this.Total) - precio_digitado;
-                    this.txtEfectivo.Text = pago_efectivo.ToString("C");
-                    this.txtEfectivo.Tag = pago_efectivo;
-                }
-            }
-        }
-
-        private void Rd_CheckedChanged(object sender, EventArgs e)
-        {
-            RadioButton rd = (RadioButton)sender;
-            if (rd.Checked)
-            {
-                if (this.chkEfectivo.Checked)
-                {
-                    double pago = this.Total / 2;
-
-                    this.txtEfectivo.Enabled = true;
-                    this.txtEfectivo.Text = pago.ToString("C");
-                    this.txtEfectivo.Tag = pago;
-
-                    this.txtDebito.Text = string.Format("{0:C}", pago);
-                    this.txtDebito.Tag = pago;
-                    this.txtDebito.Enabled = true;
-                }
-                else
-                {
-                    this.txtDebito.Text = this.Total.ToString("C");
-                    this.txtDebito.Tag = this.Total;
-                    this.txtDebito.Enabled = true;
-                }
-            }
-        }
-
-        private string ObtenerValorPanel(Panel panel)
-        {
-            string rpta = "";
-            foreach (Control control in panel.Controls)
-            {
-                if (control is RadioButton rd)
-                {
-                    if (rd.Checked)
-                    {
-                        rpta = rd.Tag.ToString().ToUpper();
-                        break;
-                    }
-                }
-            }
-            return rpta;
-        }
-
-        private void ChkEfectivo_CheckedChanged(object sender, EventArgs e)
-        {
-            CheckBox chk = (CheckBox)sender;
-            string tipo_pago = this.ObtenerValorPanel(this.panel1);
-            if (chk.Checked)
-            {
-                if (tipo_pago.Equals(""))
-                {
-                    this.txtEfectivo.Enabled = true;
-                    this.txtEfectivo.Text = this.Total.ToString("C");
-                    this.txtEfectivo.Tag = this.Total;
-
-                    this.txtDebito.Text = "$0";
-                    this.txtDebito.Tag = "0";
-                    this.txtDebito.Enabled = false;
-                }
-                else
-                {
-                    double pago = this.Total / 2;
-
-                    this.txtEfectivo.Enabled = true;
-                    this.txtEfectivo.Text = pago.ToString("C");
-                    this.txtEfectivo.Tag = pago;
-
-                    this.txtDebito.Text = string.Format("{0:C}", pago);
-                    this.txtDebito.Tag = pago;
-                    this.txtDebito.Enabled = true;
+                    DataRow row = table.NewRow();
+                    row["Pago"] = metodo.MetodoPago;
+                    row["Valor_pago"] = metodo.ValorPago;
+                    row["Vaucher"] = metodo.Vaucher;
+                    row["Observaciones"] = metodo.Observaciones;
+                    table.Rows.Add(row);
                 }
             }
             else
+                return null;
+
+            return table;
+        }
+
+        private void LoadMetodosPago()
+        {
+            List<MetodoPagoModel> metodos = new List<MetodoPagoModel>
             {
-                if (tipo_pago.Equals(""))
+                new MetodoPagoModel
                 {
-                    this.chkEfectivo.Checked = true;
-
-                    this.txtEfectivo.Enabled = true;
-                    this.txtEfectivo.Text = this.Total.ToString("C");
-                    this.txtEfectivo.Tag = this.Total;
-
-                    this.txtDebito.Text = "$0";
-                    this.txtDebito.Tag = "0";
-                    this.txtDebito.Enabled = false;
-
-                    Mensajes.MensajeErrorForm("Debe de seleccionar como mínimo un método de pago");
-                }
-                else
+                    MetodoPago = "EFECTIVO",
+                    Vaucher = string.Empty,
+                    ValorPago = 0,
+                    Observaciones = string.Empty,
+                },
+                new MetodoPagoModel
                 {
-                    this.txtEfectivo.Enabled = false;
-                    this.txtEfectivo.Text = "$0";
-                    this.txtEfectivo.Tag = "0";
+                    MetodoPago = "TARJETA",
+                    Vaucher = string.Empty,
+                    ValorPago = 0,
+                    Observaciones = string.Empty,
+                },
+                new MetodoPagoModel
+                {
+                    MetodoPago = "TRANSFERENCIA",
+                    Vaucher = string.Empty,
+                    ValorPago = 0,
+                    Observaciones = string.Empty,
+                },
+                new MetodoPagoModel
+                {
+                    MetodoPago = "VALE",
+                    Vaucher = string.Empty,
+                    ValorPago = 0,
+                    Observaciones = string.Empty,
+                },
+            };
 
-                    this.txtDebito.Text = this.Total.ToString("C");
-                    this.txtDebito.Tag = this.Total;
-                    this.txtDebito.Enabled = true;
+            this.panelMetodosPago.clearDataSource();
 
-                    this.txtEfectivo.Enabled = false;
+            List<UserControl> controls = new List<UserControl>();
+            foreach(MetodoPagoModel metodo in metodos)
+            {
+                MetodoPagoSmall metodoPagoSmall = new MetodoPagoSmall
+                {
+                    MetodoPago = metodo,
+                };
+                controls.Add(metodoPagoSmall);
+            }
+
+            this.panelMetodosPago.AddArrayControl(controls);
+        }
+
+        private bool ObtenerMetodosPago(out List<MetodoPagoModel> metodos_pago)
+        {
+            metodos_pago = new List<MetodoPagoModel>();
+            int cantidad_metodos_pago = 0;
+            decimal total_valores = 0;
+
+            foreach (UserControl control in panelMetodosPago.Controls)
+            {
+                if (control is MetodoPagoSmall metodo)
+                {
+                    if (metodo.chkMetodo.Checked)
+                    {
+                        if (decimal.TryParse(Convert.ToString(metodo.txtValor.Tag), out decimal valor))
+                        {
+                            metodos_pago.Add(new MetodoPagoModel
+                            {
+                                MetodoPago = metodo.chkMetodo.Text.ToUpper(),
+                                Vaucher = string.Empty,
+                                ValorPago = valor,
+                            });
+                            total_valores += valor;
+                            cantidad_metodos_pago += 1;
+                        }
+                        else
+                        {
+                            Mensajes.MensajeInformacion("Verifique los valores en métodos de pago");
+                            return false;
+                        }                      
+                    }
                 }
             }
+
+            if (total_valores != this.Total)
+            {
+                Mensajes.MensajeInformacion("Verifique los valores del método de pago, la suma debe ser igual al valor total");
+                return false;
+            }
+
+            if (cantidad_metodos_pago > 2)
+            {
+                Mensajes.MensajeInformacion("Solo se pueden seleccionar 2 métodos de pago");
+                return false;
+            }
+
+            return true;
         }
 
         private void LblPropinaSugerida_Click(object sender, EventArgs e)
@@ -326,7 +260,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         private void OperacionSumarPrecios()
         {
-
             if (!decimal.TryParse(this.txtPrecioDesechables.Tag.ToString(), out decimal desechables))
                 desechables = 0;
 
@@ -347,16 +280,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
             {
                 this.lblTotal.Text = subtotal.ToString("C");
                 this.lblTotal.Tag = subtotal;
-                this.Total = Convert.ToDouble(subtotal);
+                this.Total = Convert.ToDecimal(subtotal);
             }
             else
             {
                 this.lblTotal.Text = total_con_descuento.ToString("C");
                 this.lblTotal.Tag = total_con_descuento;
-                this.Total = Convert.ToDouble(total_con_descuento);
+                this.Total = Convert.ToDecimal(total_con_descuento);
             }
 
-            this.frmFacturarPedido.ObtenerTotales(this.Total_parcial, 
+            this.frmFacturarPedido.ObtenerTotales(this.Total_parcial,
                 Convert.ToInt32(this.lblSubtotal.Tag), Convert.ToInt32(this.Total));
         }
 
@@ -397,12 +330,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtPropina.Tag = 0;
 
             this.CrearTablaCuenta();
-            this.chkEfectivo.Checked = true;
-            this.txtDebito.Enabled = false;
+            this.LoadMetodosPago();
         }
 
         private DataTable dtCuenta;
-        private double total;
+        private decimal total;
         private int total_parcial;
         private bool _isDomicilio;
         public bool IsDomicilio
@@ -424,8 +356,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         public FrmFacturarPedido frmFacturarPedido;
         public DataTable DtCuenta { get => dtCuenta; set => dtCuenta = value; }
-        public double Total { get => total; set => total = value; }
+        public decimal Total { get => total; set => total = value; }
         public int Total_parcial { get => total_parcial; set => total_parcial = value; }
-
     }
 }
