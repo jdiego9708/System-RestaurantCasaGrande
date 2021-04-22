@@ -788,7 +788,7 @@
                 {
                     /**Como abrimos los detalles, se debe de generar el evento guardar 
                       * para agregarlo correctamente a la lista**/
-                    bool isEnabledBebida = plato.Plato_carta.Equals("ACTIVO") ? false : true;
+                    bool isEnabledBebida = plato.Plato_carta.Equals("ACTIVO") ? true : false;
 
                     FrmDetallePedidoPlato frmDetallePedidoPlato = new FrmDetallePedidoPlato
                     {
