@@ -60,6 +60,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.txtDescripcion.Text = datos[5];
             this.txtPrecio.Text = datos[3];
             this.chkIngredientes.Checked = datos[7] == "ACTIVO" ? true : false;
+            this.chkCarta.Checked = datos[8] == "ACTIVO" ? true : false;
         }
 
         private bool Comprobaciones(out string[] variables)

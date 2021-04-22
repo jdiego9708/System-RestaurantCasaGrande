@@ -55,7 +55,9 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     int fila = this.dgvPlatos.CurrentRow.Cells[0].RowIndex;
                     if (this.FrmAgregarPlato != null)
                     {
-                        this.FrmAgregarPlato.Plato = new CapaEntidades.Models.Platos(row);
+                        this.FrmAgregarPlato.Plato = new CapaEntidades.Models.Platos(row); this.FrmAgregarPlato.ObtenerDatos
+                             (DatagridString.ReturnValuesOfCells(sender, fila, out rpta));
+                        this.FrmAgregarPlato.Show();
                     }
                     else if (this.agregarDetallePlato != null)
                     {
