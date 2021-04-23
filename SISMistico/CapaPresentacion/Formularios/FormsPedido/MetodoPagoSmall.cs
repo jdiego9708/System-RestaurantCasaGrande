@@ -18,6 +18,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtValor.KeyPress += Txt_KeyPress;
             this.txtValor.GotFocus += Txt_GotFocus;
             this.txtValor.LostFocus += Txt_LostFocus;
+            this.chkMetodo.CheckedChanged += ChkMetodo_CheckedChanged;
+        }
+
+        private void ChkMetodo_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox chk = (CheckBox)sender;
+            if (chk.Checked)
+            {
+                if (chk.Text.Equals("EFECTIVO"))
+                {
+                    this.txtValor.Tag = this.Total;
+                    this.txtValor.Text = this.Total.ToString("C");
+                }
+            }
         }
 
         private void Txt_KeyPress(object sender, KeyPressEventArgs e)
@@ -85,5 +99,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.AsignarDatos(value);
             }
         }
+
+        public decimal Total { get; set; }
     }
 }

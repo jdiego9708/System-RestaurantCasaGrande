@@ -173,6 +173,15 @@ namespace CapaDatos
                 SqlCmd.Parameters.Add(Observaciones_pedido);
                 contador += 1;
 
+                SqlParameter CantidadClientes = new SqlParameter
+                {
+                    ParameterName = "@CantidadClientes",
+                    SqlDbType = SqlDbType.Int,
+                    Value = Convert.ToInt32(Variables[contador])
+                };
+                SqlCmd.Parameters.Add(CantidadClientes);
+                contador += 1;
+
                 SqlParameter Detalles_pedido = new SqlParameter("@Detalle_pedido", TablaDetalle);
                 //Detalles_pedido.ParameterName = "@Detalle_pedido";
                 //Detalles_pedido.Value = TablaDetalle;

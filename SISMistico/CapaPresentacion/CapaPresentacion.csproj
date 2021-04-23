@@ -542,6 +542,11 @@
     <Compile Include="Formularios\FormsReservas\ReservaMesaSmall.Designer.cs">
       <DependentUpon>ReservaMesaSmall.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReportesFacturas\Comandas\ConfigComandas.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>ConfigComandas.settings</DependentUpon>
+    </Compile>
     <Compile Include="ReportesFacturas\GastosTurno\FrmReporteGastos.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -994,6 +999,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="dsReportes.xsc">
       <DependentUpon>dsReportes.xsd</DependentUpon>
     </None>
@@ -1008,6 +1014,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ReportesFacturas\Comandas\ConfigComandas.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>ConfigComandas.Designer.cs</LastGenOutput>
+    </None>
     <None Include="Resources\add2.png" />
   </ItemGroup>
   <ItemGroup>

@@ -91,7 +91,7 @@
                 Convert.ToString(this.MesaSelected.Id_mesa),
                 Convert.ToString(this.EmpleadoSelected.Id_empleado),
                 Convert.ToString(this.ClienteSelected.Id_cliente),
-                "0", tipo_pedido, "",
+                "0", tipo_pedido, "", this.numericClientes.Value.ToString()
                 };
 
 
@@ -931,6 +931,7 @@
 
             this.lblMesero.Text = "Mesero/Empleado " + pedido.Empleado.Nombre_empleado;
             this.lblTitulo.Text = "Adicionar/Remover productos del pedido número " + pedido.Id_pedido;
+            this.numericClientes.Value = pedido.CantidadClientes;
             this.IsEditar = true;
 
             //Obtener el detalle del pedido
@@ -1081,7 +1082,16 @@
                 this.txtInfoPedido.Text = value;
             }
         }
-        public bool IsEditar { get => _isEditar; set => _isEditar = value; }
+        public bool IsEditar
+        {
+            get => _isEditar;
+            set
+            {
+                _isEditar = value;
+                this.numericClientes.Visible = false;
+                this.gbNumClientes.Visible = false;
+            }
+        }
         public bool IsDomicilio { get; set; }
         public int Numero_mesa { get; set; }
         public string Tipo_servicio

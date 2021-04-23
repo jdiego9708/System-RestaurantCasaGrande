@@ -277,7 +277,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private void ButtonMesa_OnBtnCancelarPedidoClick(object sender, EventArgs e)
         {
             Pedidos pedido = (Pedidos)sender;
-            string rpta = NPedido.CancelarPedido(pedido.Id_pedido, string.Empty);
+            string rpta = NPedido.CancelarPedido(pedido.Id_pedido, pedido.Observaciones_pedido);
             if (rpta.Equals("OK"))
             {
                 this.CargarMesas();

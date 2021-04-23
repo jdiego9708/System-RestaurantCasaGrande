@@ -121,59 +121,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     DataTable detalle_pago;
                     List<string> variables = this.Variables(out detalle_pago);
 
-                    if (detalle_pago.Rows.Count > 0)
+                    if (detalle_pago != null)
                     {
-                        MensajeEspera.ShowWait("Facturando y terminando");
-                        if (this.IsPrecuenta)
+                        if (detalle_pago.Rows.Count > 0)
                         {
-                            frmFacturaFinal.Id_pedido = this.Id_pedido;
-                            frmFacturaFinal.AsignarTablasPedido(variables);
-
-                            string metodo = this.ObtenerValorPanel(this.panelTipoPedido);
-                            if (metodo.Equals("IMPRIMIR"))
+                            MensajeEspera.ShowWait("Facturando y terminando");
+                            if (this.IsPrecuenta)
                             {
-                                frmFacturaFinal.ImprimirFactura(1);
-                            }
-                            else if (metodo.Equals("CORREO"))
-                            {
-                                string rpta_email =
-                                    EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
-                                if (!rpta_email.Equals("OK"))
-                                {
-                                    Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
-                                }
-                            }
-                            else if (metodo.Equals("AMBAS"))
-                            {
-                                frmFacturaFinal.ImprimirFactura(1);
-                                string rpta_email =
-                                    EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
-                                if (!rpta_email.Equals("OK"))
-                                {
-                                    Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
-                                }
-                            }
-
-                            FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
-                            frm.MesaSaliendo(this.Id_mesa, this.Id_pedido);
-
-                            MensajeEspera.CloseForm();
-                            Mensajes.MensajeOkForm("Se realizó la precuenta correctamente");
-                            this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
-                            this.Close();
-                        }
-                        else
-                        {                            
-                            rpta =
-                                NVentas.InsertarVenta(variables, out id_venta, detalle_pago);
-                            if (rpta.Equals("OK"))
-                            {
-                                FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
-                                frm.LiberarMesa(this.Id_mesa);
-                                MensajeEspera.CloseForm();
                                 frmFacturaFinal.Id_pedido = this.Id_pedido;
-                                frmFacturaFinal.AsignarTablas();
-                                MensajeEspera.CloseForm();
+                                frmFacturaFinal.AsignarTablasPedido(variables);
+
                                 string metodo = this.ObtenerValorPanel(this.panelTipoPedido);
                                 if (metodo.Equals("IMPRIMIR"))
                                 {
@@ -185,7 +142,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                         EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
                                     if (!rpta_email.Equals("OK"))
                                     {
-                                        MensajeEspera.CloseForm();
                                         Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
                                     }
                                 }
@@ -196,22 +152,74 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                         EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
                                     if (!rpta_email.Equals("OK"))
                                     {
-                                        MensajeEspera.CloseForm();
                                         Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
                                     }
                                 }
 
+                                FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
+                                frm.MesaSaliendo(this.Id_mesa, this.Id_pedido);
+
                                 MensajeEspera.CloseForm();
-                                Mensajes.MensajeOkForm("Se realizó la facturación correctamente");
+                                Mensajes.MensajeOkForm("Se realizó la precuenta correctamente");
                                 this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
                                 this.Close();
                             }
                             else
                             {
-                                throw new Exception(rpta);
+                                rpta =
+                                    NVentas.InsertarVenta(variables, out id_venta, detalle_pago);
+                                if (rpta.Equals("OK"))
+                                {
+                                    FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
+                                    frm.LiberarMesa(this.Id_mesa);
+                                    MensajeEspera.CloseForm();
+                                    frmFacturaFinal.Id_pedido = this.Id_pedido;
+                                    frmFacturaFinal.AsignarTablas();
+                                    MensajeEspera.CloseForm();
+                                    string metodo = this.ObtenerValorPanel(this.panelTipoPedido);
+                                    if (metodo.Equals("IMPRIMIR"))
+                                    {
+                                        frmFacturaFinal.ImprimirFactura(1);
+                                    }
+                                    else if (metodo.Equals("CORREO"))
+                                    {
+                                        string rpta_email =
+                                            EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
+                                        if (!rpta_email.Equals("OK"))
+                                        {
+                                            MensajeEspera.CloseForm();
+                                            Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
+                                        }
+                                    }
+                                    else if (metodo.Equals("AMBAS"))
+                                    {
+                                        frmFacturaFinal.ImprimirFactura(1);
+                                        string rpta_email =
+                                            EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
+                                        if (!rpta_email.Equals("OK"))
+                                        {
+                                            MensajeEspera.CloseForm();
+                                            Mensajes.MensajeErrorForm("Hubo un error al enviar el correo electrónico");
+                                        }
+                                    }
+
+                                    MensajeEspera.CloseForm();
+                                    Mensajes.MensajeOkForm("Se realizó la facturación correctamente");
+                                    this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
+                                    this.Close();
+                                }
+                                else
+                                {
+                                    throw new Exception(rpta);
+                                }
                             }
+                            MensajeEspera.CloseForm();
                         }
-                        MensajeEspera.CloseForm();
+                        else
+                        {
+                            MensajeEspera.CloseForm();
+                            Mensajes.MensajeErrorForm("Debe de seleccionar un método de pago");
+                        }
                     }
                     else
                     {
@@ -314,7 +322,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
         public DataTable TablaVista { get => tablaVista; set => tablaVista = value; }
         public DataTable TablaDetalle { get => tablaDetalle; set => tablaDetalle = value; }
         public int Total_parcial { get => total_parcial; set => total_parcial = value; }
-        public int Total_final { get => total_final; set => total_final = value; }
+        public int Total_final
+        {
+            get => total_final;
+            set
+            {
+                total_final = value;
+            }
+        }
+
         public int Cantidad_pedidos { get => cantidad_pedidos; set => cantidad_pedidos = value; }
         public int Id_mesa { get => id_mesa; set => id_mesa = value; }
         public string Mesa { get => mesa; set => mesa = value; }

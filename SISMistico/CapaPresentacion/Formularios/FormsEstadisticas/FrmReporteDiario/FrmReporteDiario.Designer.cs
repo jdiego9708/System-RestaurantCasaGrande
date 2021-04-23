@@ -31,16 +31,17 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmReporteDiario));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnRefresh = new System.Windows.Forms.Button();
+            this.chkInfoPagos = new System.Windows.Forms.CheckBox();
+            this.chkInfoDetalleVentas = new System.Windows.Forms.CheckBox();
+            this.chkInfoNomina = new System.Windows.Forms.CheckBox();
+            this.chkInfoGastos = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.date2 = new System.Windows.Forms.DateTimePicker();
             this.date1 = new System.Windows.Forms.DateTimePicker();
             this.gbReporte = new System.Windows.Forms.GroupBox();
-            this.chkInfoGastos = new System.Windows.Forms.CheckBox();
-            this.chkInfoNomina = new System.Windows.Forms.CheckBox();
-            this.chkInfoDetalleVentas = new System.Windows.Forms.CheckBox();
-            this.chkInfoPagos = new System.Windows.Forms.CheckBox();
-            this.btnRefresh = new System.Windows.Forms.Button();
+            this.chkDeletePedidos = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,6 +49,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.chkDeletePedidos);
             this.groupBox1.Controls.Add(this.btnRefresh);
             this.groupBox1.Controls.Add(this.chkInfoPagos);
             this.groupBox1.Controls.Add(this.chkInfoDetalleVentas);
@@ -63,6 +65,63 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Búsqueda por rango de fechas";
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnRefresh.BackgroundImage")));
+            this.btnRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnRefresh.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
+            this.btnRefresh.FlatAppearance.BorderSize = 0;
+            this.btnRefresh.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
+            this.btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRefresh.Location = new System.Drawing.Point(1021, 24);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(35, 35);
+            this.btnRefresh.TabIndex = 30;
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            // 
+            // chkInfoPagos
+            // 
+            this.chkInfoPagos.AutoSize = true;
+            this.chkInfoPagos.Location = new System.Drawing.Point(790, 46);
+            this.chkInfoPagos.Name = "chkInfoPagos";
+            this.chkInfoPagos.Size = new System.Drawing.Size(225, 21);
+            this.chkInfoPagos.TabIndex = 5;
+            this.chkInfoPagos.Text = "Información de métodos de pago";
+            this.chkInfoPagos.UseVisualStyleBackColor = true;
+            // 
+            // chkInfoDetalleVentas
+            // 
+            this.chkInfoDetalleVentas.AutoSize = true;
+            this.chkInfoDetalleVentas.Location = new System.Drawing.Point(790, 16);
+            this.chkInfoDetalleVentas.Name = "chkInfoDetalleVentas";
+            this.chkInfoDetalleVentas.Size = new System.Drawing.Size(214, 21);
+            this.chkInfoDetalleVentas.TabIndex = 4;
+            this.chkInfoDetalleVentas.Text = "Información detallada de ventas";
+            this.chkInfoDetalleVentas.UseVisualStyleBackColor = true;
+            // 
+            // chkInfoNomina
+            // 
+            this.chkInfoNomina.AutoSize = true;
+            this.chkInfoNomina.Location = new System.Drawing.Point(622, 16);
+            this.chkInfoNomina.Name = "chkInfoNomina";
+            this.chkInfoNomina.Size = new System.Drawing.Size(162, 21);
+            this.chkInfoNomina.TabIndex = 2;
+            this.chkInfoNomina.Text = "Información de nómina";
+            this.chkInfoNomina.UseVisualStyleBackColor = true;
+            // 
+            // chkInfoGastos
+            // 
+            this.chkInfoGastos.AutoSize = true;
+            this.chkInfoGastos.Location = new System.Drawing.Point(622, 46);
+            this.chkInfoGastos.Name = "chkInfoGastos";
+            this.chkInfoGastos.Size = new System.Drawing.Size(158, 21);
+            this.chkInfoGastos.TabIndex = 2;
+            this.chkInfoGastos.Text = "Información de gastos";
+            this.chkInfoGastos.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
@@ -108,62 +167,15 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.gbReporte.TabStop = false;
             this.gbReporte.Text = "Reporte";
             // 
-            // chkInfoGastos
+            // chkDeletePedidos
             // 
-            this.chkInfoGastos.AutoSize = true;
-            this.chkInfoGastos.Location = new System.Drawing.Point(622, 46);
-            this.chkInfoGastos.Name = "chkInfoGastos";
-            this.chkInfoGastos.Size = new System.Drawing.Size(158, 21);
-            this.chkInfoGastos.TabIndex = 2;
-            this.chkInfoGastos.Text = "Información de gastos";
-            this.chkInfoGastos.UseVisualStyleBackColor = true;
-            // 
-            // chkInfoNomina
-            // 
-            this.chkInfoNomina.AutoSize = true;
-            this.chkInfoNomina.Location = new System.Drawing.Point(622, 16);
-            this.chkInfoNomina.Name = "chkInfoNomina";
-            this.chkInfoNomina.Size = new System.Drawing.Size(162, 21);
-            this.chkInfoNomina.TabIndex = 2;
-            this.chkInfoNomina.Text = "Información de nómina";
-            this.chkInfoNomina.UseVisualStyleBackColor = true;
-            // 
-            // chkInfoDetalleVentas
-            // 
-            this.chkInfoDetalleVentas.AutoSize = true;
-            this.chkInfoDetalleVentas.Location = new System.Drawing.Point(790, 16);
-            this.chkInfoDetalleVentas.Name = "chkInfoDetalleVentas";
-            this.chkInfoDetalleVentas.Size = new System.Drawing.Size(214, 21);
-            this.chkInfoDetalleVentas.TabIndex = 4;
-            this.chkInfoDetalleVentas.Text = "Información detallada de ventas";
-            this.chkInfoDetalleVentas.UseVisualStyleBackColor = true;
-            // 
-            // chkInfoPagos
-            // 
-            this.chkInfoPagos.AutoSize = true;
-            this.chkInfoPagos.Location = new System.Drawing.Point(790, 46);
-            this.chkInfoPagos.Name = "chkInfoPagos";
-            this.chkInfoPagos.Size = new System.Drawing.Size(225, 21);
-            this.chkInfoPagos.TabIndex = 5;
-            this.chkInfoPagos.Text = "Información de métodos de pago";
-            this.chkInfoPagos.UseVisualStyleBackColor = true;
-            // 
-            // btnRefresh
-            // 
-            this.btnRefresh.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnRefresh.BackgroundImage")));
-            this.btnRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btnRefresh.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
-            this.btnRefresh.FlatAppearance.BorderSize = 0;
-            this.btnRefresh.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
-            this.btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRefresh.Location = new System.Drawing.Point(1021, 24);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(35, 35);
-            this.btnRefresh.TabIndex = 30;
-            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.chkDeletePedidos.AutoSize = true;
+            this.chkDeletePedidos.Location = new System.Drawing.Point(382, 16);
+            this.chkDeletePedidos.Name = "chkDeletePedidos";
+            this.chkDeletePedidos.Size = new System.Drawing.Size(234, 21);
+            this.chkDeletePedidos.TabIndex = 31;
+            this.chkDeletePedidos.Text = "Información de pedidos eliminados";
+            this.chkDeletePedidos.UseVisualStyleBackColor = true;
             // 
             // FrmReporteDiario
             // 
@@ -198,5 +210,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         private System.Windows.Forms.CheckBox chkInfoDetalleVentas;
         private System.Windows.Forms.CheckBox chkInfoPagos;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.CheckBox chkDeletePedidos;
     }
 }

@@ -55,7 +55,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.Text = "Editar datos de un plato";
             this.Tag = datos[0];
             this.txtNombre.Text = datos[1];
-            this.ListaPlatos.Text = datos[8];
+            this.ListaPlatos.Text = datos[10];
             this.adjuntarImagen.AsignarImagen(datos[4]);
             this.txtDescripcion.Text = datos[5];
             this.txtPrecio.Text = datos[3];

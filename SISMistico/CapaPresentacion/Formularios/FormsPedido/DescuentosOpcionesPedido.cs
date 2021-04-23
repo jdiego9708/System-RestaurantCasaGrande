@@ -117,7 +117,12 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 MetodoPagoSmall metodoPagoSmall = new MetodoPagoSmall
                 {
                     MetodoPago = metodo,
+                    Total = this.Total,
                 };
+
+                if (metodo.Equals("EFECTIVO"))
+                    metodoPagoSmall.chkMetodo.Checked = true;
+
                 controls.Add(metodoPagoSmall);
             }
 
@@ -354,9 +359,35 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
+        private void CambioTotal()
+        {
+            if (this.panelMetodosPago.Controls.Count > 0)
+            {
+                foreach(UserControl control in this.panelMetodosPago.controlsUser)
+                {
+                    if (control is MetodoPagoSmall metodo)
+                    {
+                        if (metodo.MetodoPago.MetodoPago.Equals("EFECTIVO"))
+                        {
+                            metodo.txtValor.Tag = this.Total;
+                            metodo.txtValor.Text = this.Total.ToString("C");
+                        }
+                    }
+                }
+            }
+        }
+
         public FrmFacturarPedido frmFacturarPedido;
         public DataTable DtCuenta { get => dtCuenta; set => dtCuenta = value; }
-        public decimal Total { get => total; set => total = value; }
+        public decimal Total
+        {
+            get => total;
+            set
+            {
+                total = value;
+                this.CambioTotal();
+            }
+        }
         public int Total_parcial { get => total_parcial; set => total_parcial = value; }
     }
 }

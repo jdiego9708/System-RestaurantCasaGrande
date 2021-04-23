@@ -40,7 +40,13 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         private void BtnCancelarPedido_Click(object sender, EventArgs e)
         {
-            this.OnBtnCancelarPedidoClick?.Invoke(this.Pedido, e);
+            Mensajes.InputBox("Justificación de cancelación", "Continuar",
+                "Cerrar", out DialogResult dialog, out string mensaje);
+            if (dialog == DialogResult.Yes)
+            {
+                this.Pedido.Observaciones_pedido = "Justificación: " + mensaje;
+                this.OnBtnCancelarPedidoClick?.Invoke(this.Pedido, e);
+            }       
         }
 
         private void BtnCambiarMesa_Click(object sender, EventArgs e)

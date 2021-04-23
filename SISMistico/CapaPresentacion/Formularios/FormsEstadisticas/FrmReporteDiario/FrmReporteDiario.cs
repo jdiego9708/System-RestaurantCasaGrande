@@ -276,6 +276,32 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 resumenResultados.Append(infoPagos);
             }
 
+            if (this.chkDeletePedidos.Checked)
+            {
+                if (dtPedidos != null)
+                {
+                    StringBuilder infoDeletePedidos = new StringBuilder();
+                    infoDeletePedidos.Append("Información de pedidos cancelados").Append(Environment.NewLine);
+
+                    bool pedidos_cancelados = false;
+                    foreach (DataRow row in dtPedidos.Rows)
+                    {
+                        string estado_pedido = Convert.ToString(row["Estado_pedido"]);
+                        if (estado_pedido.Equals("CANCELADO"))
+                        {
+                            pedidos_cancelados = true;
+                            Pedidos pedido = new Pedidos(row);
+                            infoDeletePedidos.Append("* Fecha: " + pedido.Fecha_pedido.ToString("dd-MM-yy") + " - Hora: " + pedido.Hora_pedido + " - Motivo: " + pedido.Observaciones_pedido).Append(Environment.NewLine);
+                        }
+                    }
+
+                    if (pedidos_cancelados == false)
+                        infoDeletePedidos = new StringBuilder();
+
+                    resumenResultados.Append(infoDeletePedidos);
+                }
+            }
+
             this.InformacionEmpleado = informacionEmpleado;
             this.CantidadPedidos = cantidadPedidos;
             this.ResumenResultados = resumenResultados.ToString();

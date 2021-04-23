@@ -29,6 +29,7 @@ namespace CapaEntidades.Models
                 this.Hora_pedido = Convert.ToString(row["Hora_pedido"]);
                 this.Tipo_pedido = Convert.ToString(row["Tipo_pedido"]);
                 this.Observaciones_pedido = Convert.ToString(row["Observaciones_pedido"]);
+                this.CantidadClientes = Convert.ToInt32(row["CantidadClientes"]);
             }
             catch (Exception)
             {
@@ -60,5 +61,6 @@ namespace CapaEntidades.Models
 
         public string Observaciones_pedido { get; set; }
 
+        public int CantidadClientes { get; set; }
     }
 }

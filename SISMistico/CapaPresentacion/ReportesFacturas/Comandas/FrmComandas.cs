@@ -1,6 +1,7 @@
 ﻿using CapaEntidades.Models;
 using CapaNegocio;
 using CapaPresentacion.Formularios;
+using CapaPresentacion.ReportesFacturas.Comandas;
 using Microsoft.Reporting.WinForms;
 using System;
 using System.Collections.Generic;
@@ -29,14 +30,47 @@ namespace CapaPresentacion
                 "CapaPresentacion.ReportesFacturas.Comandas.ComandasPedido.rdlc";
         }
 
+        private int ComprobacionNumComandas()
+        {
+            var fecha = ConfigComandas.Default.Fecha;
+            int numcomanda = ConfigComandas.Default.NumComanda;
+
+            if (fecha == null)
+            {
+                ConfigComandas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numcomanda = 1;
+                ConfigComandas.Default.NumComanda = numcomanda;
+            }
+            else if (string.IsNullOrEmpty(fecha))
+            {
+                ConfigComandas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numcomanda += 1;
+                ConfigComandas.Default.NumComanda = numcomanda;
+            }
+            else if (DateTime.Now.ToString("yyyy-MM-dd") == fecha.ToString())
+            {
+                numcomanda += 1;
+                ConfigComandas.Default.NumComanda = numcomanda;
+            }
+            else
+            {
+                ConfigComandas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numcomanda = 1;
+                ConfigComandas.Default.NumComanda = numcomanda;
+            }
+
+            ConfigComandas.Default.Save();
+
+            return numcomanda;
+        }
+
         public void ImprimirFactura(int Repetir)
         {
             try
             {
 
                 //Asignar parámetros de observaciones y horas
-                DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
-                int num = datos.NumeroComandas + 1;
+                int num = this.ComprobacionNumComandas();
 
                 ReportParameter[] reportParameters = new ReportParameter[3];
                 reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
