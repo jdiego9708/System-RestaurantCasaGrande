@@ -31,6 +31,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmReporteDiario));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chkDeletePedidos = new System.Windows.Forms.CheckBox();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.chkInfoPagos = new System.Windows.Forms.CheckBox();
             this.chkInfoDetalleVentas = new System.Windows.Forms.CheckBox();
@@ -41,7 +42,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.date2 = new System.Windows.Forms.DateTimePicker();
             this.date1 = new System.Windows.Forms.DateTimePicker();
             this.gbReporte = new System.Windows.Forms.GroupBox();
-            this.chkDeletePedidos = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,6 +65,16 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Búsqueda por rango de fechas";
+            // 
+            // chkDeletePedidos
+            // 
+            this.chkDeletePedidos.AutoSize = true;
+            this.chkDeletePedidos.Location = new System.Drawing.Point(382, 16);
+            this.chkDeletePedidos.Name = "chkDeletePedidos";
+            this.chkDeletePedidos.Size = new System.Drawing.Size(234, 21);
+            this.chkDeletePedidos.TabIndex = 31;
+            this.chkDeletePedidos.Text = "Información de pedidos eliminados";
+            this.chkDeletePedidos.UseVisualStyleBackColor = true;
             // 
             // btnRefresh
             // 
@@ -166,16 +176,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.gbReporte.TabIndex = 1;
             this.gbReporte.TabStop = false;
             this.gbReporte.Text = "Reporte";
-            // 
-            // chkDeletePedidos
-            // 
-            this.chkDeletePedidos.AutoSize = true;
-            this.chkDeletePedidos.Location = new System.Drawing.Point(382, 16);
-            this.chkDeletePedidos.Name = "chkDeletePedidos";
-            this.chkDeletePedidos.Size = new System.Drawing.Size(234, 21);
-            this.chkDeletePedidos.TabIndex = 31;
-            this.chkDeletePedidos.Text = "Información de pedidos eliminados";
-            this.chkDeletePedidos.UseVisualStyleBackColor = true;
             // 
             // FrmReporteDiario
             // 
