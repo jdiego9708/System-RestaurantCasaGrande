@@ -226,13 +226,11 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
                 if (isRango)
                 {
-                    var result = await NNomina.BuscarNomina("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
-                    dtNomina = result.dtNomina;
+                    dtNomina = NNomina.BuscarNomina("GENERAL RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"), out rpta);
                 }
                 else
                 {
-                    var result = await NNomina.BuscarNomina("FECHA", date1.ToString("yyyy-MM-dd"));
-                    dtNomina = result.dtNomina;
+                    dtNomina = NNomina.BuscarNomina("GENERAL FECHA", date1.ToString("yyyy-MM-dd"), out rpta);
                 }
 
                 if (dtNomina != null)
@@ -244,16 +242,17 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                     else
                     {
                         infoEgresos.Append("Descripción de la nómina: ").Append(Environment.NewLine);
-                        int contador = 0;
                         foreach (DataRow row in dtNomina.Rows)
                         {
-                            contador += 1;
                             EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
                             if (nomina.Estado_nomina.Equals("TERMINADO"))
                             {
-                                infoEgresos.Append(contador + ") Fecha: ").Append(nomina.Fecha_nomina.ToLongDateString()).Append(" - ");
-                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(" - ");
-                                infoEgresos.Append("Observaciones: ").Append(nomina.Observaciones).Append(Environment.NewLine);
+                                infoEgresos.Append("* Fecha: ").Append(nomina.Fecha_nomina.ToString("dd-MM-yyyy")).Append(" - ");
+                                infoEgresos.Append(nomina.Empleado.Nombre_empleado).Append(" - ");
+                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C"));
+                                if (!string.IsNullOrEmpty(nomina.Observaciones))
+                                    infoEgresos.Append(" - " + nomina.Observaciones).Append(Environment.NewLine);
+                                infoEgresos.Append(Environment.NewLine);
                             }
                         }
                     }

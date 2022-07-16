@@ -49,7 +49,7 @@ namespace CapaDatos
         public string InsertarBebida(DBebidas DBebidas, out int id_bebida)
         {
             id_bebida = 0;
-            int contador = 0;
+            int contador = 1;
             //asignamos a una cadena string la variable rpta y la iniciamos en vacía
             string rpta = "";
             SqlConnection SqlCon = new SqlConnection();
@@ -87,11 +87,21 @@ namespace CapaDatos
                 SqlCmd.Parameters.Add(Nombre_bebida);
                 contador += 1;
 
+                SqlParameter Descripcion_bebida = new SqlParameter
+                {
+                    ParameterName = "@Descripcion_bebida",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 500,
+                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                };
+                SqlCmd.Parameters.Add(Descripcion_bebida);
+                contador += 1;
+
                 SqlParameter Precio_bebida = new SqlParameter
                 {
                     ParameterName = "@Precio_bebida",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador],
                 };
                 SqlCmd.Parameters.Add(Precio_bebida);
                 contador += 1;
@@ -99,8 +109,8 @@ namespace CapaDatos
                 SqlParameter Precio_trago = new SqlParameter
                 {
                     ParameterName = "@Precio_trago",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_trago);
                 contador += 1;
@@ -108,8 +118,8 @@ namespace CapaDatos
                 SqlParameter Precio_trago_doble = new SqlParameter
                 {
                     ParameterName = "@Precio_trago_doble",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_trago_doble);
                 contador += 1;
@@ -117,8 +127,8 @@ namespace CapaDatos
                 SqlParameter Precio_proveedor = new SqlParameter
                 {
                     ParameterName = "@Precio_proveedor",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_proveedor);
                 contador += 1;
@@ -127,7 +137,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Id_proveedor",
                     SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Id_proveedor);
                 contador += 1;
@@ -137,7 +147,7 @@ namespace CapaDatos
                     ParameterName = "@Imagen",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 8000,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Imagen);
                 contador += 1;
@@ -246,11 +256,21 @@ namespace CapaDatos
                 SqlCmd.Parameters.Add(Nombre_bebida);
                 contador += 1;
 
+                SqlParameter Descripcion_bebida = new SqlParameter
+                {
+                    ParameterName = "@Descripcion_bebida",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 500,
+                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                };
+                SqlCmd.Parameters.Add(Descripcion_bebida);
+                contador += 1;
+
                 SqlParameter Precio_bebida = new SqlParameter
                 {
                     ParameterName = "@Precio_bebida",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_bebida);
                 contador += 1;
@@ -258,7 +278,7 @@ namespace CapaDatos
                 SqlParameter Precio_trago = new SqlParameter
                 {
                     ParameterName = "@Precio_trago",
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.Decimal,
                     Value = DBebidas.Variables[contador].Trim().ToUpper()
                 };
                 SqlCmd.Parameters.Add(Precio_trago);
@@ -267,8 +287,8 @@ namespace CapaDatos
                 SqlParameter Precio_trago_doble = new SqlParameter
                 {
                     ParameterName = "@Precio_trago_doble",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_trago_doble);
                 contador += 1;
@@ -276,8 +296,8 @@ namespace CapaDatos
                 SqlParameter Precio_proveedor = new SqlParameter
                 {
                     ParameterName = "@Precio_proveedor",
-                    SqlDbType = SqlDbType.Int,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = DBebidas.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_proveedor);
                 contador += 1;

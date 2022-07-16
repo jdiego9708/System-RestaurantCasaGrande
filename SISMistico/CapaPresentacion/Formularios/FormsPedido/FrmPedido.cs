@@ -597,6 +597,7 @@
                             Observaciones = string.Empty,
                             Cantidad = 0,
                             Product = plato,
+                            NombreImagen = plato.Imagen_plato,
                         };
 
                         ProductoItem productoItem = new ProductoItem
@@ -709,17 +710,12 @@
                     string nombreimagen = product.Product.NombreImagen;
                     if (!string.IsNullOrEmpty(nombreimagen))
                     {
-                        if (Directory.Exists(nombreimagen))
-                        {
-                            img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
-                        }
-                        else
-                        {
-                            img = Resources.SIN_IMAGENES;
-                        }
+                        img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
 
-                        if (img != null)
-                            product.ImageProduct = img;
+                        if (img == null)
+                            img = Resources.SIN_IMAGENES;
+
+                        product.ImageProduct = img;
                     }
                     else
                     {
@@ -745,17 +741,12 @@
                         string nombreimagen = product.Product.NombreImagen;
                         if (!string.IsNullOrEmpty(nombreimagen))
                         {
-                            if (Directory.Exists(nombreimagen))
-                            {
-                                img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
-                            }
-                            else
-                            {
-                                img = Resources.SIN_IMAGENES;
-                            }
+                            img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
 
-                            if (img != null)
-                                product.ImageProduct = img;
+                            if (img == null)
+                                img = Resources.SIN_IMAGENES;
+
+                            product.ImageProduct = img;
                         }
                         else
                         {

@@ -55,6 +55,7 @@ namespace CapaPresentacion.Formularios.Controles
             this.pxImagen.SizeMode = PictureBoxSizeMode.StretchImage;
             this.txtImagen.Tag = rutaOrigen;
             this.txtImagen.Text = nombre_imagen;
+            this.RutaOrigen = rutaOrigen;
         }
 
         private void BtnImagen_Click(object sender, EventArgs e)
@@ -72,6 +73,7 @@ namespace CapaPresentacion.Formularios.Controles
                     pxImagen.Image = Image.FromFile(archivo.FileName);
                     this.txtImagen.Tag = archivo.FileName;
                     this.txtImagen.Text = archivo.SafeFileName;
+                    this.RutaOrigen = archivo.FileName;
                 }
             }
             catch (Exception ex)

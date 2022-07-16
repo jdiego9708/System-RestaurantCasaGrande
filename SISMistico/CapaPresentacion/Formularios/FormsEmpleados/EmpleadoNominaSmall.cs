@@ -1,4 +1,5 @@
 ﻿using CapaEntidades.Models;
+using CapaNegocio;
 using CapaPresentacion.Formularios.Controles;
 using System;
 using System.Collections.Generic;
@@ -67,7 +68,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             if (decimal.TryParse(this.txtTotalPropinas.Text, out decimal total_propinas))
             {
                 total_pagar += total_propinas;
-                this.EmpleadoNominaBinding.Propinas = total_propinas; 
+                this.EmpleadoNominaBinding.Propinas = total_propinas;
             }
             else
                 Mensajes.MensajeInformacion("Verifique el valor de las propinas deben ser solo números", "Entendido");
@@ -152,6 +153,18 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             this.lblTotal.Text = empleadoNomina.Total_nomina.ToString("C");
             this.lblEstado.Text = empleadoNomina.Estado_nomina;
 
+            //Buscar ultima nómina
+            DataTable dt = NNomina.BuscarNomina("ID EMPLEADO ULTIMA NOMINA", empleadoNomina.Id_empleado.ToString(), out string rpta);
+            if (dt != null)
+            {
+                EmpleadoNominaBinding empleado = new EmpleadoNominaBinding(dt.Rows[0]);
+                lblEstado.Text = $"Última nómina paga {empleado.Fecha_nomina.ToLongDateString()}";
+            }
+            else
+            {
+                lblEstado.Text = "No se han pagado nóminas a este empleado.";
+            }
+
             if (empleadoNomina.Estado_nomina.Equals("PENDIENTE"))
             {
                 this.panel1.BackColor = Color.FromArgb(255, 128, 128);
@@ -172,7 +185,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
         EmpleadoNominaBinding _eEmpleadoNomina;
 
         public EmpleadoNominaBinding EmpleadoNominaBinding
-        { 
+        {
             get => _eEmpleadoNomina;
             set
             {

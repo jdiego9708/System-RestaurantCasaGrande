@@ -87,16 +87,16 @@ namespace CapaPresentacion.Formularios.FormsBebidas
                 this.IsEditar = true;
                 this.Tag = datos[0];
                 this.txtNombre.Text = datos[1];
-                this.txtPrecio.Text = datos[2];
-                this.txtPrecioTrago.Text = datos[3];
-                this.txtPrecioTragoDoble.Text = datos[4];
-                this.txtPrecioProveedor.Text = datos[5];
-                this.txtProveedor.Tag = datos[6];
-                this.adjuntarImagen.AsignarImagen(datos[7]);
-                this.ListaTipoBebidas.SelectedValue = datos[8];
-                this.txtCantidadUnidad.Text = datos[9];
-                this.txtCantidadxUnidad.Text = datos[10];
-                this.lblCantidadTotal.Text = datos[11];
+                this.txtPrecio.Text = datos[3];
+                this.txtPrecioTrago.Text = datos[4];
+                this.txtPrecioTragoDoble.Text = datos[5];
+                this.txtPrecioProveedor.Text = datos[6];
+                this.txtProveedor.Tag = datos[7];
+                this.adjuntarImagen.AsignarImagen(datos[8]);
+                this.ListaTipoBebidas.SelectedValue = datos[9];
+                this.txtCantidadUnidad.Text = datos[10];
+                this.txtCantidadxUnidad.Text = datos[11];
+                this.lblCantidadTotal.Text = datos[12];
             }
             catch (Exception ex)
             {

@@ -1171,7 +1171,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         {
             try
             {
-                FrmAgregarBebidas frm = new FrmAgregarBebidas
+                FrmAgregarBebida frm = new FrmAgregarBebida
                 {
                     TopLevel = false
                 };
@@ -1211,7 +1211,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         {
             try
             {
-                FrmAgregarBebidas frm = new FrmAgregarBebidas
+                FrmAgregarBebida frm = new FrmAgregarBebida
                 {
                     TopLevel = false
                 };

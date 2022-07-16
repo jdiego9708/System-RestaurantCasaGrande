@@ -22,25 +22,21 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             this.btnRefresh.Click += BtnRefresh_Click;
         }
 
-        private async void BtnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            if (rdPendiente.Checked)
-                await BuscarNominaEmpleados("ESTADO NOMINA", "PENDIENTE");
-            else
-                await BuscarNominaEmpleados("ESTADO NOMINA", "TERMINADO");
+            BuscarNominaEmpleados("GENERAL", "");
         }
 
-        private async void FrmNominaEmpleados_Load(object sender, EventArgs e)
+        private void FrmNominaEmpleados_Load(object sender, EventArgs e)
         {
-            await BuscarNominaEmpleados("ESTADO NOMINA", "PENDIENTE");
+            BuscarNominaEmpleados("GENERAL", "");
         }
 
-        private async Task BuscarNominaEmpleados(string tipo_busqueda, string texto_busqueda)
+        private void BuscarNominaEmpleados(string tipo_busqueda, string texto_busqueda)
         {
             try
             {
-                var (rpta, dtNominaEmpleados) = 
-                    await NNomina.BuscarNomina(tipo_busqueda, texto_busqueda);
+                DataTable dtNominaEmpleados = NNomina.BuscarNomina(tipo_busqueda, texto_busqueda, out string rpta);
 
                 this.panelNominaEmpleados.clearDataSource();
 
@@ -49,14 +45,28 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
                     List<UserControl> controls = new List<UserControl>();
                     foreach (DataRow row in dtNominaEmpleados.Rows)
                     {
-                        EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
-                        EmpleadoNominaSmall empleado = new EmpleadoNominaSmall
+                        Empleados empleado = new Empleados(row);
+                        EmpleadoNominaBinding nomina = new EmpleadoNominaBinding
+                        {
+                            Id_empleado = empleado.Id_empleado,
+                            Empleado = empleado,
+                            Id_nomina_empleado = 0,
+                            Fecha_nomina = DateTime.Now,
+                            Salario = 0,
+                            Propinas = 0,
+                            Otros_ingresos = 0,
+                            Egresos = 0,
+                            Total_nomina = 0,
+                            Estado_nomina = "PENDIENTE",
+                            Observaciones = string.Empty,
+                        };
+                        EmpleadoNominaSmall empleadoSmall = new EmpleadoNominaSmall
                         {
                             EmpleadoNominaBinding = nomina,
                         };
-                        empleado.OnBtnPagarClick += Empleado_OnBtnPagarClick;
-                        empleado.OnBtnImprimirClick += Empleado_OnBtnImprimirClick;
-                        controls.Add(empleado);
+                        empleadoSmall.OnBtnPagarClick += Empleado_OnBtnPagarClick;
+                        empleadoSmall.OnBtnImprimirClick += Empleado_OnBtnImprimirClick;
+                        controls.Add(empleadoSmall);
                     }
                     this.panelNominaEmpleados.AddArrayControl(controls);
                 }
@@ -100,7 +110,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             if (empleadoNomina.Id_nomina_empleado == 0)
             {
                 empleadoNomina.Estado_nomina = "TERMINADO";
-                var (rpta, id_nomina) = await NNomina.InsertarEmpleado(empleadoNomina);
+                var (rpta, id_nomina) = await NNomina.InsertarNomina(empleadoNomina);
                 if (rpta.Equals("OK"))
                 {
                     Mensajes.MensajeInformacion("Se pagó la nómina correctamente", "Entendido");
@@ -116,7 +126,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             {
                 empleadoNomina.Estado_nomina = "TERMINADO";
                 string rpta = await NNomina.EditarNomina(empleadoNomina.Id_nomina_empleado, empleadoNomina);
-                if(rpta.Equals("OK"))
+                if (rpta.Equals("OK"))
                 {
                     Mensajes.MensajeInformacion("Se pagó la nómina correctamente", "Entendido");
                     this.btnRefresh.PerformClick();

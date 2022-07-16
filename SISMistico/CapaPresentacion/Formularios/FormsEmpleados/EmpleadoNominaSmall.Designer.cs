@@ -141,7 +141,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             // 
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotal.Location = new System.Drawing.Point(137, 129);
+            this.lblTotal.Location = new System.Drawing.Point(8, 142);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(48, 21);
             this.lblTotal.TabIndex = 24;
@@ -216,7 +216,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             // 
             this.lblEstado.AutoSize = true;
             this.lblEstado.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblEstado.Location = new System.Drawing.Point(5, 129);
+            this.lblEstado.Location = new System.Drawing.Point(6, 117);
             this.lblEstado.Name = "lblEstado";
             this.lblEstado.Size = new System.Drawing.Size(53, 19);
             this.lblEstado.TabIndex = 26;
@@ -294,7 +294,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "EmpleadoNominaSmall";
-            this.Size = new System.Drawing.Size(557, 162);
+            this.Size = new System.Drawing.Size(557, 169);
             this.gbNombre.ResumeLayout(false);
             this.gbNombre.PerformLayout();
             this.gbTotalPropinas.ResumeLayout(false);

@@ -14,7 +14,7 @@ namespace CapaNegocio
     {
         #region INSERTAR NOMINA EMPLEADO
 
-        public static async Task<(string rpta, int id_nomina)> InsertarEmpleado(EmpleadoNominaBinding empleadoNomina)
+        public static async Task<(string rpta, int id_nomina)> InsertarNomina(EmpleadoNominaBinding empleadoNomina)
         {
             DNomina DNomina = new DNomina();
             return await DNomina.InsertarNomina(empleadoNomina);
@@ -33,17 +33,17 @@ namespace CapaNegocio
 
         #region BUSCAR EMPLEADOS
 
-        public static async Task<(string rpta, DataTable dtNomina)> BuscarNomina(string tipo_busqueda, string texto_busqueda)
+        public static DataTable BuscarNomina(string tipo_busqueda, string texto_busqueda, out string rpta)
         {
             DNomina DNomina = new DNomina();
-            return await DNomina.BuscarNomina(tipo_busqueda, texto_busqueda);
+            return DNomina.BuscarNomina(tipo_busqueda, texto_busqueda, out rpta);
         }
 
-        public static async Task<(string rpta, DataTable dtNomina)> BuscarNomina(string tipo_busqueda, string texto_busqueda1, 
-            string texto_busqueda2)
+        public static DataTable BuscarNomina(string tipo_busqueda, string texto_busqueda1, 
+            string texto_busqueda2, out string rpta)
         {
             DNomina DNomina = new DNomina();
-            return await DNomina.BuscarNomina(tipo_busqueda, texto_busqueda1, texto_busqueda2);
+            return DNomina.BuscarNomina(tipo_busqueda, texto_busqueda1, texto_busqueda2, out rpta);
         }
 
         #endregion

@@ -343,9 +343,9 @@ namespace CapaDatos
         #endregion
 
         #region METODO BUSCAR NOMINA
-        public async Task<(string rpta, DataTable dtNominaEmpleado)> BuscarNomina(string tipo_busqueda, string texto_busqueda)
+        public DataTable BuscarNomina(string tipo_busqueda, string texto_busqueda, out string rpta)
         {
-            string rpta = "OK";
+            rpta = "OK";
             DataTable dtNomina = new DataTable("NominaEmpleado");
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
@@ -353,7 +353,7 @@ namespace CapaDatos
             try
             {
                 SqlCon.ConnectionString = Conexion.Cn;
-                await SqlCon.OpenAsync();
+                SqlCon.Open();
                 SqlCommand Sqlcmd = new SqlCommand
                 {
                     Connection = SqlCon,
@@ -397,7 +397,7 @@ namespace CapaDatos
                 Sqlcmd.Parameters.Add(Fecha);
 
                 SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
-                await Task.Run(() => SqlData.Fill(dtNomina));                
+                SqlData.Fill(dtNomina);                
             }
             catch (SqlException ex)
             {
@@ -413,13 +413,13 @@ namespace CapaDatos
                     SqlCon.Close();
             }
 
-            return (rpta, dtNomina);
+            return dtNomina;
         }
 
-        public async Task<(string rpta, DataTable dtNominaEmpleado)> BuscarNomina(string tipo_busqueda, string texto_busqueda1,
-            string texto_busqueda2)
+        public DataTable BuscarNomina(string tipo_busqueda, string texto_busqueda1,
+            string texto_busqueda2, out string rpta)
         {
-            string rpta = "OK";
+            rpta = "OK";
             DataTable dtNomina = new DataTable("NominaEmpleado");
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
@@ -427,7 +427,7 @@ namespace CapaDatos
             try
             {
                 SqlCon.ConnectionString = Conexion.Cn;
-                await SqlCon.OpenAsync();
+                SqlCon.Open();
                 SqlCommand Sqlcmd = new SqlCommand
                 {
                     Connection = SqlCon,
@@ -471,7 +471,7 @@ namespace CapaDatos
                 Sqlcmd.Parameters.Add(Fecha);
 
                 SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
-                await Task.Run(() => SqlData.Fill(dtNomina));
+                SqlData.Fill(dtNomina);
             }
             catch (SqlException ex)
             {
@@ -487,7 +487,7 @@ namespace CapaDatos
                     SqlCon.Close();
             }
 
-            return (rpta, dtNomina);
+            return dtNomina;
         }
         #endregion
 
