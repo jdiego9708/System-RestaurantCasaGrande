@@ -37,18 +37,7 @@ namespace CapaPresentacion
         {
             try
             {
-                this.Controls.Add(this.reportViewer1);
-                this.reportViewer1.LocalReport.ReportEmbeddedResource =
-                    "CapaPresentacion.ReportesFacturas.FacturaFinal.FacturaFinal.rdlc";
 
-                ReportDataSource dsDatosPrincipales = new ReportDataSource("DatosPrincipales", this.TablaDatosPrincipales);
-                reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);
-
-                ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
-                reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
-
-                ReportDataSource dsDetallePago = new ReportDataSource("DetallePago", this.TablaDetalleVenta);
-                reportViewer1.LocalReport.DataSources.Add(dsDetallePago);
             }
             catch (Exception ex)
             {
@@ -56,11 +45,10 @@ namespace CapaPresentacion
             }
         }
 
-        public void AsignarTablasPedido(List<string> variables)
+        public void AsignarTablasPrecuenta(List<string> variables)
         {
             try
             {
-                this.Is_precuenta = true;
                 this.reportParameters = new ReportParameter[variables.Count];
                 reportParameters[0] = new ReportParameter("Hora_pedido", DateTime.Now.ToShortTimeString());
                 reportParameters[1] = new ReportParameter("Total_parcial", variables[1]);
@@ -74,8 +62,8 @@ namespace CapaPresentacion
                 reportParameters[9] = new ReportParameter("PrecioDomicilio", variables[7]);
 
                 string rpta;
-                this.TablaDatosPrincipales = NPedido.BuscarPedidosYDetalle("ID PEDIDO",
-                    Convert.ToString(this.Id_pedido), 
+                this.TablaDatosPrincipales = NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE",
+                    Convert.ToString(this.Id_pedido),
                     out this.TablaDetallePedido,
                     out DataTable dtDetallePlatosPedido, out rpta);
             }
@@ -87,12 +75,23 @@ namespace CapaPresentacion
             //int rows = this.TablaDetalleVenta.Rows.Count;
         }
 
-        public void AsignarTablas()
+        public void AsignarTablasCuentaFinal()
         {
             this.Is_precuenta = false;
             this.TablaDatosPrincipales = NVentas.BuscarVentaFinal(Convert.ToString(this.Id_pedido),
                 out this.TablaDetallePedido, out this.TablaDetalleVenta);
             int rows = this.TablaDetalleVenta.Rows.Count;
+
+            this.Controls.Add(this.reportViewer1);
+
+            ReportDataSource dsDatosPrincipales = new ReportDataSource("DatosPrincipales", this.TablaDatosPrincipales);
+            reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);
+
+            ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
+            reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
+
+            ReportDataSource dsDetallePago = new ReportDataSource("DetallePago", this.TablaDetalleVenta);
+            reportViewer1.LocalReport.DataSources.Add(dsDetallePago);
         }
 
         public void ImprimirFactura(int Repetir)
@@ -108,7 +107,7 @@ namespace CapaPresentacion
 
                     ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
                     reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
-                    reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);                
+                    reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);
                 }
                 else
                 {

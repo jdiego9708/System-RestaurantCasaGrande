@@ -568,9 +568,21 @@ namespace CapaDatos
                 }
                 else
                 {
-                    dtPedidosDatosPrincipales = ds.Tables[0];
-                    DtResultadoDetalle = ds.Tables[1];
-                    dtDetallePlatoDetallado = ds.Tables[2];
+                    if (ds.Tables.Count == 1)
+                    {
+                        dtPedidosDatosPrincipales = ds.Tables[0];
+                    }
+                    else if (ds.Tables.Count == 2)
+                    {
+                        dtPedidosDatosPrincipales = ds.Tables[0];
+                        DtResultadoDetalle = ds.Tables[1];
+                    }
+                    else if (ds.Tables.Count == 3)
+                    {
+                        dtPedidosDatosPrincipales = ds.Tables[0];
+                        DtResultadoDetalle = ds.Tables[1];
+                        dtDetallePlatoDetallado = ds.Tables[2];
+                    }
                 }
 
                 /**FIN BUSCAR PEDIDO DATOS PRINCIPALES**/

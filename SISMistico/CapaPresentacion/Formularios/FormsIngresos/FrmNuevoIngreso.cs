@@ -1,5 +1,6 @@
 ﻿using CapaEntidades.Models;
 using CapaNegocio;
+using CapaPresentacion.ReportesFacturas.IngresosTurno;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -91,6 +92,26 @@ namespace CapaPresentacion.Formularios.FormsIngresos
                     {
                         Mensajes.MensajeInformacion("Se guardó correctamente el ingreso", "Entendido");
                         ingreso.Id_ingreso = id_ingreso;
+
+                        StringBuilder infoEmpleado = new StringBuilder();
+                        infoEmpleado.Append("Nombre de quien genera el ingreso " + ingreso.Empleado.Nombre_empleado).Append(Environment.NewLine);
+                        infoEmpleado.Append("Identificación " + ingreso.Empleado.Identificacion_empleado).Append(Environment.NewLine);
+
+                        StringBuilder infoingreso = new StringBuilder();
+                        infoingreso.Append("Concepto/Observaciones del ingreso:").Append(Environment.NewLine);
+                        infoingreso.Append(ingreso.Descripcion_ingreso).Append(Environment.NewLine);
+
+                        FrmReporteIngresos frmReporteingresos = new FrmReporteIngresos
+                        {
+                            FechaHora = ingreso.Fecha_ingreso.ToLongDateString() + " - " + DateTime.Now.ToLongTimeString(),
+                            InformacionEmpleado = infoEmpleado.ToString(),
+                            InformacionIngreso = infoingreso.ToString(),
+                            Valor_ingreso = ingreso.Valor_ingreso.ToString("C"),
+                            Observaciones = string.Empty,
+                        };
+                        frmReporteingresos.ObtenerReporte();
+                        frmReporteingresos.ImprimirFactura(1);
+
                         this.OnIngresoSuccess?.Invoke(ingreso, e);
                         this.Close();
                     }

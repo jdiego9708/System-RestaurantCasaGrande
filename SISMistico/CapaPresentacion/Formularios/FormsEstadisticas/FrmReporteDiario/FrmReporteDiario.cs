@@ -52,6 +52,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         public string CantidadPedidos { get; set; }
         public string ResumenResultados { get; set; }
         public string InformacionEgresos { get; set; }
+        public string InformacionIngresos { get; set; }
         public string IdentificacionTurno { get; set; }
         public string FechaHora { get; set; }
 
@@ -220,6 +221,46 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                     infoEgresos.Append("No hay conceptos de egresos.").Append(Environment.NewLine);
             }
 
+            StringBuilder infoIngresos = new StringBuilder();
+            if (this.chkIngresos.Checked)
+            {
+                DataTable dtIngresos = null;
+
+                if (isRango)
+                {
+                    var result = await NIngresos.BuscarIngresos("RANGO FECHAS", date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
+                    dtIngresos = result.dtIngresos;
+                }
+                else
+                {
+                    var result = await NIngresos.BuscarIngresos("FECHA", date1.ToString("yyyy-MM-dd"));
+                    dtIngresos = result.dtIngresos;
+                }
+
+                if (dtIngresos != null)
+                {
+                    if (dtIngresos.Rows.Count == 0)
+                    {
+                        infoIngresos.Append("No hay conceptos de ingresos extras.").Append(Environment.NewLine);
+                    }
+                    else
+                    {
+                        infoIngresos.Append("Descripción de los ingresos: ").Append(Environment.NewLine);
+                        int contador = 0;
+                        foreach (DataRow row in dtIngresos.Rows)
+                        {
+                            contador += 1;
+                            Ingresos ingreso = new Ingresos(row);
+                            infoIngresos.Append(contador + ") Fecha: ").Append(ingreso.Fecha_ingreso.ToLongDateString()).Append(" - ");
+                            infoIngresos.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C")).Append(" - ");
+                            infoIngresos.Append("Observaciones: ").Append(ingreso.Descripcion_ingreso).Append(Environment.NewLine);
+                        }
+                    }
+                }
+                else
+                    infoIngresos.Append("No hay conceptos de ingresos extras.").Append(Environment.NewLine);
+            }
+
             if (this.chkInfoNomina.Checked)
             {
                 DataTable dtNomina;
@@ -305,6 +346,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.CantidadPedidos = cantidadPedidos;
             this.ResumenResultados = resumenResultados.ToString();
             this.InformacionEgresos = infoEgresos.ToString();
+            this.InformacionIngresos = infoIngresos.ToString();
             this.IdentificacionTurno = id_turno;
             this.FechaHora = DateTime.Now.ToLongDateString();
             this.ObtenerReporte();
@@ -333,13 +375,14 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.reportViewer1.LocalReport.ReportEmbeddedResource =
             "CapaPresentacion.Formularios.FormsEstadisticas.FrmReporteDiario.rptReporteDiario.rdlc";
 
-            ReportParameter[] reportParameters = new ReportParameter[6];
+            ReportParameter[] reportParameters = new ReportParameter[7];
             reportParameters[0] = new ReportParameter("InformacionEmpleado", InformacionEmpleado);
             reportParameters[1] = new ReportParameter("CantidadPedidos", CantidadPedidos);
             reportParameters[2] = new ReportParameter("ResumenResultados", ResumenResultados);
             reportParameters[3] = new ReportParameter("InformacionEgresos", InformacionEgresos);
             reportParameters[4] = new ReportParameter("IdentificacionTurno", IdentificacionTurno);
             reportParameters[5] = new ReportParameter("FechaHora", FechaHora);
+            reportParameters[6] = new ReportParameter("InformacionIngresos", InformacionIngresos);
             this.reportViewer1.LocalReport.SetParameters(reportParameters);
             this.reportViewer1.RefreshReport();
         }
@@ -348,13 +391,14 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         {
             try
             {
-                ReportParameter[] reportParameters = new ReportParameter[6];
+                ReportParameter[] reportParameters = new ReportParameter[7];
                 reportParameters[0] = new ReportParameter("InformacionEmpleado", InformacionEmpleado);
                 reportParameters[1] = new ReportParameter("CantidadPedidos", CantidadPedidos);
                 reportParameters[2] = new ReportParameter("ResumenResultados", ResumenResultados);
                 reportParameters[3] = new ReportParameter("InformacionEgresos", InformacionEgresos);
                 reportParameters[4] = new ReportParameter("IdentificacionTurno", IdentificacionTurno);
                 reportParameters[5] = new ReportParameter("FechaHora", FechaHora);
+                reportParameters[6] = new ReportParameter("InformacionIngresos", InformacionIngresos);
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
                 this.reportViewer1.RefreshReport();
 

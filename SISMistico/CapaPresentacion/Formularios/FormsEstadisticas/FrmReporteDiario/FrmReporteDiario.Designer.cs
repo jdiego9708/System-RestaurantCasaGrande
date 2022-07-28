@@ -42,6 +42,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.date2 = new System.Windows.Forms.DateTimePicker();
             this.date1 = new System.Windows.Forms.DateTimePicker();
             this.gbReporte = new System.Windows.Forms.GroupBox();
+            this.chkIngresos = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -49,8 +50,9 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.chkDeletePedidos);
             this.groupBox1.Controls.Add(this.btnRefresh);
+            this.groupBox1.Controls.Add(this.chkIngresos);
+            this.groupBox1.Controls.Add(this.chkDeletePedidos);
             this.groupBox1.Controls.Add(this.chkInfoPagos);
             this.groupBox1.Controls.Add(this.chkInfoDetalleVentas);
             this.groupBox1.Controls.Add(this.chkInfoNomina);
@@ -61,7 +63,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.groupBox1.Controls.Add(this.date1);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1070, 76);
+            this.groupBox1.Size = new System.Drawing.Size(1339, 76);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Búsqueda por rango de fechas";
@@ -69,11 +71,11 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             // chkDeletePedidos
             // 
             this.chkDeletePedidos.AutoSize = true;
-            this.chkDeletePedidos.Location = new System.Drawing.Point(382, 16);
+            this.chkDeletePedidos.Location = new System.Drawing.Point(1021, 17);
             this.chkDeletePedidos.Name = "chkDeletePedidos";
-            this.chkDeletePedidos.Size = new System.Drawing.Size(234, 21);
+            this.chkDeletePedidos.Size = new System.Drawing.Size(245, 21);
             this.chkDeletePedidos.TabIndex = 31;
-            this.chkDeletePedidos.Text = "Información de pedidos eliminados";
+            this.chkDeletePedidos.Text = "Información de comandas eliminadas";
             this.chkDeletePedidos.UseVisualStyleBackColor = true;
             // 
             // btnRefresh
@@ -87,7 +89,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRefresh.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRefresh.Location = new System.Drawing.Point(1021, 24);
+            this.btnRefresh.Location = new System.Drawing.Point(1272, 24);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(35, 35);
             this.btnRefresh.TabIndex = 30;
@@ -96,7 +98,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             // chkInfoPagos
             // 
             this.chkInfoPagos.AutoSize = true;
-            this.chkInfoPagos.Location = new System.Drawing.Point(790, 46);
+            this.chkInfoPagos.Location = new System.Drawing.Point(1021, 43);
             this.chkInfoPagos.Name = "chkInfoPagos";
             this.chkInfoPagos.Size = new System.Drawing.Size(225, 21);
             this.chkInfoPagos.TabIndex = 5;
@@ -172,17 +174,27 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gbReporte.Location = new System.Drawing.Point(12, 94);
             this.gbReporte.Name = "gbReporte";
-            this.gbReporte.Size = new System.Drawing.Size(1070, 281);
+            this.gbReporte.Size = new System.Drawing.Size(1339, 450);
             this.gbReporte.TabIndex = 1;
             this.gbReporte.TabStop = false;
             this.gbReporte.Text = "Reporte";
+            // 
+            // chkIngresos
+            // 
+            this.chkIngresos.AutoSize = true;
+            this.chkIngresos.Location = new System.Drawing.Point(790, 45);
+            this.chkIngresos.Name = "chkIngresos";
+            this.chkIngresos.Size = new System.Drawing.Size(169, 21);
+            this.chkIngresos.TabIndex = 32;
+            this.chkIngresos.Text = "Información de ingresos";
+            this.chkIngresos.UseVisualStyleBackColor = true;
             // 
             // FrmReporteDiario
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1094, 387);
+            this.ClientSize = new System.Drawing.Size(1363, 556);
             this.Controls.Add(this.gbReporte);
             this.Controls.Add(this.groupBox1);
             this.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -211,5 +223,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         private System.Windows.Forms.CheckBox chkInfoPagos;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.CheckBox chkDeletePedidos;
+        private System.Windows.Forms.CheckBox chkIngresos;
     }
 }

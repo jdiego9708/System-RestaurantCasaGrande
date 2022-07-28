@@ -255,6 +255,7 @@
         private ProductDetalleBinding _productDetalle;
         private bool _isEditar;
         private bool _isEnabledBebida;
+        private bool _isEnabledSopa;
 
         public ProductDetalleBinding ProductDetalle
         {
@@ -283,7 +284,14 @@
             set
             {
                 _isEnabledBebida = value;
-                this.gbBebida.Visible = value;
+            }
+        }
+        public bool IsEnabledSopa
+        {
+            get => _isEnabledSopa;
+            set
+            {
+                _isEnabledSopa = value;
             }
         }
     }

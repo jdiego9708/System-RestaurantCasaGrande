@@ -155,7 +155,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
 
             //Buscar ultima nómina
             DataTable dt = NNomina.BuscarNomina("ID EMPLEADO ULTIMA NOMINA", empleadoNomina.Id_empleado.ToString(), out string rpta);
-            if (dt != null)
+            if (dt != null && dt.Rows.Count > 0)
             {
                 EmpleadoNominaBinding empleado = new EmpleadoNominaBinding(dt.Rows[0]);
                 lblEstado.Text = $"Última nómina paga {empleado.Fecha_nomina.ToLongDateString()}";

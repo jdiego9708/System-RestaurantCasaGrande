@@ -1,4 +1,5 @@
 ﻿using CapaPresentacion.Formularios.Controles;
+using CapaPresentacion.Formularios.FormsPlatos;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +24,33 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnRemove.Click += BtnRemove_Click;
             this.btnComment.Click += BtnComment_Click;
             this.pxImage.Click += PxImage_Click;
+
+            this.btnEditar.Click += BtnEditar_Click;
+        }
+
+        private void BtnEditar_Click(object sender, EventArgs e)
+        {
+            if (this.Product == null) return;
+
+            if (this.Product.Tipo_producto.Equals("PLATO"))
+            {
+                CapaEntidades.Models.Platos plato = (CapaEntidades.Models.Platos)this.Product.Product;
+
+                FrmAgregarPlato frmplato = new FrmAgregarPlato()
+                {
+                    StartPosition = FormStartPosition.CenterScreen,
+                    Plato = plato,
+                };
+                frmplato.OnPlatoSuccess += Frmplato_OnPlatoSuccess;
+                frmplato.ShowDialog();
+            }
+        }
+
+        private void Frmplato_OnPlatoSuccess(object sender, EventArgs e)
+        {
+            CapaEntidades.Models.Platos plato = (CapaEntidades.Models.Platos)sender;
+            this.Product.Product = plato;
+            this.AsignarDatos(this.Product);
         }
 
         private void PxImage_Click(object sender, EventArgs e)

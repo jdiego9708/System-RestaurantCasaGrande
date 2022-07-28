@@ -33,8 +33,8 @@
             this.btnAdministracion = new System.Windows.Forms.Button();
             this.btnReservas = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnInsumos = new System.Windows.Forms.Button();
             this.lblMistico = new System.Windows.Forms.Label();
-            this.btnVentas = new System.Windows.Forms.Button();
             this.btnMesasPedidos = new System.Windows.Forms.Button();
             this.btnBebidas = new System.Windows.Forms.Button();
             this.btnPlatos = new System.Windows.Forms.Button();
@@ -44,7 +44,6 @@
             this.btnUsuario = new System.Windows.Forms.Button();
             this.btnAdministracionAvanzada = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnInsumos = new System.Windows.Forms.Button();
             this.panelBotones.SuspendLayout();
             this.panelBarraSuperior.SuspendLayout();
             this.SuspendLayout();
@@ -59,7 +58,6 @@
             this.panelBotones.Controls.Add(this.label1);
             this.panelBotones.Controls.Add(this.btnInsumos);
             this.panelBotones.Controls.Add(this.lblMistico);
-            this.panelBotones.Controls.Add(this.btnVentas);
             this.panelBotones.Controls.Add(this.btnMesasPedidos);
             this.panelBotones.Controls.Add(this.btnBebidas);
             this.panelBotones.Controls.Add(this.btnPlatos);
@@ -79,7 +77,7 @@
             this.btnAdministracion.ForeColor = System.Drawing.Color.White;
             this.btnAdministracion.Image = ((System.Drawing.Image)(resources.GetObject("btnAdministracion.Image")));
             this.btnAdministracion.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnAdministracion.Location = new System.Drawing.Point(0, 246);
+            this.btnAdministracion.Location = new System.Drawing.Point(0, 217);
             this.btnAdministracion.Name = "btnAdministracion";
             this.btnAdministracion.Size = new System.Drawing.Size(124, 33);
             this.btnAdministracion.TabIndex = 14;
@@ -116,6 +114,24 @@
             this.label1.TabIndex = 12;
             this.label1.Text = "® Copyright Juan Diego \r\nDuque -\r\njdiego9708@gmail.com";
             // 
+            // btnInsumos
+            // 
+            this.btnInsumos.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnInsumos.FlatAppearance.BorderSize = 0;
+            this.btnInsumos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnInsumos.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnInsumos.ForeColor = System.Drawing.Color.White;
+            this.btnInsumos.Image = ((System.Drawing.Image)(resources.GetObject("btnInsumos.Image")));
+            this.btnInsumos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnInsumos.Location = new System.Drawing.Point(-1, 260);
+            this.btnInsumos.Name = "btnInsumos";
+            this.btnInsumos.Size = new System.Drawing.Size(124, 33);
+            this.btnInsumos.TabIndex = 11;
+            this.btnInsumos.Text = "Insumos";
+            this.btnInsumos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnInsumos.UseVisualStyleBackColor = true;
+            this.btnInsumos.Visible = false;
+            // 
             // lblMistico
             // 
             this.lblMistico.AutoSize = true;
@@ -126,23 +142,6 @@
             this.lblMistico.Size = new System.Drawing.Size(118, 21);
             this.lblMistico.TabIndex = 10;
             this.lblMistico.Text = "CASA GRANDE";
-            // 
-            // btnVentas
-            // 
-            this.btnVentas.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnVentas.FlatAppearance.BorderSize = 0;
-            this.btnVentas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnVentas.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnVentas.ForeColor = System.Drawing.Color.White;
-            this.btnVentas.Image = ((System.Drawing.Image)(resources.GetObject("btnVentas.Image")));
-            this.btnVentas.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnVentas.Location = new System.Drawing.Point(0, 210);
-            this.btnVentas.Name = "btnVentas";
-            this.btnVentas.Size = new System.Drawing.Size(124, 33);
-            this.btnVentas.TabIndex = 9;
-            this.btnVentas.Text = "Ventas";
-            this.btnVentas.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnVentas.UseVisualStyleBackColor = true;
             // 
             // btnMesasPedidos
             // 
@@ -289,24 +288,6 @@
             this.panel1.Size = new System.Drawing.Size(699, 394);
             this.panel1.TabIndex = 2;
             // 
-            // btnInsumos
-            // 
-            this.btnInsumos.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnInsumos.FlatAppearance.BorderSize = 0;
-            this.btnInsumos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnInsumos.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnInsumos.ForeColor = System.Drawing.Color.White;
-            this.btnInsumos.Image = ((System.Drawing.Image)(resources.GetObject("btnInsumos.Image")));
-            this.btnInsumos.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnInsumos.Location = new System.Drawing.Point(-3, 307);
-            this.btnInsumos.Name = "btnInsumos";
-            this.btnInsumos.Size = new System.Drawing.Size(124, 33);
-            this.btnInsumos.TabIndex = 11;
-            this.btnInsumos.Text = "Insumos";
-            this.btnInsumos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnInsumos.UseVisualStyleBackColor = true;
-            this.btnInsumos.Visible = false;
-            // 
             // FrmPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -336,7 +317,6 @@
         private System.Windows.Forms.Button btnPlatos;
         private System.Windows.Forms.Button btnBebidas;
         private System.Windows.Forms.Button btnMesasPedidos;
-        private System.Windows.Forms.Button btnVentas;
         private System.Windows.Forms.Label lblMistico;
         private System.Windows.Forms.Button btnAdministracionAvanzada;
         public System.Windows.Forms.Panel panel1;

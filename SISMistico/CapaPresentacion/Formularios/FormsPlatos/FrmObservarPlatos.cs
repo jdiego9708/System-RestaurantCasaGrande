@@ -17,6 +17,8 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.txtBusqueda.onKeyPress += TxtBusqueda_KeyPress;
         }
 
+        public event EventHandler OnDgvDoubleClick;
+
         private void TxtBusqueda_KeyPress(object sender, KeyPressEventArgs e)
         {
             if ((int)e.KeyChar == (int)Keys.Enter)
@@ -38,7 +40,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             }
         }
 
-        public FrmAgregarPlato FrmAgregarPlato;
+        public bool IsEditar { get; set; }
         public FrmAgregarDetallePlato agregarDetallePlato;
 
         public bool InactivarPlatos = false;
@@ -53,11 +55,10 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                 {
                     string rpta = "OK";
                     int fila = this.dgvPlatos.CurrentRow.Cells[0].RowIndex;
-                    if (this.FrmAgregarPlato != null)
+                    if (this.IsEditar)
                     {
-                        this.FrmAgregarPlato.Plato = new CapaEntidades.Models.Platos(row); this.FrmAgregarPlato.ObtenerDatos
-                             (DatagridString.ReturnValuesOfCells(sender, fila, out rpta));
-                        this.FrmAgregarPlato.Show();
+                        CapaEntidades.Models.Platos plato = new CapaEntidades.Models.Platos(row);
+                        this.OnDgvDoubleClick?.Invoke(plato, e);                     
                     }
                     else if (this.agregarDetallePlato != null)
                     {
@@ -148,7 +149,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     "Hubo un error al buscar los platos", ex.Message);
             }
         }
-      
+
         private void FrmObservarPlatos_Load(object sender, EventArgs e)
         {
             this.BuscarPlatos("COMPLETO", "");

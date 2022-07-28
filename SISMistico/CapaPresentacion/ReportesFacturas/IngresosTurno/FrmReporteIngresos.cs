@@ -9,11 +9,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace CapaPresentacion.ReportesFacturas.GastosTurno
+namespace CapaPresentacion.ReportesFacturas.IngresosTurno
 {
-    public partial class FrmReporteGastos : Form
+    public partial class FrmReporteIngresos : Form
     {
-        public FrmReporteGastos()
+        public FrmReporteIngresos()
         {
             InitializeComponent();
             this.Load += FrmReporteGastos_Load;
@@ -21,8 +21,8 @@ namespace CapaPresentacion.ReportesFacturas.GastosTurno
 
         public string FechaHora { get; set; }
         public string InformacionEmpleado { get; set; }
-        public string InformacionGasto { get; set; }
-        public string Valor_gasto { get; set; }
+        public string InformacionIngreso { get; set; }
+        public string Valor_ingreso { get; set; }
         public string Observaciones { get; set; }
 
         private ReportViewer reportViewer1;
@@ -33,7 +33,7 @@ namespace CapaPresentacion.ReportesFacturas.GastosTurno
             this.reportViewer1 = new ReportViewer();
             this.Controls.Add(this.reportViewer1);
             this.reportViewer1.LocalReport.ReportEmbeddedResource =
-            "CapaPresentacion.ReportesFacturas.GastosTurno.rptComprobanteGasto.rdlc";
+            "CapaPresentacion.ReportesFacturas.IngresosTurno.rptComprobanteIngreso.rdlc";
         }
 
         private void FrmReporteGastos_Load(object sender, EventArgs e)
@@ -43,7 +43,7 @@ namespace CapaPresentacion.ReportesFacturas.GastosTurno
 
             this.Controls.Add(this.reportViewer1);
             this.reportViewer1.LocalReport.ReportEmbeddedResource =
-            "CapaPresentacion.ReportesFacturas.GastosTurno.rptComprobanteGasto.rdlc";
+            "CapaPresentacion.ReportesFacturas.IngresosTurno.rptComprobanteIngreso.rdlc";
         }
 
         public void ImprimirFactura(int Repetir)
@@ -53,8 +53,8 @@ namespace CapaPresentacion.ReportesFacturas.GastosTurno
                 ReportParameter[] reportParameters = new ReportParameter[5];
                 reportParameters[0] = new ReportParameter("FechaHora", FechaHora);
                 reportParameters[1] = new ReportParameter("InformacionEmpleado", InformacionEmpleado);
-                reportParameters[2] = new ReportParameter("InformacionGasto", InformacionGasto);
-                reportParameters[3] = new ReportParameter("Valor_gasto", Valor_gasto);
+                reportParameters[2] = new ReportParameter("InformacionIngreso", InformacionIngreso);
+                reportParameters[3] = new ReportParameter("Valor_ingreso", Valor_ingreso);
                 reportParameters[4] = new ReportParameter("Observaciones", Observaciones);
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
                 this.reportViewer1.RefreshReport();

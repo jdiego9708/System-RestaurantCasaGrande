@@ -39,6 +39,12 @@ namespace CapaNegocio
             return await DIngresos.BuscarIngresos(tipo_busqueda, texto_busqueda);
         }
 
+        public static async Task<(string rpta, DataTable dtIngresos)> BuscarIngresos(string tipo_busqueda, string texto_busqueda1, string texto_busqueda2)
+        {
+            DIngresos DIngresos = new DIngresos();
+            return await DIngresos.BuscarIngresos(tipo_busqueda, texto_busqueda1, texto_busqueda2);
+        }
+
         #endregion
     }
 }

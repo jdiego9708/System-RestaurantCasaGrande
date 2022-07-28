@@ -37,6 +37,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnCambiarMesa = new System.Windows.Forms.Button();
             this.btnEditarPedido = new System.Windows.Forms.Button();
             this.btnFacturar = new System.Windows.Forms.Button();
+            this.btnPrecuenta = new System.Windows.Forms.Button();
             this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +48,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panel1.BackColor = System.Drawing.Color.SteelBlue;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(460, 10);
+            this.panel1.Size = new System.Drawing.Size(601, 10);
             this.panel1.TabIndex = 0;
             // 
             // groupBox5
@@ -58,7 +59,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.Controls.Add(this.txtInfo);
             this.groupBox5.Location = new System.Drawing.Point(3, 104);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(454, 291);
+            this.groupBox5.Size = new System.Drawing.Size(595, 475);
             this.groupBox5.TabIndex = 10;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Información";
@@ -77,7 +78,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtInfo.Name = "txtInfo";
             this.txtInfo.ReadOnly = true;
             this.txtInfo.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtInfo.Size = new System.Drawing.Size(442, 261);
+            this.txtInfo.Size = new System.Drawing.Size(583, 445);
             this.txtInfo.TabIndex = 0;
             this.txtInfo.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -113,7 +114,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnCambiarMesa.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCambiarMesa.Image = ((System.Drawing.Image)(resources.GetObject("btnCambiarMesa.Image")));
             this.btnCambiarMesa.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnCambiarMesa.Location = new System.Drawing.Point(8, 58);
+            this.btnCambiarMesa.Location = new System.Drawing.Point(426, 12);
             this.btnCambiarMesa.Name = "btnCambiarMesa";
             this.btnCambiarMesa.Size = new System.Drawing.Size(172, 40);
             this.btnCambiarMesa.TabIndex = 28;
@@ -153,19 +154,40 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnFacturar.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnFacturar.Image = ((System.Drawing.Image)(resources.GetObject("btnFacturar.Image")));
             this.btnFacturar.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnFacturar.Location = new System.Drawing.Point(248, 58);
+            this.btnFacturar.Location = new System.Drawing.Point(454, 58);
             this.btnFacturar.Name = "btnFacturar";
-            this.btnFacturar.Size = new System.Drawing.Size(117, 40);
+            this.btnFacturar.Size = new System.Drawing.Size(138, 40);
             this.btnFacturar.TabIndex = 30;
-            this.btnFacturar.Text = "Facturar";
+            this.btnFacturar.Text = "Factura final";
             this.btnFacturar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnFacturar.UseVisualStyleBackColor = true;
+            // 
+            // btnPrecuenta
+            // 
+            this.btnPrecuenta.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnPrecuenta.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnPrecuenta.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
+            this.btnPrecuenta.FlatAppearance.BorderSize = 0;
+            this.btnPrecuenta.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
+            this.btnPrecuenta.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnPrecuenta.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrecuenta.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnPrecuenta.Image = ((System.Drawing.Image)(resources.GetObject("btnPrecuenta.Image")));
+            this.btnPrecuenta.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnPrecuenta.Location = new System.Drawing.Point(8, 58);
+            this.btnPrecuenta.Name = "btnPrecuenta";
+            this.btnPrecuenta.Size = new System.Drawing.Size(127, 40);
+            this.btnPrecuenta.TabIndex = 31;
+            this.btnPrecuenta.Text = "Precuenta";
+            this.btnPrecuenta.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnPrecuenta.UseVisualStyleBackColor = true;
             // 
             // DatosMesaSmall
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.btnPrecuenta);
             this.Controls.Add(this.btnFacturar);
             this.Controls.Add(this.btnEditarPedido);
             this.Controls.Add(this.btnCambiarMesa);
@@ -176,7 +198,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "DatosMesaSmall";
-            this.Size = new System.Drawing.Size(460, 398);
+            this.Size = new System.Drawing.Size(601, 582);
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
@@ -192,5 +214,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.Button btnCambiarMesa;
         private System.Windows.Forms.Button btnEditarPedido;
         private System.Windows.Forms.Button btnFacturar;
+        private System.Windows.Forms.Button btnPrecuenta;
     }
 }

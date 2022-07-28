@@ -66,7 +66,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox1.Controls.Add(this.btnPlatos);
             this.groupBox1.Location = new System.Drawing.Point(7, 60);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(627, 84);
+            this.groupBox1.Size = new System.Drawing.Size(735, 84);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Platos y bebidas";
@@ -80,7 +80,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtBusqueda.Location = new System.Drawing.Point(216, 38);
             this.txtBusqueda.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtBusqueda.Name = "txtBusqueda";
-            this.txtBusqueda.Size = new System.Drawing.Size(405, 20);
+            this.txtBusqueda.Size = new System.Drawing.Size(513, 20);
             this.txtBusqueda.TabIndex = 3;
             this.txtBusqueda.Texto = "Búsqueda";
             this.txtBusqueda.Texto_inicial = "Búsqueda";
@@ -181,7 +181,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox3.Controls.Add(this.panelResultados);
             this.groupBox3.Location = new System.Drawing.Point(206, 150);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(428, 422);
+            this.groupBox3.Size = new System.Drawing.Size(536, 422);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Búsqueda";
@@ -195,7 +195,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelResultados.Location = new System.Drawing.Point(3, 21);
             this.panelResultados.Name = "panelResultados";
             this.panelResultados.PageSize = 10;
-            this.panelResultados.Size = new System.Drawing.Size(419, 395);
+            this.panelResultados.Size = new System.Drawing.Size(527, 395);
             this.panelResultados.TabIndex = 0;
             // 
             // groupBox4
@@ -204,9 +204,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox4.Controls.Add(this.panelPedido);
-            this.groupBox4.Location = new System.Drawing.Point(640, 150);
+            this.groupBox4.Location = new System.Drawing.Point(748, 150);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(445, 422);
+            this.groupBox4.Size = new System.Drawing.Size(337, 422);
             this.groupBox4.TabIndex = 8;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pedido";
@@ -222,7 +222,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelPedido.Location = new System.Drawing.Point(3, 21);
             this.panelPedido.Name = "panelPedido";
             this.panelPedido.PageSize = 10;
-            this.panelPedido.Size = new System.Drawing.Size(436, 395);
+            this.panelPedido.Size = new System.Drawing.Size(328, 395);
             this.panelPedido.TabIndex = 0;
             // 
             // groupBox5
@@ -233,9 +233,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.Controls.Add(this.chkPrintComandas);
             this.groupBox5.Controls.Add(this.btnSave);
             this.groupBox5.Controls.Add(this.txtInfoPedido);
-            this.groupBox5.Location = new System.Drawing.Point(640, 60);
+            this.groupBox5.Location = new System.Drawing.Point(748, 60);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(445, 84);
+            this.groupBox5.Size = new System.Drawing.Size(337, 84);
             this.groupBox5.TabIndex = 8;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Información";
@@ -311,7 +311,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtInfoPedido.Name = "txtInfoPedido";
             this.txtInfoPedido.ReadOnly = true;
             this.txtInfoPedido.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtInfoPedido.Size = new System.Drawing.Size(189, 54);
+            this.txtInfoPedido.Size = new System.Drawing.Size(81, 54);
             this.txtInfoPedido.TabIndex = 0;
             this.txtInfoPedido.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 

@@ -21,8 +21,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnCancelarPedido.Click += BtnCancelarPedido_Click;
             this.btnEditarPedido.Click += BtnEditarPedido_Click;
             this.btnFacturar.Click += BtnFacturar_Click;
+            this.btnPrecuenta.Click += BtnPrecuenta_Click;
         }
 
+        private void BtnPrecuenta_Click(object sender, EventArgs e)
+        {
+            this.OnBtnPrecuentaPedidoClick?.Invoke(this.Pedido, e);
+        }
+
+        public event EventHandler OnBtnPrecuentaPedidoClick;
         public event EventHandler OnBtnCambiarMesaClick;
         public event EventHandler OnBtnCancelarPedidoClick;
         public event EventHandler OnBtnEditarPedidoClick;
@@ -87,6 +94,10 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     }
 
                     //row["Nombre"] = info.ToString();
+                }
+                else
+                {
+                    info.Append("-" + nombre).Append(Environment.NewLine);
                 }
             }
 

@@ -39,7 +39,7 @@ namespace CapaPresentacion.Formularios.FormsBebidas
 
             this.ListaTipoBebidas =
               LlenarListas.LlenarListaTipoBebidas(this.ListaTipoBebidas);
-            this.ListaTipoBebidas.SelectedValue = bebida.Id_bebida;
+            this.ListaTipoBebidas.SelectedValue = bebida.Id_tipo_bebida;
 
             this.txtNombre.Text = bebida.Nombre_bebida;
             this.txtPrecio.Text = bebida.Precio_bebida.ToString();
@@ -69,6 +69,9 @@ namespace CapaPresentacion.Formularios.FormsBebidas
 
                     if (rpta.Equals("OK"))
                     {
+                        if (this.uploadImage1.Nombre_imagen == null)
+                            this.uploadImage1.Nombre_imagen = "SIN IMAGEN";
+
                         if (!this.uploadImage1.Nombre_imagen.Equals("SIN IMAGEN"))
                         {
                             rpta = ArchivosAdjuntos.GuardarArchivo(id_bebida, "rutaImages",
@@ -120,7 +123,7 @@ namespace CapaPresentacion.Formularios.FormsBebidas
                         this.txtDescripcion.Text,
                         precio_bebida.ToString("N2"),
                         "0", "0", "0", "0",
-                        this.uploadImage1.Nombre_imagen,
+                        this.uploadImage1.Nombre_imagen == null ? "SIN IMAGEN" : this.uploadImage1.Nombre_imagen,
                         id_tipo_bebida.ToString(),
                         "0", "0"
                     };
@@ -134,7 +137,7 @@ namespace CapaPresentacion.Formularios.FormsBebidas
                         this.txtDescripcion.Text,
                         precio_bebida.ToString("N2"),
                         "0", "0", "0", "0",
-                        this.uploadImage1.Nombre_imagen,
+                        this.uploadImage1.Nombre_imagen == null ? "SIN IMAGEN" : this.uploadImage1.Nombre_imagen,
                         id_tipo_bebida.ToString(),
                         "0", "0"
                     };

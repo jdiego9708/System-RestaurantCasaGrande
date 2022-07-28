@@ -47,13 +47,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.txtPrecioDesechables.Visible = false;
         }
 
-        public DataTable TablaPago()
+        public DataTable TablaPago(bool isPrecuenta)
         {
             DataTable table = new DataTable();
             table.Columns.Add("Pago", typeof(string));
             table.Columns.Add("Valor_pago", typeof(string));
             table.Columns.Add("Vaucher", typeof(string));
             table.Columns.Add("Observaciones", typeof(string));
+
+            if (isPrecuenta)
+                return table;
 
             bool result = this.ObtenerMetodosPago(out List<MetodoPagoModel> MetodosPago);
 
@@ -154,7 +157,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         }
                         else
                         {
-                            Mensajes.MensajeInformacion("Verifique los valores en métodos de pago");
+                            //Mensajes.MensajeInformacion("Verifique los valores en métodos de pago");
                             return false;
                         }                      
                     }

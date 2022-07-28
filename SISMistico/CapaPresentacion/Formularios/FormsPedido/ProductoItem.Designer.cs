@@ -29,6 +29,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProductoItem));
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
@@ -37,6 +38,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.pxImage = new System.Windows.Forms.PictureBox();
             this.btnRemove = new System.Windows.Forms.Button();
             this.btnComment = new System.Windows.Forms.Button();
+            this.btnEditar = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pxImage)).BeginInit();
             this.SuspendLayout();
@@ -48,7 +51,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panel1.BackColor = System.Drawing.Color.SteelBlue;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(406, 5);
+            this.panel1.Size = new System.Drawing.Size(475, 5);
             this.panel1.TabIndex = 0;
             // 
             // groupBox5
@@ -56,9 +59,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox5.Controls.Add(this.txtInfo);
-            this.groupBox5.Location = new System.Drawing.Point(120, 7);
+            this.groupBox5.Location = new System.Drawing.Point(158, 7);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(283, 163);
+            this.groupBox5.Size = new System.Drawing.Size(314, 187);
             this.groupBox5.TabIndex = 9;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Información";
@@ -70,14 +73,14 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtInfo.BackColor = System.Drawing.Color.White;
             this.txtInfo.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtInfo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtInfo.Font = new System.Drawing.Font("Segoe UI", 16F);
             this.txtInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.txtInfo.Location = new System.Drawing.Point(6, 24);
             this.txtInfo.Multiline = true;
             this.txtInfo.Name = "txtInfo";
             this.txtInfo.ReadOnly = true;
             this.txtInfo.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtInfo.Size = new System.Drawing.Size(271, 133);
+            this.txtInfo.Size = new System.Drawing.Size(302, 157);
             this.txtInfo.TabIndex = 0;
             this.txtInfo.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -92,18 +95,19 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAdd.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAdd.Location = new System.Drawing.Point(3, 131);
+            this.btnAdd.Location = new System.Drawing.Point(6, 159);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(40, 40);
             this.btnAdd.TabIndex = 26;
+            this.toolTip1.SetToolTip(this.btnAdd, "Agregar producto");
             this.btnAdd.UseVisualStyleBackColor = true;
             // 
             // pxImage
             // 
             this.pxImage.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pxImage.Location = new System.Drawing.Point(4, 19);
+            this.pxImage.Location = new System.Drawing.Point(4, 17);
             this.pxImage.Name = "pxImage";
-            this.pxImage.Size = new System.Drawing.Size(110, 110);
+            this.pxImage.Size = new System.Drawing.Size(149, 140);
             this.pxImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pxImage.TabIndex = 27;
             this.pxImage.TabStop = false;
@@ -119,10 +123,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnRemove.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnRemove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRemove.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRemove.Location = new System.Drawing.Point(82, 136);
+            this.btnRemove.Location = new System.Drawing.Point(85, 164);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(30, 30);
             this.btnRemove.TabIndex = 28;
+            this.toolTip1.SetToolTip(this.btnRemove, "Remover producto de la lista");
             this.btnRemove.UseVisualStyleBackColor = true;
             // 
             // btnComment
@@ -136,17 +141,37 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnComment.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnComment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnComment.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnComment.Location = new System.Drawing.Point(46, 136);
+            this.btnComment.Location = new System.Drawing.Point(49, 164);
             this.btnComment.Name = "btnComment";
             this.btnComment.Size = new System.Drawing.Size(30, 30);
             this.btnComment.TabIndex = 29;
+            this.toolTip1.SetToolTip(this.btnComment, "Agregar un comentario al producto");
             this.btnComment.UseVisualStyleBackColor = true;
+            // 
+            // btnEditar
+            // 
+            this.btnEditar.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnEditar.BackgroundImage")));
+            this.btnEditar.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnEditar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnEditar.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
+            this.btnEditar.FlatAppearance.BorderSize = 0;
+            this.btnEditar.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Silver;
+            this.btnEditar.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnEditar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEditar.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnEditar.Location = new System.Drawing.Point(121, 164);
+            this.btnEditar.Name = "btnEditar";
+            this.btnEditar.Size = new System.Drawing.Size(30, 30);
+            this.btnEditar.TabIndex = 30;
+            this.toolTip1.SetToolTip(this.btnEditar, "Editar los datos de un producto");
+            this.btnEditar.UseVisualStyleBackColor = true;
             // 
             // ProductoItem
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.btnEditar);
             this.Controls.Add(this.btnComment);
             this.Controls.Add(this.btnRemove);
             this.Controls.Add(this.pxImage);
@@ -157,7 +182,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "ProductoItem";
-            this.Size = new System.Drawing.Size(406, 176);
+            this.Size = new System.Drawing.Size(475, 200);
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pxImage)).EndInit();
@@ -174,5 +199,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.PictureBox pxImage;
         private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.Button btnComment;
+        private System.Windows.Forms.Button btnEditar;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

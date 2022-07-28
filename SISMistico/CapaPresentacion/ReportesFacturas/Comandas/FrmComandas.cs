@@ -25,6 +25,14 @@ namespace CapaPresentacion
 
         public void ObtenerReporte()
         {
+            if (this.Controls.Count > 0)
+            {
+                this.Controls.Remove(this.reportViewer1);
+                this.reportViewer1.LocalReport.ReportEmbeddedResource = null;
+                this.reportViewer1.DataBindings.Clear(); ;
+                this.reportViewer1.LocalReport.DataSources.Clear();
+            }
+
             this.Controls.Add(this.reportViewer1);
             this.reportViewer1.LocalReport.ReportEmbeddedResource =
                 "CapaPresentacion.ReportesFacturas.Comandas.ComandasPedido.rdlc";
@@ -159,6 +167,8 @@ namespace CapaPresentacion
 
         public void AsignarTablas(DataTable detallepedido)
         {
+            this.TablaDetallePedido = null;
+
             int cantidad_productos = 0;
             foreach (DataRow row in detallepedido.Rows)
             {

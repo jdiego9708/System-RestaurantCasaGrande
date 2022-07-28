@@ -298,15 +298,89 @@ namespace CapaDatos
 
                 SqlParameter Texto_busqueda = new SqlParameter
                 {
-                    ParameterName = "@Texto_busqueda",
+                    ParameterName = "@Texto_busqueda1",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 50,
                     Value = texto_busqueda.Trim(),
                 };
                 Sqlcmd.Parameters.Add(Texto_busqueda);
-            
+
+                SqlParameter Texto_busqueda2 = new SqlParameter
+                {
+                    ParameterName = "@Texto_busqueda2",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = ""
+                };
+                Sqlcmd.Parameters.Add(Texto_busqueda2);
+
                 SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
                 await Task.Run(() => SqlData.Fill(dtNomina));                
+            }
+            catch (SqlException ex)
+            {
+                rpta = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                rpta = ex.Message;
+            }
+            finally
+            {
+                if (SqlCon.State == ConnectionState.Open)
+                    SqlCon.Close();
+            }
+
+            return (rpta, dtNomina);
+        }
+
+        public async Task<(string rpta, DataTable dtIngresos)> BuscarIngresos(string tipo_busqueda, string texto_busqueda1, string texto_busqueda2)
+        {
+            string rpta = "OK";
+            DataTable dtNomina = new DataTable("Ingresos");
+            SqlConnection SqlCon = new SqlConnection();
+            SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
+            SqlCon.FireInfoMessageEventOnUserErrors = true;
+            try
+            {
+                SqlCon.ConnectionString = Conexion.Cn;
+                await SqlCon.OpenAsync();
+                SqlCommand Sqlcmd = new SqlCommand
+                {
+                    Connection = SqlCon,
+                    CommandText = "sp_Buscar_ingreso",
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                SqlParameter Tipo_busqueda = new SqlParameter
+                {
+                    ParameterName = "@Tipo_busqueda",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = tipo_busqueda.Trim(),
+                };
+                Sqlcmd.Parameters.Add(Tipo_busqueda);
+
+                SqlParameter Texto_busqueda1 = new SqlParameter
+                {
+                    ParameterName = "@Texto_busqueda1",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = texto_busqueda1.Trim(),
+                };
+                Sqlcmd.Parameters.Add(Texto_busqueda1);
+
+                SqlParameter Texto_busqueda2 = new SqlParameter
+                {
+                    ParameterName = "@Texto_busqueda2",
+                    SqlDbType = SqlDbType.VarChar,
+                    Size = 50,
+                    Value = texto_busqueda2.Trim(),
+                };
+                Sqlcmd.Parameters.Add(Texto_busqueda2);
+
+                SqlDataAdapter SqlData = new SqlDataAdapter(Sqlcmd);
+                await Task.Run(() => SqlData.Fill(dtNomina));
             }
             catch (SqlException ex)
             {

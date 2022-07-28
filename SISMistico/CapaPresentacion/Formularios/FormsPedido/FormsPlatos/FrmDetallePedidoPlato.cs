@@ -48,12 +48,21 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
         public ProductBinding Product { get; set; }
 
         private bool _isEnabledBebida;
+        private bool _isEnabledSopa;
         public bool IsEnabledBebida
         {
             get => _isEnabledBebida;
             set
             {
                 _isEnabledBebida = value;
+            }
+        }
+        public bool IsEnabledSopa
+        {
+            get => _isEnabledSopa;
+            set
+            {
+                _isEnabledSopa = value;
             }
         }
     }

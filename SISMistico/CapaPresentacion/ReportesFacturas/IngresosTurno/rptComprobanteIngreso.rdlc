@@ -27,7 +27,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Comprobante de gasto</Value>
+                    <Value>Comprobante de ingreso</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>11pt</FontSize>
@@ -278,7 +278,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=Parameters!InformacionGasto.Value</Value>
+                    <Value>=Parameters!InformacionIngreso.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>SemiBold</FontWeight>
@@ -313,7 +313,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=Parameters!Valor_gasto.Value</Value>
+                    <Value>=Parameters!Valor_ingreso.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>11pt</FontSize>
@@ -502,13 +502,13 @@
       <AllowBlank>true</AllowBlank>
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
-    <ReportParameter Name="InformacionGasto">
+    <ReportParameter Name="InformacionIngreso">
       <DataType>String</DataType>
       <Nullable>true</Nullable>
       <AllowBlank>true</AllowBlank>
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
-    <ReportParameter Name="Valor_gasto">
+    <ReportParameter Name="Valor_ingreso">
       <DataType>String</DataType>
       <Nullable>true</Nullable>
       <AllowBlank>true</AllowBlank>
@@ -539,12 +539,12 @@
         <CellDefinition>
           <ColumnIndex>2</ColumnIndex>
           <RowIndex>0</RowIndex>
-          <ParameterName>InformacionGasto</ParameterName>
+          <ParameterName>InformacionIngreso</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>3</ColumnIndex>
           <RowIndex>0</RowIndex>
-          <ParameterName>Valor_gasto</ParameterName>
+          <ParameterName>Valor_ingreso</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>

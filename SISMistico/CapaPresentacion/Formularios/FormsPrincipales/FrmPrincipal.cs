@@ -21,6 +21,7 @@ using CapaEntidades.Models;
 using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CapaPresentacion.Formularios.FormsPrincipales.FormsConfiguracion;
 
 namespace CapaPresentacion.Formularios.FormsPrincipales
 {
@@ -45,7 +46,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.btnClientes.Click += BtnClientes_Click;
             this.btnMesasPedidos.Click += BtnMesasPedidos_Click;
             this.btnInsumos.Click += BtnInsumos_Click;
-            this.btnVentas.Click += BtnVentas_Click;
             this.btnUsuario.Click += BtnUsuario_Click;
             this.FormClosing += FrmPrincipal_FormClosing;
             this.opcionesUsuario.btnCerrarSesion.Click += BtnCerrarSesion_Click;
@@ -59,11 +59,19 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             MenuAdministracion menuAdmin = new MenuAdministracion();
             menuAdmin.btnEstadisticasDiarias.Click += BtnEstadisticasDiarias_Click;
             menuAdmin.btnObservarMovimientos.Click += BtnObservarMovimientos_Click;
+            menuAdmin.btnHistorialVentas.Click += BtnHistorialVentas_Click;
             container = new PoperContainer(menuAdmin);
             container.Show(this.btnAdministracion);
         }
 
-
+        private void BtnHistorialVentas_Click(object sender, EventArgs e)
+        {
+            FrmObservarVentas frmObservarVentas = new FrmObservarVentas
+            {
+                WindowState = FormWindowState.Maximized,
+            };
+            frmObservarVentas.Show();
+        }
 
         private void BtnObservarMovimientos_Click(object sender, EventArgs e)
         {
@@ -103,7 +111,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             };
             await FrmReporteDiario.LoadEstadistica(DateTime.Now, DateTime.Now);
             FrmReporteDiario.Show();
-        }     
+        }
 
         private void BtnFunciones_Click(object sender, EventArgs e)
         {
@@ -225,15 +233,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             Application.Exit();
         }
 
-        private void BtnVentas_Click(object sender, EventArgs e)
-        {
-            FrmObservarVentas frmObservarVentas = new FrmObservarVentas
-            {
-                WindowState = FormWindowState.Maximized
-            };
-            frmObservarVentas.Show();
-        }
-
         private void BtnInsumos_Click(object sender, EventArgs e)
         {
             Button btnSender = (Button)sender;
@@ -290,10 +289,136 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
 
         private void BtnPlatos_Click(object sender, EventArgs e)
         {
-            Button btnSender = (Button)sender;
-            Point ptLowerLeft = new Point(btnSender.Width, btnSender.Height);
-            ptLowerLeft = btnSender.PointToScreen(ptLowerLeft);
-            this.MenuPlatos.Show(ptLowerLeft);
+            MenuPlatos menuPlatos = new MenuPlatos();
+            menuPlatos.btnAgregarPlato.Click += BtnAgregarPlato_Click;
+            menuPlatos.btnEditarAcompanante.Click += BtnEditarAcompanante_Click;
+            menuPlatos.btnEditarPlato.Click += BtnEditarPlato_Click;
+            menuPlatos.btnObservarPlatos.Click += BtnObservarPlatos_Click;
+            menuPlatos.btnInactivarPlatos.Click += BtnInactivarPlatos_Click;
+            container = new PoperContainer(menuPlatos);
+            container.Show(this.btnPlatos);
+        }
+
+        private void BtnInactivarPlatos_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FrmObservarPlatos frm = new FrmObservarPlatos
+                {
+                    TopLevel = false,
+                    InactivarPlatos = true
+                };
+                Form FormComprobado = this.ComprobarExistencia(frm);
+                if (FormComprobado != null)
+                {
+                    frm.WindowState = FormWindowState.Normal;
+                    frm.Activate();
+                }
+                else
+                {
+                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
+                    this.panel1.Controls.Add(frm);
+                    this.panel1.Tag = frm;
+                    frm.Show();
+                }
+                frm.BringToFront();
+                frm.Activate();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "InactivarPlato_Click",
+                    "Hubo un error con el menu observar platos para inactivar", ex.Message);
+            }
+        }
+
+        private void BtnObservarPlatos_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FrmObservarPlatos frm = new FrmObservarPlatos
+                {
+                    TopLevel = false
+                };
+                Form FormComprobado = this.ComprobarExistencia(frm);
+                if (FormComprobado != null)
+                {
+                    frm.WindowState = FormWindowState.Normal;
+                    frm.Activate();
+                }
+                else
+                {
+                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
+                    this.panel1.Controls.Add(frm);
+                    this.panel1.Tag = frm;
+                    frm.Show();
+                }
+                frm.BringToFront();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "ObservarPlatos_Click",
+                    "Hubo un error con el menu observar plato", ex.Message);
+            }
+        }
+
+        private void BtnEditarPlato_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FrmObservarPlatos frmObservar = new FrmObservarPlatos
+                {
+                    StartPosition = FormStartPosition.CenterScreen,
+                    IsEditar = true,
+                };
+                frmObservar.OnDgvDoubleClick += FrmObservar_OnDgvDoubleClick;
+                frmObservar.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "EditarEmpleado_Click",
+                    "Hubo un error con el menu Editar empleado", ex.Message);
+            }
+        }
+
+        private void BtnEditarAcompanante_Click(object sender, EventArgs e)
+        {
+            FrmConfigurarAcompananteDiario frm = new FrmConfigurarAcompananteDiario()
+            {
+                StartPosition = FormStartPosition.CenterScreen,
+                MaximizeBox = false,
+                MinimizeBox = false,
+            };
+            frm.ShowDialog();
+        }
+
+        private void BtnAgregarPlato_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FrmAgregarPlato frm = new FrmAgregarPlato
+                {
+                    TopLevel = false
+                };
+                Form FormComprobado = this.ComprobarExistencia(frm);
+                if (FormComprobado != null)
+                {
+                    frm.WindowState = FormWindowState.Normal;
+                    frm.Activate();
+                }
+                else
+                {
+                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
+                    this.panel1.Controls.Add(frm);
+                    this.panel1.Tag = frm;
+                    frm.Show();
+                }
+                frm.BringToFront();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "AgregarPlato_Click",
+                    "Hubo un error con el menu agregar plato", ex.Message);
+            }
         }
 
         private void BtnEmpleados_Click(object sender, EventArgs e)
@@ -695,7 +820,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnPlatos.Enabled = true;
                 this.btnBebidas.Enabled = true;
                 this.btnMesasPedidos.Enabled = true;
-                this.btnVentas.Enabled = true;
                 this.btnInsumos.Enabled = true;
                 this.btnAdministracion.Enabled = true;
             }
@@ -706,7 +830,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnPlatos.Enabled = false;
                 this.btnBebidas.Enabled = false;
                 this.btnMesasPedidos.Enabled = true;
-                this.btnVentas.Enabled = false;
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
@@ -717,7 +840,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnPlatos.Enabled = false;
                 this.btnBebidas.Enabled = false;
                 this.btnMesasPedidos.Enabled = true;
-                this.btnVentas.Enabled = false;
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
@@ -728,7 +850,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnPlatos.Enabled = false;
                 this.btnBebidas.Enabled = false;
                 this.btnMesasPedidos.Enabled = true;
-                this.btnVentas.Enabled = false;
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
@@ -739,7 +860,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnPlatos.Enabled = false;
                 this.btnBebidas.Enabled = false;
                 this.btnMesasPedidos.Enabled = false;
-                this.btnVentas.Enabled = false;
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
@@ -798,56 +918,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.MenuClientes.Items.Add(AgregarCliente);
             this.MenuClientes.Items.Add(Editarcliente);
             this.MenuClientes.Items.Add(ObservarClientes);
-
-            #endregion
-
-            #region MENU PLATOS
-            ToolStripMenuItem AgregarPlato =
-                new ToolStripMenuItem("Nuevo plato");
-            ToolStripMenuItem EditarPlatos =
-                new ToolStripMenuItem("Actualizar un plato");
-            ToolStripMenuItem ObservarPlatos =
-                new ToolStripMenuItem("Observar platos");
-            //ToolStripMenuItem DetallePlato =
-            //    new ToolStripMenuItem("Detalles del plato");
-            ToolStripMenuItem InactivarPlato =
-                new ToolStripMenuItem("Inactivar plato");
-
-            AgregarPlato.BackColor = Color.FromArgb(31, 143, 242);
-            AgregarPlato.ForeColor = Color.White;
-            AgregarPlato.Font = font;
-            AgregarPlato.Name = "AgregarPlato";
-            AgregarPlato.Click += AgregarPlato_Click;
-
-            EditarPlatos.BackColor = Color.FromArgb(31, 143, 242);
-            EditarPlatos.ForeColor = Color.White;
-            EditarPlatos.Name = "EditarPlatos";
-            EditarPlatos.Font = font;
-            EditarPlatos.Click += EditarPlatos_Click;
-
-            ObservarPlatos.BackColor = Color.FromArgb(31, 143, 242);
-            ObservarPlatos.ForeColor = Color.White;
-            ObservarPlatos.Name = "ObservarPlatos";
-            ObservarPlatos.Font = font;
-            ObservarPlatos.Click += ObservarPlatos_Click;
-
-            //DetallePlato.BackColor = Color.FromArgb(31, 143, 242);
-            //DetallePlato.ForeColor = Color.White;
-            //DetallePlato.Name = "DetallePlatos";
-            //DetallePlato.Font = font;
-            //DetallePlato.Click += DetallePlato_Click;
-
-            InactivarPlato.BackColor = Color.FromArgb(31, 143, 242);
-            InactivarPlato.ForeColor = Color.White;
-            InactivarPlato.Name = "InactivarPlato";
-            InactivarPlato.Font = font;
-            InactivarPlato.Click += InactivarPlato_Click;
-
-            this.MenuPlatos.Items.Add(AgregarPlato);
-            this.MenuPlatos.Items.Add(EditarPlatos);
-            this.MenuPlatos.Items.Add(ObservarPlatos);
-            //this.MenuPlatos.Items.Add(DetallePlato);
-            this.MenuPlatos.Items.Add(InactivarPlato);
 
             #endregion
 
@@ -968,38 +1038,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             {
                 Mensajes.MensajeErrorCompleto(this.Name, "InactivarBebidas_Click",
                     "Hubo un error con el menu observar bebidas para inactivar", ex.Message);
-            }
-        }
-
-        private void InactivarPlato_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                FrmObservarPlatos frm = new FrmObservarPlatos
-                {
-                    TopLevel = false,
-                    InactivarPlatos = true
-                };
-                Form FormComprobado = this.ComprobarExistencia(frm);
-                if (FormComprobado != null)
-                {
-                    frm.WindowState = FormWindowState.Normal;
-                    frm.Activate();
-                }
-                else
-                {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
-                    this.panel1.Controls.Add(frm);
-                    this.panel1.Tag = frm;
-                    frm.Show();
-                }
-                frm.BringToFront();
-                frm.Activate();
-            }
-            catch (Exception ex)
-            {
-                Mensajes.MensajeErrorCompleto(this.Name, "InactivarPlato_Click",
-                    "Hubo un error con el menu observar platos para inactivar", ex.Message);
             }
         }
 
@@ -1338,106 +1376,34 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             }
         }
 
-        private void ObservarPlatos_Click(object sender, EventArgs e)
+        private void FrmObservar_OnDgvDoubleClick(object sender, EventArgs e)
         {
-            try
+            Platos plato = (Platos)sender;
+
+            FrmAgregarPlato frm = new FrmAgregarPlato()
             {
-                FrmObservarPlatos frm = new FrmObservarPlatos
-                {
-                    TopLevel = false
-                };
-                Form FormComprobado = this.ComprobarExistencia(frm);
-                if (FormComprobado != null)
-                {
-                    frm.WindowState = FormWindowState.Normal;
-                    frm.Activate();
-                }
-                else
-                {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
-                    this.panel1.Controls.Add(frm);
-                    this.panel1.Tag = frm;
-                    frm.Show();
-                }
-                frm.BringToFront();
-            }
-            catch (Exception ex)
+                StartPosition = FormStartPosition.CenterParent,
+                Plato = plato,
+                TopMost = false,
+                TopLevel = false,
+            };
+
+            Form FormComprobado = this.ComprobarExistencia(frm);
+            if (FormComprobado != null)
             {
-                Mensajes.MensajeErrorCompleto(this.Name, "ObservarPlatos_Click",
-                    "Hubo un error con el menu observar plato", ex.Message);
+                frm.WindowState = FormWindowState.Normal;
+                frm.Activate();
+                frm.Show();
             }
+            else
+            {
+                frm.FormBorderStyle = FormBorderStyle.Fixed3D;
+                this.panel1.Controls.Add(frm);
+                this.panel1.Tag = frm;
+                frm.Show();
+            }
+            frm.BringToFront();
         }
-
-        private void EditarPlatos_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                FrmAgregarPlato frm = new FrmAgregarPlato
-                {
-                    TopLevel = false
-                };
-                FrmObservarPlatos frmObservar = new FrmObservarPlatos
-                {
-                    StartPosition = FormStartPosition.CenterScreen,
-                    FrmAgregarPlato = frm
-                };
-                frmObservar.ShowDialog();
-
-                if (frm.Tag != null)
-                {
-                    Form FormComprobado = this.ComprobarExistencia(frm);
-                    if (FormComprobado != null)
-                    {
-                        frm.WindowState = FormWindowState.Normal;
-                        frm.Activate();
-                    }
-                    else
-                    {
-                        frm.FormBorderStyle = FormBorderStyle.Fixed3D;
-                        this.panel1.Controls.Add(frm);
-                        this.panel1.Tag = frm;
-                        frm.Show();
-                    }
-                }
-                frm.BringToFront();
-            }
-            catch (Exception ex)
-            {
-                Mensajes.MensajeErrorCompleto(this.Name, "EditarEmpleado_Click",
-                    "Hubo un error con el menu Editar empleado", ex.Message);
-            }
-        }
-
-        private void AgregarPlato_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                FrmAgregarPlato frm = new FrmAgregarPlato
-                {
-                    TopLevel = false
-                };
-                Form FormComprobado = this.ComprobarExistencia(frm);
-                if (FormComprobado != null)
-                {
-                    frm.WindowState = FormWindowState.Normal;
-                    frm.Activate();
-                }
-                else
-                {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
-                    this.panel1.Controls.Add(frm);
-                    this.panel1.Tag = frm;
-                    frm.Show();
-                }
-                frm.BringToFront();
-            }
-            catch (Exception ex)
-            {
-                Mensajes.MensajeErrorCompleto(this.Name, "AgregarPlato_Click",
-                    "Hubo un error con el menu agregar plato", ex.Message);
-            }
-        }
-
         private Form ComprobarExistencia(Form form)
         {
             if (this.container != null)

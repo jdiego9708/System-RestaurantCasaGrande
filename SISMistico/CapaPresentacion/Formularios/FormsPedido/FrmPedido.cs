@@ -45,15 +45,20 @@
             {
                 DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
                 datos.EmpleadoClaveMaestra = frm.EmpleadoSelected;
+                this.EmpleadoSelected = frm.EmpleadoSelected;
             }
         }
 
         private bool Comprobaciones(out List<string> variablesPedido,
             out DataTable dtDetallePedido,
-            out List<Detalle_ingredientes_pedido> listDetalleIngredientes)
+            out List<Detalle_ingredientes_pedido> listDetalleIngredientes,
+            out DataTable dtPlatos,
+            out DataTable dtBebidas)
         {
             //Asignar la tabla de los detalles
             dtDetallePedido = new DataTable("DetallePedido");
+            dtPlatos = new DataTable("DetallePedido");
+            dtBebidas = new DataTable("DetallePedido");
             //Asignar las variables del pedido, es decir los datos principales
             variablesPedido = new List<string>();
             //Asignar la lista de ingredientes del detalle del pedido
@@ -112,11 +117,16 @@
             dtDetallePedido.Columns.Add("Total", typeof(string));
             dtDetallePedido.Columns.Add("Observaciones", typeof(string));
 
+            dtPlatos = dtDetallePedido.Clone();
+            dtBebidas = dtDetallePedido.Clone();
+
             if (this.ProductsAddSelected != null)
             {
                 foreach (ProductBinding pr in this.ProductsAddSelected)
                 {
                     DataRow newRow = dtDetallePedido.NewRow();
+
+                    string nombre = pr.Nombre;
 
                     if (this.IsEditar)
                         newRow["Id_pedido"] = this.Pedido.Id_pedido;
@@ -136,6 +146,7 @@
                     {
                         CapaEntidades.Models.Platos plato =
                             (CapaEntidades.Models.Platos)pr.Product;
+
                         if (plato.Plato_detallado.Equals("ACTIVO"))
                         {
                             if (pr.ProductDetalles != null)
@@ -154,11 +165,38 @@
                                     };
 
                                     info.Append(de.Ingrediente.Nombre_ingrediente).Append(Environment.NewLine);
+
+                                    nombre = info.ToString();
                                     newRow["Nombre"] = info.ToString();
                                     listDetalleIngredientes.Add(detail);
                                 }
                             }
                         }
+
+                        DataRow newRowPlato = dtPlatos.NewRow();
+                        newRowPlato["Id_tipo"] = pr.Id_producto;
+                        newRowPlato["Tipo"] = pr.Tipo_producto;
+                        newRowPlato["Nombre"] = nombre;
+                        newRowPlato["Precio"] = pr.Precio;
+                        newRowPlato["Cantidad"] = pr.Cantidad;
+                        newRowPlato["Total"] = pr.Cantidad * pr.Precio;
+                        newRowPlato["Observaciones"] = pr.Observaciones;
+                        dtPlatos.Rows.Add(newRowPlato);
+                    }
+                    else
+                    {
+                        CapaEntidades.Models.Bebidas bebida =
+                            (CapaEntidades.Models.Bebidas)pr.Product;
+
+                        DataRow newRowBebida = dtBebidas.NewRow();
+                        newRowBebida["Id_tipo"] = pr.Id_producto;
+                        newRowBebida["Tipo"] = pr.Tipo_producto;
+                        newRowBebida["Nombre"] = nombre;
+                        newRowBebida["Precio"] = pr.Precio;
+                        newRowBebida["Cantidad"] = pr.Cantidad;
+                        newRowBebida["Total"] = pr.Cantidad * pr.Precio;
+                        newRowBebida["Observaciones"] = pr.Observaciones;
+                        dtBebidas.Rows.Add(newRowBebida);
                     }
 
                     dtDetallePedido.Rows.Add(newRow);
@@ -177,7 +215,9 @@
                 MensajeEspera.ShowWait("Cargando...");
                 if (this.Comprobaciones(out List<string> variablesPedido,
                                         out DataTable dtDetallePedido,
-                                        out List<Detalle_ingredientes_pedido> listDetalleIngredientes))
+                                        out List<Detalle_ingredientes_pedido> listDetalleIngredientes,
+                                        out DataTable dtPlatos,
+                                        out DataTable dtBebidas))
                 {
                     DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
 
@@ -236,23 +276,37 @@
                             FrmObservarMesas.ObtenerPedido(id_pedido, this.Numero_mesa, "PENDIENTE");
                         }
 
-                        if (this.IsEditar)
-                        {
-                            if (dtDetallePedido != null)
-                            {
-                                this.frmComandas.Id_pedido = id_pedido;
-                                this.frmComandas.AsignarTablas(dtDetallePedido);
-                            }
-                        }
-                        else
-                        {
-                            this.frmComandas.Id_pedido = id_pedido;
-                            this.frmComandas.AsignarTablas();
-                        }
+                        this.frmComandas.Id_pedido = id_pedido;
+
+                        //if (this.IsEditar)
+                        //{
+                        //    if (dtDetallePedido != null)
+                        //    {
+                        //        this.frmComandas.Id_pedido = id_pedido;
+                        //        this.frmComandas.AsignarTablas(dtDetallePedido);
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    this.frmComandas.Id_pedido = id_pedido;                         
+                        //    this.frmComandas.AsignarTablas();
+                        //}
 
                         if (this.chkPrintComandas.Checked)
                         {
-                            this.frmComandas.ImprimirFactura(1);
+                            if (dtBebidas.Rows.Count > 0)
+                            {
+                                this.frmComandas.ObtenerReporte();
+                                this.frmComandas.AsignarTablas(dtBebidas);
+                                this.frmComandas.ImprimirFactura(1);
+                            }
+
+                            if (dtPlatos.Rows.Count > 0)
+                            {
+                                this.frmComandas.ObtenerReporte();
+                                this.frmComandas.AsignarTablas(dtPlatos);
+                                this.frmComandas.ImprimirFactura(1);
+                            }
                         }
                         MensajeEspera.CloseForm();
                         this.Close();
@@ -658,6 +712,7 @@
                             Observaciones = string.Empty,
                             Cantidad = 0,
                             Product = bebida,
+                            NombreImagen = bebida.Imagen
                         };
 
                         ProductoItem productoItem = new ProductoItem
@@ -779,7 +834,7 @@
                 {
                     /**Como abrimos los detalles, se debe de generar el evento guardar 
                       * para agregarlo correctamente a la lista**/
-                    bool isEnabledBebida = plato.Plato_carta.Equals("ACTIVO") ? true : false;
+                    bool isCarta = plato.Plato_carta.Equals("ACTIVO") ? true : false;
 
                     FrmDetallePedidoPlato frmDetallePedidoPlato = new FrmDetallePedidoPlato
                     {
@@ -787,7 +842,8 @@
                         MaximizeBox = false,
                         MinimizeBox = false,
                         Product = product,
-                        IsEnabledBebida = isEnabledBebida,
+                        IsEnabledBebida = true,
+                        IsEnabledSopa = !isCarta,
                     };
                     frmDetallePedidoPlato.OnBtnSaveClick += FrmDetallePedidoPlato_OnBtnSaveClick;
                     frmDetallePedidoPlato.ShowDialog();
@@ -917,7 +973,7 @@
         private void AsignarDatos(Pedidos pedido)
         {
             this.ClienteSelected = pedido.Cliente;
-            this.EmpleadoSelected = pedido.Empleado;
+            //this.EmpleadoSelected = pedido.Empleado;
             this.MesaSelected = pedido.Mesa;
 
             this.lblMesero.Text = "Mesero/Empleado " + pedido.Empleado.Nombre_empleado;

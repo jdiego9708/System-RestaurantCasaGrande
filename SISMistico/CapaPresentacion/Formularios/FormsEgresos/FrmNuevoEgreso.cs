@@ -107,8 +107,8 @@ namespace CapaPresentacion.Formularios.FormsEgresos
                         infoEmpleado.Append("Identificación " + egreso.Empleado.Identificacion_empleado).Append(Environment.NewLine);
 
                         StringBuilder infoGasto = new StringBuilder();
-                        infoEmpleado.Append("Concepto/Observaciones del egreso:").Append(Environment.NewLine);
-                        infoEmpleado.Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
+                        infoGasto.Append("Concepto/Observaciones del egreso:").Append(Environment.NewLine);
+                        infoGasto.Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
 
                         FrmReporteGastos frmReporteGastos = new FrmReporteGastos
                         {

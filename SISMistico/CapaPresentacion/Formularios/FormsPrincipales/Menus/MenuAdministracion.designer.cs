@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuAdministracion));
             this.btnEstadisticasDiarias = new System.Windows.Forms.Button();
             this.btnObservarMovimientos = new System.Windows.Forms.Button();
+            this.btnHistorialVentas = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnEstadisticasDiarias
@@ -67,18 +68,36 @@
             this.btnObservarMovimientos.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnObservarMovimientos.UseVisualStyleBackColor = true;
             // 
+            // btnHistorialVentas
+            // 
+            this.btnHistorialVentas.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnHistorialVentas.FlatAppearance.BorderSize = 0;
+            this.btnHistorialVentas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnHistorialVentas.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnHistorialVentas.ForeColor = System.Drawing.Color.White;
+            this.btnHistorialVentas.Image = ((System.Drawing.Image)(resources.GetObject("btnHistorialVentas.Image")));
+            this.btnHistorialVentas.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnHistorialVentas.Location = new System.Drawing.Point(4, 108);
+            this.btnHistorialVentas.Name = "btnHistorialVentas";
+            this.btnHistorialVentas.Size = new System.Drawing.Size(188, 47);
+            this.btnHistorialVentas.TabIndex = 10;
+            this.btnHistorialVentas.Text = "Historial de ventas";
+            this.btnHistorialVentas.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnHistorialVentas.UseVisualStyleBackColor = true;
+            // 
             // MenuAdministracion
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(152)))), ((int)(((byte)(202)))));
+            this.Controls.Add(this.btnHistorialVentas);
             this.Controls.Add(this.btnEstadisticasDiarias);
             this.Controls.Add(this.btnObservarMovimientos);
             this.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MenuAdministracion";
-            this.Size = new System.Drawing.Size(195, 112);
+            this.Size = new System.Drawing.Size(195, 158);
             this.ResumeLayout(false);
 
         }
@@ -86,5 +105,6 @@
         #endregion
         public System.Windows.Forms.Button btnObservarMovimientos;
         public System.Windows.Forms.Button btnEstadisticasDiarias;
+        public System.Windows.Forms.Button btnHistorialVentas;
     }
 }

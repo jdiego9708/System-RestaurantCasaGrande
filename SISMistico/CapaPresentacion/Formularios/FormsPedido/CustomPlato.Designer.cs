@@ -54,7 +54,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(441, 7);
+            this.panel1.Size = new System.Drawing.Size(593, 7);
             this.panel1.TabIndex = 0;
             // 
             // groupBox1
@@ -62,7 +62,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox1.Controls.Add(this.listaSopa);
             this.groupBox1.Location = new System.Drawing.Point(3, 9);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(185, 60);
+            this.groupBox1.Size = new System.Drawing.Size(301, 74);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Sopa/Crema";
@@ -73,20 +73,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listaSopa.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.listaSopa.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.listaSopa.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listaSopa.Font = new System.Drawing.Font("Segoe UI", 20F);
             this.listaSopa.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.listaSopa.FormattingEnabled = true;
-            this.listaSopa.Location = new System.Drawing.Point(6, 22);
+            this.listaSopa.Location = new System.Drawing.Point(6, 23);
             this.listaSopa.Name = "listaSopa";
-            this.listaSopa.Size = new System.Drawing.Size(173, 29);
+            this.listaSopa.Size = new System.Drawing.Size(289, 45);
             this.listaSopa.TabIndex = 0;
             // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.listaArroz);
-            this.groupBox2.Location = new System.Drawing.Point(194, 9);
+            this.groupBox2.Location = new System.Drawing.Point(310, 9);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(176, 60);
+            this.groupBox2.Size = new System.Drawing.Size(280, 74);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Arroz";
@@ -97,20 +97,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listaArroz.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.listaArroz.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.listaArroz.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listaArroz.Font = new System.Drawing.Font("Segoe UI", 20F);
             this.listaArroz.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.listaArroz.FormattingEnabled = true;
-            this.listaArroz.Location = new System.Drawing.Point(6, 22);
+            this.listaArroz.Location = new System.Drawing.Point(6, 23);
             this.listaArroz.Name = "listaArroz";
-            this.listaArroz.Size = new System.Drawing.Size(164, 29);
+            this.listaArroz.Size = new System.Drawing.Size(268, 45);
             this.listaArroz.TabIndex = 0;
             // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.listaAcompanante);
-            this.groupBox4.Location = new System.Drawing.Point(3, 72);
+            this.groupBox4.Location = new System.Drawing.Point(3, 89);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(185, 60);
+            this.groupBox4.Size = new System.Drawing.Size(301, 74);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Acompañantes";
@@ -121,20 +121,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listaAcompanante.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.listaAcompanante.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.listaAcompanante.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listaAcompanante.Font = new System.Drawing.Font("Segoe UI", 20F);
             this.listaAcompanante.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.listaAcompanante.FormattingEnabled = true;
             this.listaAcompanante.Location = new System.Drawing.Point(6, 22);
             this.listaAcompanante.Name = "listaAcompanante";
-            this.listaAcompanante.Size = new System.Drawing.Size(173, 29);
+            this.listaAcompanante.Size = new System.Drawing.Size(289, 45);
             this.listaAcompanante.TabIndex = 0;
             // 
             // gbBebida
             // 
             this.gbBebida.Controls.Add(this.listaBebidas);
-            this.gbBebida.Location = new System.Drawing.Point(194, 72);
+            this.gbBebida.Location = new System.Drawing.Point(310, 89);
             this.gbBebida.Name = "gbBebida";
-            this.gbBebida.Size = new System.Drawing.Size(176, 60);
+            this.gbBebida.Size = new System.Drawing.Size(280, 74);
             this.gbBebida.TabIndex = 7;
             this.gbBebida.TabStop = false;
             this.gbBebida.Text = "Bebida";
@@ -145,12 +145,12 @@ namespace CapaPresentacion.Formularios.FormsPedido
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listaBebidas.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.listaBebidas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.listaBebidas.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listaBebidas.Font = new System.Drawing.Font("Segoe UI", 20F);
             this.listaBebidas.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.listaBebidas.FormattingEnabled = true;
             this.listaBebidas.Location = new System.Drawing.Point(6, 22);
             this.listaBebidas.Name = "listaBebidas";
-            this.listaBebidas.Size = new System.Drawing.Size(164, 29);
+            this.listaBebidas.Size = new System.Drawing.Size(268, 45);
             this.listaBebidas.TabIndex = 0;
             // 
             // btnSave
@@ -164,9 +164,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSave.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSave.Location = new System.Drawing.Point(376, 82);
+            this.btnSave.Location = new System.Drawing.Point(259, 169);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(50, 50);
+            this.btnSave.Size = new System.Drawing.Size(90, 90);
             this.btnSave.TabIndex = 25;
             this.btnSave.UseVisualStyleBackColor = true;
             // 
@@ -185,7 +185,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "CustomPlato";
-            this.Size = new System.Drawing.Size(441, 135);
+            this.Size = new System.Drawing.Size(593, 260);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);

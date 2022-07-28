@@ -210,6 +210,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     ButtonMesa.OnBtnCancelarPedidoClick += ButtonMesa_OnBtnCancelarPedidoClick;
                     ButtonMesa.OnBtnEditarPedidoClick += ButtonMesa_OnBtnEditarPedidoClick;
                     ButtonMesa.OnBtnFacturarPedidoClick += ButtonMesa_OnBtnFacturarPedidoClick;
+                    ButtonMesa.OnBtnPrecuentaPedidoClick += ButtonMesa_OnBtnPrecuentaPedidoClick; ;
                     if (positionX > this.panelMesas.Width ||
                         this.panelMesas.Width < positionX + ButtonMesa.Width)
                     {
@@ -241,6 +242,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 Mensajes.MensajeErrorCompleto(this.Name, "CargarMesas",
                     "Hubo un error al cargar las mesas", ex.Message);
             }
+        }
+
+        private void ButtonMesa_OnBtnPrecuentaPedidoClick(object sender, EventArgs e)
+        {
+            Pedidos pedido = (Pedidos)sender;
+            FrmFacturarPedido facturarPedido = new FrmFacturarPedido
+            {
+                StartPosition = FormStartPosition.CenterScreen,
+                IsPrecuenta = true
+            };
+            facturarPedido.ObtenerPedido(pedido.Id_pedido);
+            facturarPedido.Show();
         }
 
         private void ButtonMesa_OnBtnFacturarPedidoClick(object sender, EventArgs e)

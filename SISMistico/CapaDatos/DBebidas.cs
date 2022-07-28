@@ -316,7 +316,7 @@ namespace CapaDatos
                     ParameterName = "@Imagen",
                     SqlDbType = SqlDbType.VarChar,
                     Size = 8000,
-                    Value = DBebidas.Variables[contador].Trim().ToUpper()
+                    Value = DBebidas.Variables[contador].ToUpper()
                 };
                 SqlCmd.Parameters.Add(Imagen);
                 contador += 1;

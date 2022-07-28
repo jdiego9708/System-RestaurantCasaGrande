@@ -40,7 +40,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(546, 176);
+            this.panel1.Size = new System.Drawing.Size(604, 260);
             this.panel1.TabIndex = 0;
             // 
             // FrmDetallePedidoPlato
@@ -48,7 +48,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(547, 177);
+            this.ClientSize = new System.Drawing.Size(604, 261);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));

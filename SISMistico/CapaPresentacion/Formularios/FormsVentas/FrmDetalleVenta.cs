@@ -31,7 +31,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 Id_pedido = this.Id_pedido
             };
             frm.AsignarReporte();
-            frm.AsignarTablas();
+            frm.AsignarTablasCuentaFinal();
             frm.ImprimirFactura(1);
             MensajeEspera.CloseForm();
         }

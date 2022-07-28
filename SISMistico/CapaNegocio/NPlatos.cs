@@ -83,5 +83,14 @@ namespace CapaNegocio
         }
 
         #endregion
+
+        #region ACTUALIZAR ACOMPALANTE
+        public static string ActualizarAcompanante(int id_ingrediente, string nombre)
+        {
+            DPlatos DPlatos = new DPlatos();
+            return DPlatos.ActualizarAcompanante(id_ingrediente, nombre);
+        }
+
+        #endregion
     }
 }

@@ -481,6 +481,12 @@
     <Compile Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfiguracionReportes.designer.cs">
       <DependentUpon>FrmConfiguracionReportes.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfigurarAcompananteDiario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfigurarAcompananteDiario.Designer.cs">
+      <DependentUpon>FrmConfigurarAcompananteDiario.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPrincipales\FormsManuales\FrmManualEmpleados.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -516,6 +522,12 @@
     </Compile>
     <Compile Include="Formularios\FormsPrincipales\Menus\MenuAdministracion.designer.cs">
       <DependentUpon>MenuAdministracion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuPlatos.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\Menus\MenuPlatos.designer.cs">
+      <DependentUpon>MenuPlatos.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPrincipales\Menus\MenuEmpleados.cs">
       <SubType>UserControl</SubType>
@@ -558,6 +570,12 @@
     </Compile>
     <Compile Include="ReportesFacturas\GastosTurno\FrmReporteGastos.Designer.cs">
       <DependentUpon>FrmReporteGastos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ReportesFacturas\IngresosTurno\FrmReporteIngresos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportesFacturas\IngresosTurno\FrmReporteIngresos.Designer.cs">
+      <DependentUpon>FrmReporteIngresos.cs</DependentUpon>
     </Compile>
     <Compile Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.cs">
       <SubType>Form</SubType>
@@ -895,6 +913,9 @@
     <EmbeddedResource Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfiguracionReportes.resx">
       <DependentUpon>FrmConfiguracionReportes.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\FormsConfiguracion\FrmConfigurarAcompananteDiario.resx">
+      <DependentUpon>FrmConfigurarAcompananteDiario.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPrincipales\FormsManuales\FrmManualEmpleados.resx">
       <DependentUpon>FrmManualEmpleados.cs</DependentUpon>
     </EmbeddedResource>
@@ -918,6 +939,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPrincipales\Menus\MenuAdministracion.resx">
       <DependentUpon>MenuAdministracion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formularios\FormsPrincipales\Menus\MenuPlatos.resx">
+      <DependentUpon>MenuPlatos.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPrincipales\Menus\MenuEmpleados.resx">
       <DependentUpon>MenuEmpleados.cs</DependentUpon>
@@ -978,6 +1002,7 @@
       <DependentUpon>FrmReporteGastos.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ReportesFacturas\GastosTurno\rptComprobanteGasto.rdlc" />
+    <EmbeddedResource Include="ReportesFacturas\IngresosTurno\rptComprobanteIngreso.rdlc" />
     <EmbeddedResource Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.resx">
       <DependentUpon>FrmReporteNominaEmpleado.cs</DependentUpon>
     </EmbeddedResource>

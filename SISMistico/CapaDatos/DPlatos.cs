@@ -240,8 +240,7 @@ namespace CapaDatos
                 SqlParameter Id_tipo_plato = new SqlParameter
                 {
                     ParameterName = "@Id_tipo_plato",
-                    SqlDbType = SqlDbType.VarChar,
-                    Size = 50,
+                    SqlDbType = SqlDbType.Int,
                     Value = DPlatos.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Id_tipo_plato);
@@ -250,7 +249,7 @@ namespace CapaDatos
                 SqlParameter Precio_plato = new SqlParameter
                 {
                     ParameterName = "@Precio_plato",
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.Decimal,
                     Value = DPlatos.Variables[contador]
                 };
                 SqlCmd.Parameters.Add(Precio_plato);
@@ -700,6 +699,74 @@ namespace CapaDatos
                     Value = id_plato
                 };
                 SqlCmd.Parameters.Add(Id_plato);
+
+                //Ejecutamos nuestro comando
+                rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO";
+
+                if (rpta != "OK")
+                {
+                    if (this.Mensaje_respuesta != null)
+                    {
+                        rpta = this.Mensaje_respuesta;
+                    }
+                }
+            }
+            //Mostramos posible error que tengamos
+            catch (SqlException ex)
+            {
+                rpta = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                rpta = ex.Message;
+            }
+            finally
+            {
+                //Si la cadena SqlCon esta abierta la cerramos
+                if (SqlCon.State == ConnectionState.Open)
+                    SqlCon.Close();
+            }
+            return rpta;
+        }
+        #endregion
+
+        #region METODO ACTUALIZAR ACOMPAÑANTE
+        public string ActualizarAcompanante(int id_ingrediente, string nombre)
+        {
+            //asignamos a una cadena string la variable rpta y la iniciamos en vacía
+            string rpta = "";
+            SqlConnection SqlCon = new SqlConnection();
+            SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
+            SqlCon.FireInfoMessageEventOnUserErrors = true;
+            //Capturador de errores
+            try
+            {
+                SqlCon.ConnectionString = Conexion.Cn;
+                SqlCon.Open();
+                //establecer comando
+                SqlCommand SqlCmd = new SqlCommand
+                {
+                    Connection = SqlCon,
+                    CommandText = "sp_Actualizar_acompanante",
+                    //Indicamos que es un procedimiento almacenado
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                SqlParameter Id_ingrediente = new SqlParameter
+                {
+                    ParameterName = "@Id_ingrediente",
+                    SqlDbType = SqlDbType.Int,
+                    Value = id_ingrediente
+                };
+                SqlCmd.Parameters.Add(Id_ingrediente);
+
+                SqlParameter Nombre_ingrediente = new SqlParameter
+                {
+                    ParameterName = "@Nombre_ingrediente",
+                    SqlDbType = SqlDbType.VarChar,
+                    Value = nombre
+                };
+                SqlCmd.Parameters.Add(Nombre_ingrediente);
 
                 //Ejecutamos nuestro comando
                 rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO";

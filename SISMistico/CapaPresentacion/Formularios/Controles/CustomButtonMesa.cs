@@ -28,6 +28,7 @@ namespace CapaPresentacion.Formularios
         public event EventHandler OnBtnCancelarPedidoClick;
         public event EventHandler OnBtnEditarPedidoClick;
         public event EventHandler OnBtnFacturarPedidoClick;
+        public event EventHandler OnBtnPrecuentaPedidoClick;
 
         protected void ButtonMouseDown_Click(object sender, MouseEventArgs e)
         {
@@ -43,7 +44,7 @@ namespace CapaPresentacion.Formularios
                             StartPosition = FormStartPosition.CenterScreen,
                             Numero_mesa = Convert.ToInt32(this.Numero_mesa),
                             Tipo_servicio = "MESA",
-                            EmpleadoSelected = datos.EmpleadoClaveMaestra,
+                            //EmpleadoSelected = datos.EmpleadoClaveMaestra,
                             ClienteSelected = datos.ClienteDefault,
                             MesaSelected = new CapaEntidades.Models.Mesas
                             {
@@ -69,6 +70,7 @@ namespace CapaPresentacion.Formularios
                             this.datosMesa.OnBtnCancelarPedidoClick += DatosMesa_OnBtnCancelarPedidoClick;
                             this.datosMesa.OnBtnEditarPedidoClick += DatosMesa_OnBtnEditarPedidoClick;
                             this.datosMesa.OnBtnFacturarPedidoClick += DatosMesa_OnBtnFacturarPedidoClick;
+                            this.datosMesa.OnBtnPrecuentaPedidoClick += DatosMesa_OnBtnPrecuentaPedidoClick;
                             this.container = new PoperContainer(this.datosMesa);
                             this.container.Show(Cursor.Position);
                         }
@@ -85,6 +87,11 @@ namespace CapaPresentacion.Formularios
                     // Right click
                     break;
             }
+        }
+
+        private void DatosMesa_OnBtnPrecuentaPedidoClick(object sender, EventArgs e)
+        {
+            this.OnBtnPrecuentaPedidoClick?.Invoke(sender, e);
         }
 
         private void DatosMesa_OnBtnFacturarPedidoClick(object sender, EventArgs e)

@@ -110,7 +110,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     Id_pedido = this.Pedido.Id_pedido,
                 };
                 frmFacturaFinal.AsignarReporte();
-                frmFacturaFinal.AsignarTablas();
+                frmFacturaFinal.AsignarTablasCuentaFinal();
                 frmFacturaFinal.ImprimirFactura(1);
                 MensajeEspera.CloseForm();
             }

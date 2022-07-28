@@ -25,6 +25,8 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             this.txtPrecio.LostFocus += TxtPrecio_LostFocus;
         }
 
+        public event EventHandler OnPlatoSuccess;
+
         private void TxtPrecio_LostFocus(object sender, EventArgs e)
         {
             if (this.txtPrecio.Text.Equals(""))
@@ -41,26 +43,16 @@ namespace CapaPresentacion.Formularios.FormsPlatos
         private void AsignarDatos(Platos plato)
         {
             this.IsEditar = true;
-            this.adjuntarImagen.IsEditar = true;
+
             this.ListaPlatos =
               LlenarListas.LlenarListaTipoPlatos(this.ListaPlatos);
-        }
+            this.ListaPlatos.SelectedValue = plato.Id_tipo_plato;
 
-        public void ObtenerDatos(List<string> datos)
-        {
-            this.IsEditar = true;
-            this.adjuntarImagen.IsEditar = true;
-            this.ListaPlatos =
-                LlenarListas.LlenarListaTipoPlatos(this.ListaPlatos);
-            this.Text = "Editar datos de un plato";
-            this.Tag = datos[0];
-            this.txtNombre.Text = datos[1];
-            this.ListaPlatos.Text = datos[10];
-            this.adjuntarImagen.AsignarImagen(datos[4]);
-            this.txtDescripcion.Text = datos[5];
-            this.txtPrecio.Text = datos[3];
-            this.chkIngredientes.Checked = datos[7] == "ACTIVO" ? true : false;
-            this.chkCarta.Checked = datos[8] == "ACTIVO" ? true : false;
+            this.txtNombre.Text = plato.Nombre_plato;
+            this.txtDescripcion.Text = plato.Descripcion_plato;
+            this.txtPrecio.Text = plato.Precio_plato.ToString();
+
+            this.uploadImage1.AsignarImagen(plato.Imagen_plato, "rutaImages");
         }
 
         private bool Comprobaciones(out string[] variables)
@@ -78,11 +70,11 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             {
                 variables = new string[]
                 {
-                    Convert.ToString(this.Tag),
+                    this.Plato.Id_plato.ToString(),
                     this.txtNombre.Text,
                     id_tipo_plato.ToString(),
                     this.txtPrecio.Text,
-                    this.adjuntarImagen.Nombre_imagen,
+                    this.uploadImage1.Nombre_imagen == null ? "SIN IMAGEN" : this.uploadImage1.Nombre_imagen,
                     this.txtDescripcion.Text,
                     "ACTIVO",
                     this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO",
@@ -96,7 +88,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                     this.txtNombre.Text,
                     id_tipo_plato.ToString(),
                     this.txtPrecio.Text,
-                    this.adjuntarImagen.Nombre_imagen,
+                    this.uploadImage1.Nombre_imagen == null ? "SIN IMAGEN" : this.uploadImage1.Nombre_imagen,
                     this.txtDescripcion.Text,
                     "ACTIVO",
                     this.chkIngredientes.Checked ? "ACTIVO" : "INACTIVO",
@@ -150,28 +142,37 @@ namespace CapaPresentacion.Formularios.FormsPlatos
                         mensaje = "actualizó";
                     }
                     else
-                    {
+                    { 
                         rpta = NPlatos.InsertarPlatos(variables, out id_plato);
                         mensaje = "agregó";
                     }
 
                     if (rpta.Equals("OK"))
                     {
-                        if (!this.adjuntarImagen.Nombre_imagen.Equals("SIN IMAGEN"))
+                        if (string.IsNullOrEmpty(this.uploadImage1.Nombre_imagen))
+                            this.uploadImage1.Nombre_imagen = "SIN IMAGEN";
+                        else
                         {
-                            rpta = ArchivosAdjuntos.GuardarArchivo(id_plato, "rutaImages",
-                                this.adjuntarImagen.Nombre_imagen,
-                                this.adjuntarImagen.RutaOrigen);
+                            if (!this.uploadImage1.Nombre_imagen.Equals("SIN IMAGEN"))
+                            {
+                                rpta = ArchivosAdjuntos.GuardarArchivo(id_plato, "rutaImages",
+                                this.uploadImage1.Nombre_imagen,
+                                this.uploadImage1.Ruta_origen);
+                            }                          
                         }
+
                         if (rpta.Equals("OK"))
                         {
+                            this.OnPlatoSuccess?.Invoke(this.Plato, e);
                             Mensajes.MensajeOkForm("Se " + mensaje + " el plato correctamente");
                             this.Close();
                         }
                         else
                         {
+                            this.OnPlatoSuccess?.Invoke(this.Plato, e);
                             Mensajes.MensajeErrorCompleto(this.Name, "BtnGuardar_Click",
                             "Se " + mensaje + " el plato, pero hubo un error al guardar la imagen", rpta);
+                            this.Close();
                         }
                     }
                 }
@@ -219,7 +220,7 @@ namespace CapaPresentacion.Formularios.FormsPlatos
             }
         }
 
-        private CapaEntidades.Models.Platos _plato; 
+        private CapaEntidades.Models.Platos _plato;
 
         private bool IsEditar = false;
 
