@@ -57,8 +57,8 @@
         {
             //Asignar la tabla de los detalles
             dtDetallePedido = new DataTable("DetallePedido");
-            dtPlatos = new DataTable("DetallePedido");
-            dtBebidas = new DataTable("DetallePedido");
+            dtPlatos = new DataTable("DetallePedidoPlatos");
+            dtBebidas = new DataTable("DetallePedidoBebidas");
             //Asignar las variables del pedido, es decir los datos principales
             variablesPedido = new List<string>();
             //Asignar la lista de ingredientes del detalle del pedido

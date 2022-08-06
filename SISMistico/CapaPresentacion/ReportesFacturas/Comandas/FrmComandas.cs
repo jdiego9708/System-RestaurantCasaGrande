@@ -22,14 +22,16 @@ namespace CapaPresentacion
         {
             InitializeComponent();
         }
-
+        public string Titulo { get; set; }
         public void ObtenerReporte(string titulo)
         {
+            this.Titulo = titulo;
+
             if (this.Controls.Count > 0)
             {
                 this.Controls.Remove(this.reportViewer1);
                 this.reportViewer1.LocalReport.ReportEmbeddedResource = null;
-                this.reportViewer1.DataBindings.Clear(); ;
+                this.reportViewer1.DataBindings.Clear();
                 this.reportViewer1.LocalReport.DataSources.Clear();
             }
 
@@ -80,10 +82,11 @@ namespace CapaPresentacion
                 //Asignar parámetros de observaciones y horas
                 int num = this.ComprobacionNumComandas();
 
-                ReportParameter[] reportParameters = new ReportParameter[3];
+                ReportParameter[] reportParameters = new ReportParameter[4];
                 reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
                 reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
                 reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
+                reportParameters[3] = new ReportParameter("Titulo", Titulo == string.Empty ? "Casa Grande" : Titulo);
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
 
                 ReportDataSource dsDatosPedido = new ReportDataSource("DatosPedido", this.TablaDatosPedido);
