@@ -44,8 +44,8 @@ namespace CapaDatos
         {
             int contador = 0;
             int id_nomina = 0;
-            string consulta = "INSERT INTO Nomina_empleado VALUES (@Id_empleado, @Fecha_nomina, @Salario, " +
-                "@Propinas, @Otros_ingresos, @Egresos, @Total_nomina, @Estado_nomina, @Observaciones) " +
+            string consulta = "INSERT INTO Nomina_empleado VALUES (@Id_empleado, @Fecha_nomina, @Turno, " +
+                "@Servicios, @Platos, @Otros_ingresos, @Egresos, @Total_nomina, @Estado_nomina, @Observaciones) " +
                 "SET @Id_nomina_empleado = SCOPE_IDENTITY(); ";
 
             //asignamos a una cadena string la variable rpta y la iniciamos en vacía
@@ -91,29 +91,38 @@ namespace CapaDatos
                 SqlCmd.Parameters.Add(Fecha_nomina);
                 contador += 1;
 
-                SqlParameter Salario = new SqlParameter
+                SqlParameter Turno = new SqlParameter
                 {
-                    ParameterName = "@Salario",
+                    ParameterName = "@Turno",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Salario,
+                    Value = empleadoNomina.Turno,
                 };
-                SqlCmd.Parameters.Add(Salario);
+                SqlCmd.Parameters.Add(Turno);
                 contador += 1;
 
-                SqlParameter Propinas = new SqlParameter
+                SqlParameter Servicios = new SqlParameter
                 {
-                    ParameterName = "@Propinas",
+                    ParameterName = "@Servicios",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Propinas,
+                    Value = empleadoNomina.Servicios,
                 };
-                SqlCmd.Parameters.Add(Propinas);
+                SqlCmd.Parameters.Add(Servicios);
+                contador += 1;
+
+                SqlParameter Platos = new SqlParameter
+                {
+                    ParameterName = "@Platos",
+                    SqlDbType = SqlDbType.Decimal,
+                    Value = empleadoNomina.Platos,
+                };
+                SqlCmd.Parameters.Add(Platos);
                 contador += 1;
 
                 SqlParameter Otros_ingresos = new SqlParameter
                 {
                     ParameterName = "@Otros_ingresos",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Salario,
+                    Value = empleadoNomina.Otros_ingresos,
                 };
                 SqlCmd.Parameters.Add(Otros_ingresos);
                 contador += 1;
@@ -252,7 +261,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Salario",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Salario,
+                    Value = empleadoNomina.Turno,
                 };
                 SqlCmd.Parameters.Add(Salario);
                 contador += 1;
@@ -261,7 +270,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Propinas",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Propinas,
+                    Value = empleadoNomina.Servicios,
                 };
                 SqlCmd.Parameters.Add(Propinas);
                 contador += 1;
@@ -270,7 +279,7 @@ namespace CapaDatos
                 {
                     ParameterName = "@Otros_ingresos",
                     SqlDbType = SqlDbType.Decimal,
-                    Value = empleadoNomina.Salario,
+                    Value = empleadoNomina.Turno,
                 };
                 SqlCmd.Parameters.Add(Otros_ingresos);
                 contador += 1;

@@ -542,7 +542,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             if (dialog == DialogResult.OK)
             {
-                this.comandas.ObtenerReporte();
+                //this.comandas.ObtenerReporte();
 
                 if (this.IsDomicilio)
                     this.lblMistico.Text =

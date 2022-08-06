@@ -25,23 +25,28 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             InitializeComponent();
             this.btnPagar.Click += BtnPagar_Click;
             this.btnObservacion.Click += BtnObservacion_Click;
-            this.txtSalario.KeyPress += OnlyNumbers_KeyPress;
+            this.txtPlatos.KeyPress += OnlyNumbers_KeyPress;
             this.txtEgresos.KeyPress += OnlyNumbers_KeyPress;
-            this.txtOtrosIngresos.KeyPress += OnlyNumbers_KeyPress;
-            this.txtTotalPropinas.KeyPress += OnlyNumbers_KeyPress;
+            this.txtServicios.KeyPress += OnlyNumbers_KeyPress;
+            this.txtTurno.KeyPress += OnlyNumbers_KeyPress;
 
-            this.txtSalario.LostFocus += Txt_LostFocus;
+            this.txtPlatos.LostFocus += Txt_LostFocus;
             this.txtEgresos.LostFocus += Txt_LostFocus;
-            this.txtOtrosIngresos.LostFocus += Txt_LostFocus;
-            this.txtTotalPropinas.LostFocus += Txt_LostFocus;
+            this.txtServicios.LostFocus += Txt_LostFocus;
+            this.txtTurno.LostFocus += Txt_LostFocus;
 
-            this.txtSalario.Enter += Txt_Enter;
+            this.txtPlatos.Enter += Txt_Enter;
             this.txtEgresos.Enter += Txt_Enter;
-            this.txtOtrosIngresos.Enter += Txt_Enter;
-            this.txtTotalPropinas.LostFocus += Txt_Enter;
+            this.txtServicios.Enter += Txt_Enter;
+            this.txtTurno.Enter += TxtTurno_Enter;
 
             this.btnCalcular.Click += BtnCalcular_Click;
             this.btnImprimir.Click += BtnImprimir_Click;
+        }
+
+        private void TxtTurno_Enter(object sender, EventArgs e)
+        {
+            this.Calcular();
         }
 
         private void Txt_Enter(object sender, EventArgs e)
@@ -65,21 +70,66 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
         {
             decimal total_pagar = 0;
 
-            if (decimal.TryParse(this.txtTotalPropinas.Text, out decimal total_propinas))
-            {
-                total_pagar += total_propinas;
-                this.EmpleadoNominaBinding.Propinas = total_propinas;
-            }
-            else
-                Mensajes.MensajeInformacion("Verifique el valor de las propinas deben ser solo números", "Entendido");
+            StringBuilder info = new StringBuilder();
 
-            if (decimal.TryParse(this.txtSalario.Text, out decimal salario))
+            if (decimal.TryParse(this.txtValorHora.Text, out decimal valor_hora))
             {
-                total_pagar += salario;
-                this.EmpleadoNominaBinding.Salario = salario;
+                info.Append($"Valor hora: {valor_hora:C}").Append(Environment.NewLine);
             }
             else
-                Mensajes.MensajeInformacion("Verifique el salario deben ser solo números", "Entendido");
+            {
+                Mensajes.MensajeInformacion("Verifique el valor de la hora debe ser solo números", "Entendido");
+                return 0;
+            }
+
+            if (this.numericHoras.Value <= 0)
+            {
+                Mensajes.MensajeInformacion("Verifique el valor de la hora debe ser solo números", "Entendido");
+                return 0;
+            }
+
+            info.Append($"Horas {this.numericHoras.Value} | Minutos {this.numericMinutos.Value}").Append(Environment.NewLine);
+
+            decimal total_turno = this.numericHoras.Value * valor_hora + this.numericMinutos.Value * valor_hora / 60;
+
+            total_pagar += total_turno;
+
+            this.EmpleadoNominaBinding.Turno = total_turno;
+
+            this.txtTurno.Text = total_turno.ToString("C");
+
+            info.Append($"Total turno {total_turno:C}").Append(Environment.NewLine);
+
+            if (string.IsNullOrEmpty(txtPlatos.Text))
+                this.txtPlatos.Text = "0";
+
+            if (decimal.TryParse(this.txtPlatos.Text, out decimal platos))
+            {
+                total_pagar += platos;
+                this.EmpleadoNominaBinding.Platos = platos;
+            }
+            else
+            {
+                Mensajes.MensajeInformacion("Verifique el valor de los platos debe ser solo números", "Entendido");
+                return 0;
+            }
+
+            if (string.IsNullOrEmpty(txtServicios.Text))
+                this.txtServicios.Text = "0";
+
+            if (decimal.TryParse(this.txtServicios.Text, out decimal servicios))
+            {
+                total_pagar += servicios;
+                this.EmpleadoNominaBinding.Servicios = servicios;
+            }
+            else
+            {
+                Mensajes.MensajeInformacion("Verifique el valor de los servicios deben ser solo números", "Entendido");
+                return 0;
+            }
+
+            if (string.IsNullOrEmpty(txtOtrosIngresos.Text))
+                this.txtOtrosIngresos.Text = "0";
 
             if (decimal.TryParse(this.txtOtrosIngresos.Text, out decimal otros_ingresos))
             {
@@ -87,7 +137,10 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
                 this.EmpleadoNominaBinding.Otros_ingresos = otros_ingresos;
             }
             else
-                Mensajes.MensajeInformacion("Verifique el valor de los otros ingresos deben ser solo números", "Entendido");
+            {
+                Mensajes.MensajeInformacion("Verifique el valor de los servicios deben ser solo números", "Entendido");
+                return 0;
+            }
 
             if (decimal.TryParse(this.txtEgresos.Text, out decimal egresos))
             {
@@ -95,13 +148,17 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
                 this.EmpleadoNominaBinding.Egresos = egresos;
             }
             else
+            {
                 Mensajes.MensajeInformacion("Verifique el valor de los egresos deben ser solo números", "Entendido");
-
+                return 0;
+            }
             this.EmpleadoNominaBinding.Total_nomina = total_pagar;
             this.lblTotal.Text = "Total a pagar " + total_pagar.ToString("C");
 
             if (this.observacion != null)
-                this.EmpleadoNominaBinding.Observaciones = this.observacion.txtObservacion.Text;
+                info.Append(this.observacion.txtObservacion.Text);
+
+            this.EmpleadoNominaBinding.Observaciones = info.ToString();
 
             return total_pagar;
         }
@@ -146,9 +203,9 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
         private void AsignarDatos(EmpleadoNominaBinding empleadoNomina)
         {
             this.txtNombre.Text = empleadoNomina.Empleado.Nombre_empleado + " " + empleadoNomina.Empleado.Telefono_empleado;
-            this.txtTotalPropinas.Text = empleadoNomina.Propinas.ToString("N");
-            this.txtSalario.Text = empleadoNomina.Salario.ToString("N");
-            this.txtOtrosIngresos.Text = empleadoNomina.Otros_ingresos.ToString("N");
+            this.txtTurno.Text = empleadoNomina.Servicios.ToString("N");
+            this.txtPlatos.Text = empleadoNomina.Turno.ToString("N");
+            this.txtServicios.Text = empleadoNomina.Platos.ToString("N");
             this.txtEgresos.Text = empleadoNomina.Egresos.ToString("N");
             this.lblTotal.Text = empleadoNomina.Total_nomina.ToString("C");
             this.lblEstado.Text = empleadoNomina.Estado_nomina;

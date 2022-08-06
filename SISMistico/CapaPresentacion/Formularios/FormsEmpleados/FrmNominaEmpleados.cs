@@ -52,9 +52,9 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
                             Empleado = empleado,
                             Id_nomina_empleado = 0,
                             Fecha_nomina = DateTime.Now,
-                            Salario = 0,
-                            Propinas = 0,
-                            Otros_ingresos = 0,
+                            Turno = 0,
+                            Servicios = 0,
+                            Platos = 0,
                             Egresos = 0,
                             Total_nomina = 0,
                             Estado_nomina = "PENDIENTE",
@@ -92,15 +92,16 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             {
                 FechaHora = DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString(),
                 InformacionEmpleado = "Información de empleado: " + Environment.NewLine + infoEmpleado,
-                TotalPropinas = "Total de propinas: " + empleadoNomina.Propinas.ToString("C"),
-                Salario = "Salario: " + empleadoNomina.Salario.ToString("C"),
+                Turno = "Turno: " + empleadoNomina.Turno.ToString("C"),
+                Platos = "Platos: " + empleadoNomina.Platos.ToString("C"),
+                Servicios = "Servicio: " + empleadoNomina.Servicios.ToString("C"),
                 OtrosIngresos = "Otros ingresos: " + empleadoNomina.Otros_ingresos.ToString("C"),
                 Egresos = "Egresos: " + empleadoNomina.Egresos.ToString("C"),
                 TotalPagar = "Total a pagar: " + empleadoNomina.Total_nomina.ToString("C"),
                 Observaciones = empleadoNomina.Observaciones,
             };
             frmReporte.ObtenerReporte();
-            frmReporte.ImprimirFactura(1);
+            frmReporte.ImprimirFactura(2);
         }
 
         private async void Empleado_OnBtnPagarClick(object sender, EventArgs e)

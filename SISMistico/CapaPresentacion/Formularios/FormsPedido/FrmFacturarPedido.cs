@@ -185,7 +185,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                     string metodo = this.ObtenerValorPanel(this.panelTipoPedido);
                                     if (metodo.Equals("IMPRIMIR"))
                                     {
-                                        frmFacturaFinal.ImprimirFactura(1);
+                                        frmFacturaFinal.ImprimirFactura((int)this.numericCantidadFacturas.Value);
                                     }
                                     else if (metodo.Equals("CORREO"))
                                     {
@@ -199,7 +199,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                     }
                                     else if (metodo.Equals("AMBAS"))
                                     {
-                                        frmFacturaFinal.ImprimirFactura(1);
+                                        frmFacturaFinal.ImprimirFactura((int)this.numericCantidadFacturas.Value);
                                         string rpta_email =
                                             EmailFactura.SendEmailFactura(this.Id_pedido, this.Correo_electronico);
                                         if (!rpta_email.Equals("OK"))

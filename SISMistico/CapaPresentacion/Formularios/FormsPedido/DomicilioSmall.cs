@@ -97,7 +97,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 {
                     Id_pedido = this.Pedido.Id_pedido,
                 };
-                frmComandas.ObtenerReporte();
+                frmComandas.ObtenerReporte("Casa Grande | Domicilio");
                 frmComandas.AsignarTablas();
                 frmComandas.ImprimirFactura(1);
                 MensajeEspera.CloseForm();

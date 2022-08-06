@@ -46,8 +46,8 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnOtrasOpciones = new System.Windows.Forms.Button();
             this.gbOpciones = new System.Windows.Forms.GroupBox();
-            this.chkEliminarCuentas = new System.Windows.Forms.CheckBox();
             this.btnEliminarCuentas = new System.Windows.Forms.Button();
+            this.chkEliminarCuentas = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgvVentas)).BeginInit();
             this.panelFecha2.SuspendLayout();
             this.panelFecha1.SuspendLayout();
@@ -117,6 +117,7 @@
             this.btnResumen.Text = "Resumen de resultados";
             this.btnResumen.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnResumen.UseVisualStyleBackColor = true;
+            this.btnResumen.Visible = false;
             // 
             // ListaHora1
             // 
@@ -263,16 +264,6 @@
             this.gbOpciones.Text = "Eliminación de cuentas";
             this.gbOpciones.Visible = false;
             // 
-            // chkEliminarCuentas
-            // 
-            this.chkEliminarCuentas.AutoSize = true;
-            this.chkEliminarCuentas.Location = new System.Drawing.Point(7, 25);
-            this.chkEliminarCuentas.Name = "chkEliminarCuentas";
-            this.chkEliminarCuentas.Size = new System.Drawing.Size(121, 21);
-            this.chkEliminarCuentas.TabIndex = 0;
-            this.chkEliminarCuentas.Text = "Eliminar cuentas";
-            this.chkEliminarCuentas.UseVisualStyleBackColor = true;
-            // 
             // btnEliminarCuentas
             // 
             this.btnEliminarCuentas.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(249)))), ((int)(((byte)(112)))), ((int)(((byte)(88)))));
@@ -293,6 +284,16 @@
             this.btnEliminarCuentas.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnEliminarCuentas.UseVisualStyleBackColor = false;
             this.btnEliminarCuentas.Visible = false;
+            // 
+            // chkEliminarCuentas
+            // 
+            this.chkEliminarCuentas.AutoSize = true;
+            this.chkEliminarCuentas.Location = new System.Drawing.Point(7, 25);
+            this.chkEliminarCuentas.Name = "chkEliminarCuentas";
+            this.chkEliminarCuentas.Size = new System.Drawing.Size(121, 21);
+            this.chkEliminarCuentas.TabIndex = 0;
+            this.chkEliminarCuentas.Text = "Eliminar cuentas";
+            this.chkEliminarCuentas.UseVisualStyleBackColor = true;
             // 
             // FrmObservarVentas
             // 

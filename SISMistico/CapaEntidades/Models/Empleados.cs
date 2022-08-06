@@ -92,10 +92,14 @@ namespace CapaEntidades.Models
             {                
                 this.Id_nomina_empleado = Convert.ToInt32(row["Id_nomina_empleado"]);
                 this.Id_empleado = Convert.ToInt32(row["Id_empleado"]);
-                this.Empleado = new Empleados(row);
+
+                if (row.Table.Columns.Contains("Nombre_empleado"))
+                    this.Empleado = new Empleados(row);
+
                 this.Fecha_nomina = Convert.ToDateTime(row["Fecha_nomina"]);
-                this.Salario = Convert.ToDecimal(row["Salario"]);
-                this.Propinas = Convert.ToDecimal(row["Propinas"]);
+                this.Turno = Convert.ToDecimal(row["Turno"]);
+                this.Servicios = Convert.ToDecimal(row["Servicios"]);
+                this.Platos = Convert.ToDecimal(row["Platos"]);
                 this.Otros_ingresos = Convert.ToDecimal(row["Otros_ingresos"]);
                 this.Egresos = Convert.ToDecimal(row["Egresos"]);
                 this.Total_nomina = Convert.ToDecimal(row["Total_nomina"]);
@@ -116,10 +120,11 @@ namespace CapaEntidades.Models
 
         public DateTime Fecha_nomina { get; set; }
 
-        public decimal Propinas { get; set; }
+        public decimal Servicios { get; set; }
         
-        public decimal Salario { get; set; }
+        public decimal Turno { get; set; }
 
+        public decimal Platos { get; set; }
         public decimal Otros_ingresos { get; set; }
 
         public decimal Egresos { get; set; }

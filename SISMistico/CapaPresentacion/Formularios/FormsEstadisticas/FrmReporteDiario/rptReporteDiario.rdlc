@@ -15,7 +15,9 @@
                     <Value>=Parameters!InformacionEmpleado.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>12pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
+                      <Color>#555555</Color>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -25,10 +27,10 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>0.07056cm</Top>
-            <Left>0.03529cm</Left>
-            <Height>0.61736cm</Height>
-            <Width>16.6873cm</Width>
+            <Top>0.83784cm</Top>
+            <Left>3.713cm</Left>
+            <Height>2.35479cm</Height>
+            <Width>13.00959cm</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -49,7 +51,9 @@
                     <Value>=Parameters!ResumenResultados.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>14pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -59,9 +63,9 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>1.61327cm</Top>
+            <Top>3.98638cm</Top>
             <Left>0.03529cm</Left>
-            <Height>3.64312cm</Height>
+            <Height>4.31272cm</Height>
             <Width>16.6873cm</Width>
             <ZIndex>1</ZIndex>
             <Style>
@@ -85,6 +89,7 @@
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -94,9 +99,10 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>5.46806cm</Top>
-            <Height>1.69333cm</Height>
-            <Width>16.6873cm</Width>
+            <Top>9.13694cm</Top>
+            <Left>0.03529cm</Left>
+            <Height>1.71979cm</Height>
+            <Width>14.01499cm</Width>
             <ZIndex>2</ZIndex>
             <Style>
               <Border>
@@ -128,7 +134,7 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>0.72319cm</Top>
+            <Top>3.26319cm</Top>
             <Left>0.03529cm</Left>
             <Height>0.61736cm</Height>
             <Width>16.6873cm</Width>
@@ -144,7 +150,7 @@
             </Style>
           </Textbox>
           <Line Name="Line1">
-            <Top>1.43688cm</Top>
+            <Top>3.97688cm</Top>
             <Left>0.03529cm</Left>
             <Height>0cm</Height>
             <Width>16.6873cm</Width>
@@ -156,8 +162,7 @@
             </Style>
           </Line>
           <Line Name="Line2">
-            <Top>5.32695cm</Top>
-            <Left>0.03529cm</Left>
+            <Top>10.892cm</Top>
             <Height>0cm</Height>
             <Width>16.6873cm</Width>
             <ZIndex>5</ZIndex>
@@ -168,8 +173,7 @@
             </Style>
           </Line>
           <Line Name="Line3">
-            <Top>7.33778cm</Top>
-            <Left>0.03529cm</Left>
+            <Top>13.44081cm</Top>
             <Height>0cm</Height>
             <Width>16.6873cm</Width>
             <ZIndex>6</ZIndex>
@@ -180,8 +184,8 @@
             </Style>
           </Line>
           <Line Name="Line4">
-            <Top>10.50396cm</Top>
-            <Left>0.03528cm</Left>
+            <Top>15.90146cm</Top>
+            <Left>0.35278cm</Left>
             <Height>0cm</Height>
             <Width>6.87125cm</Width>
             <ZIndex>7</ZIndex>
@@ -192,7 +196,7 @@
             </Style>
           </Line>
           <Line Name="Line5">
-            <Top>10.50396cm</Top>
+            <Top>15.90146cm</Top>
             <Left>9.6132cm</Left>
             <Height>0cm</Height>
             <Width>6.87125cm</Width>
@@ -224,7 +228,7 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>10.64507cm</Top>
+            <Top>16.04257cm</Top>
             <Left>2.6282cm</Left>
             <Height>0.61736cm</Height>
             <Width>1.52667cm</Width>
@@ -260,7 +264,7 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>10.64507cm</Top>
+            <Top>16.04257cm</Top>
             <Left>12.52361cm</Left>
             <Height>0.61736cm</Height>
             <Width>1.52667cm</Width>
@@ -298,19 +302,20 @@
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
                     </Style>
                   </TextRun>
                 </TextRuns>
                 <Style>
-                  <TextAlign>Left</TextAlign>
+                  <TextAlign>Right</TextAlign>
                 </Style>
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>7.37306cm</Top>
-            <Left>0.03529cm</Left>
-            <Height>1.69333cm</Height>
-            <Width>16.6873cm</Width>
+            <Top>11.62401cm</Top>
+            <Left>2.6282cm</Left>
+            <Height>1.74625cm</Height>
+            <Width>14.09439cm</Width>
             <ZIndex>12</ZIndex>
             <Style>
               <Border>
@@ -323,8 +328,7 @@
             </Style>
           </Textbox>
           <Line Name="Line7">
-            <Top>9.24278cm</Top>
-            <Left>0.03529cm</Left>
+            <Top>8.2991cm</Top>
             <Height>0cm</Height>
             <Width>16.6873cm</Width>
             <ZIndex>13</ZIndex>
@@ -334,8 +338,149 @@
               </Border>
             </Style>
           </Line>
+          <Textbox Name="Textbox5">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Información del empleado</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>12pt</FontSize>
+                      <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>0.03528cm</Top>
+            <Left>0.03529cm</Left>
+            <Height>0.80256cm</Height>
+            <Width>12.9743cm</Width>
+            <ZIndex>14</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox15">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Información de egresos</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>12pt</FontSize>
+                      <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.2991cm</Top>
+            <Left>0.03528cm</Left>
+            <Height>0.80256cm</Height>
+            <Width>16.68731cm</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox16">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Información de ingresos extras</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>12pt</FontSize>
+                      <FontWeight>SemiBold</FontWeight>
+                      <Color>#4e4e4e</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Right</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>10.82145cm</Top>
+            <Left>0.01764cm</Left>
+            <Height>0.80256cm</Height>
+            <Width>16.68731cm</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Image Name="Image1">
+            <Source>Embedded</Source>
+            <Value>exchange</Value>
+            <Sizing>FitProportional</Sizing>
+            <Top>9.41731cm</Top>
+            <Left>15.1432cm</Left>
+            <Height>1.08664cm</Height>
+            <Width>1.34125cm</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Image>
+          <Image Name="Image3">
+            <Source>Embedded</Source>
+            <Value>Cashout</Value>
+            <Sizing>FitProportional</Sizing>
+            <Top>11.8004cm</Top>
+            <Left>0.60537cm</Left>
+            <Height>1.24537cm</Height>
+            <Width>1.39463cm</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Image>
         </ReportItems>
-        <Height>4.48958in</Height>
+        <Height>6.70486in</Height>
         <Style>
           <Border>
             <Style>Solid</Style>
@@ -345,7 +490,7 @@
       <Width>16.72259cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.01153cm</Height>
+          <Height>3.70285cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -359,8 +504,9 @@
                       <Value>SISTEMA DE CONTROL RESTAURANTE CASA GRANDE - REPORTE DIARIO</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
-                        <FontSize>12pt</FontSize>
+                        <FontSize>16pt</FontSize>
                         <FontWeight>SemiBold</FontWeight>
+                        <Color>#555555</Color>
                       </Style>
                     </TextRun>
                   </TextRuns>
@@ -371,13 +517,13 @@
               </Paragraphs>
               <rd:DefaultName>Textbox1</rd:DefaultName>
               <Left>0.03529cm</Left>
-              <Height>0.74153cm</Height>
+              <Height>1.66757cm</Height>
               <Width>16.6873cm</Width>
               <Style>
                 <Border>
                   <Style>None</Style>
                 </Border>
-                <BackgroundColor>LightGreen</BackgroundColor>
+                <BackgroundColor>#d3fcd3</BackgroundColor>
                 <PaddingLeft>2pt</PaddingLeft>
                 <PaddingRight>2pt</PaddingRight>
                 <PaddingTop>2pt</PaddingTop>
@@ -394,6 +540,7 @@
                       <Value>=Parameters!IdentificacionTurno.Value</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
+                        <FontSize>12pt</FontSize>
                         <FontWeight>SemiBold</FontWeight>
                       </Style>
                     </TextRun>
@@ -404,10 +551,10 @@
                 </Paragraph>
               </Paragraphs>
               <rd:DefaultName>Textbox1</rd:DefaultName>
-              <Top>0.77681cm</Top>
-              <Left>10.88321cm</Left>
-              <Height>0.61736cm</Height>
-              <Width>5.83938cm</Width>
+              <Top>1.66757cm</Top>
+              <Left>2.10583cm</Left>
+              <Height>1.01424cm</Height>
+              <Width>14.61675cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -429,6 +576,7 @@
                       <Value>=Parameters!FechaHora.Value</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
+                        <FontSize>12pt</FontSize>
                         <FontWeight>SemiBold</FontWeight>
                       </Style>
                     </TextRun>
@@ -439,10 +587,10 @@
                 </Paragraph>
               </Paragraphs>
               <rd:DefaultName>Textbox1</rd:DefaultName>
-              <Top>1.39417cm</Top>
-              <Left>10.88321cm</Left>
-              <Height>0.61736cm</Height>
-              <Width>5.83938cm</Width>
+              <Top>2.68181cm</Top>
+              <Left>2.10583cm</Left>
+              <Height>0.82903cm</Height>
+              <Width>14.58147cm</Width>
               <ZIndex>2</ZIndex>
               <Style>
                 <Border>
@@ -458,10 +606,9 @@
               <Source>Embedded</Source>
               <Value>PCx512</Value>
               <Sizing>FitProportional</Sizing>
-              <Top>0.84667cm</Top>
-              <Left>0.56128cm</Left>
-              <Height>1.05903cm</Height>
-              <Width>1.02375cm</Width>
+              <Top>1.70285cm</Top>
+              <Height>2cm</Height>
+              <Width>2cm</Width>
               <ZIndex>3</ZIndex>
               <Style>
                 <Border>
@@ -477,7 +624,7 @@
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.23611cm</Height>
+          <Height>2.02916cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -677,6 +824,18 @@ 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</ImageData>
+    </EmbeddedImage>
+    <EmbeddedImage Name="exchange">
+      <MIMEType>image/png</MIMEType>
+      <ImageData>iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA3QAAAN0BcFOiBwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAATZSURBVFiFxZdtbFNVGMd/5/T2ZV1RRrvOyZRtdLBsI4EYwwcIIhiMIEIiUxSUCI5IAkaMMfEtKkExfjFqjAmEGKN88QXcgvElAouREUAEiYgf1IWNUtYqrKysL/f2Hj9st3a064ug/r6de54+/3/PPee5zxFKKQpx95Ht7cCzAhFr97adWOZrmS6lbBNCTBRCuOxdXwjt0FGVrq1Jmt5JfabD/pXS1Db36tWhgolH0QpNLj26owPYDqBQfHrh1NxGj49ZnhszMSKdRgZDQgZDLmAaME1Vujclz1/4Nn3DpJXFjIjxVuCeIzsfNDE/BCWynzukjWduXkBLpX9kvGcv9j2f582hKt0q2dz0dbzp5vur2tuj+WJkvoebjn+8DpErDpAy07ze182v8T8L/TEAxOVh4Tr2452qpfVgKBTylWTg+VNda/qNSztMlStuETd1tp3ZT19isKgJAKfb3SqlPBQOhxsLGth8YveSU8OR9wyVHlfcIpZOsfXMPkIOs6gBISUOhyOglOoJBoN1eQ2sPfbB7H59sFMvQdwiaiR4se4ykeucRWMdDgdSyhpN094HMhoS4K7v350eVfq+hDJspYpbRDST51a2MVhpLxrrcrkAFoTD4c0ZAwKEw7TvTZpGZbniFueqKti+MOf15iClxG63o5R6dWBgoAFAzu9+2eaSWs0/FbewmYULWibOZgNwAo8CaDvqVtlcnkrRn4pS4a4A4IehILsjPxVMtK72VhoqJmHvPojzwHcEzsdKMqBpmdq3BnhB83g8C4QQnkCFF3eFG4Bg8lLRRHXO62mq8OFI2LCXKG4hpcQ0zcmRSGSRBJYCCFHy5r9qLC3TNBdJ
+KWXr/2UAqJdKqVqAYl/Fa0mWVoMEagFMs3hFu1ZkadVLwLRc/RercIWOpgH9QCuAYRjY7cUrGoDt+Em0lBPZe6ZorNZzBOUZqXNpTYOZbSAlQEhTSvULIco2YP9yH86+vJ/4HByfdI0ZizmzubRqBUKIkJRS/mZNpNNpDMMoKenVYNRUA6CUOi2Bz7Ink8kk/It7ITH7FoYXzrMMdEq/338AGLAClFLoul40kRot2+WQnDWD6EP3wUgdGIrFYvslkAY+yg4s5UimHri3LBPJ1maij6yyNh9KqV2BQCApAWw222tAWQVd+atJPLURnMWbkVRTI9H1D6O0TLsxrGnaFhhtSHw+3zkhxEvlGAAwA40knnhs9DTnR6+/icENa1FjT9cbPp8vlDEA4Pf73wROlmsi3dpMYlMH2HIbbGNyLYMbO1CuMat0OB6Pb7UG2b8yNE1bDPSWIqwbBrquo+s68dZmYmtXW5trJFlNNRcfX4+ZtU+EEGellMvr6+sT1rMxa+f1eoPhcPgOQ5nHgImFDBi6PnJkR0nNmkHqyQ24uw+S9lczfPtcTM/fXZ4Q4qxSarHf7z+fnSfn5fn9/t+jF35Z0uCo6upNXfSWsBgZ9KkNRKc25Js6LIRYfqU4jHMz6mie1/P2zHbfbROmvDPBVkLjPz7DwCvxeHx+dXV1jjgUuBta7OztmdIb+6OzNzXYFk0nMufo6Zo5THflvW0BDCmldmmatsXa7eNR1EA2b/38zbIh9DUR/fKcFVUt9iantxJIASEhREgpdVop1RmLxfYHAoFksXwAfwH0fd0ktrdNjwAAAABJRU5ErkJggg==</ImageData>
+    </EmbeddedImage>
+    <EmbeddedImage Name="Cashout">
+      <MIMEType>image/png</MIMEType>
+      <ImageData>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</ImageData>
     </EmbeddedImage>
   </EmbeddedImages>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>

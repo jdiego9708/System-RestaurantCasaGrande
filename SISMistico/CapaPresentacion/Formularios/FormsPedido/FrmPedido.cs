@@ -296,16 +296,16 @@
                         {
                             if (dtBebidas.Rows.Count > 0)
                             {
-                                this.frmComandas.ObtenerReporte();
+                                this.frmComandas.ObtenerReporte("Casa Grande | Bebidas");
                                 this.frmComandas.AsignarTablas(dtBebidas);
-                                this.frmComandas.ImprimirFactura(1);
+                                this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
                             }
 
                             if (dtPlatos.Rows.Count > 0)
                             {
-                                this.frmComandas.ObtenerReporte();
+                                this.frmComandas.ObtenerReporte("Casa Grande | Platos");
                                 this.frmComandas.AsignarTablas(dtPlatos);
-                                this.frmComandas.ImprimirFactura(1);
+                                this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
                             }
                         }
                         MensajeEspera.CloseForm();
@@ -356,7 +356,7 @@
                 if (this.frmComandas == null)
                     this.frmComandas = new FrmComandas();
 
-                this.frmComandas.ObtenerReporte();
+                this.frmComandas.ObtenerReporte("Casa grande comanda");
 
                 if (this.IsEditar)
                 {

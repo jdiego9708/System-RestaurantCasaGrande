@@ -65,7 +65,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
             DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
 
-            string informacionEmpleado = "Información de empleado que genera el reporte " +
+            string informacionEmpleado = "Reporte generado por " +
                 datos.Nombre_empleado + " - Teléfono: " + datos.EmpleadoLogin.Telefono_empleado;
             string cantidadPedidos = "";
             var (rpta, dtPedidos) =
@@ -107,10 +107,10 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 Turno turno = new Turno(dtEstadistica.Rows[0]);
                 id_turno = "Identificación del turno: " + turno.Id_turno.ToString();
 
-                if (!isRango)
-                    resumenResultados.Append("Fecha: ").Append(turno.Fecha_turno.ToLongDateString()).Append(Environment.NewLine);
-                else
-                    resumenResultados.Append("Entre ").Append(date1.ToLongDateString() + " y ").Append(date2.ToLongDateString()).Append(" se registra la siguiente información:").Append(Environment.NewLine);
+                //if (!isRango)
+                //    resumenResultados.Append("Fecha: ").Append(turno.Fecha_turno.ToLongDateString()).Append(Environment.NewLine);
+                //else
+                //    resumenResultados.Append("Entre ").Append(date1.ToLongDateString() + " y ").Append(date2.ToLongDateString()).Append(" se registra la siguiente información:").Append(Environment.NewLine);
 
                 resumenResultados.Append("Total ingresos: ").Append(turno.Total_ingresos.ToString("C")).Append(Environment.NewLine);
 
@@ -182,6 +182,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             }
 
             StringBuilder infoEgresos = new StringBuilder();
+
             if (this.chkInfoGastos.Checked)
             {
                 DataTable dtEgresos = null;
@@ -211,8 +212,8 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                         {
                             contador += 1;
                             Egresos egreso = new Egresos(row);
-                            infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
-                            infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
+                            infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso).Append(" | ");
+                            infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(Environment.NewLine);
                             infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
                         }
                     }
@@ -222,6 +223,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             }
 
             StringBuilder infoIngresos = new StringBuilder();
+
             if (this.chkIngresos.Checked)
             {
                 DataTable dtIngresos = null;
@@ -251,8 +253,8 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                         {
                             contador += 1;
                             Ingresos ingreso = new Ingresos(row);
-                            infoIngresos.Append(contador + ") Fecha: ").Append(ingreso.Fecha_ingreso.ToLongDateString()).Append(" - ");
-                            infoIngresos.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C")).Append(" - ");
+                            infoIngresos.Append(contador + ") Fecha: ").Append(ingreso.Fecha_ingreso.ToString("yyyy-MM-dd")).Append(" | ");
+                            infoIngresos.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C")).Append(Environment.NewLine);
                             infoIngresos.Append("Observaciones: ").Append(ingreso.Descripcion_ingreso).Append(Environment.NewLine);
                         }
                     }
@@ -263,6 +265,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
             if (this.chkInfoNomina.Checked)
             {
+                infoEgresos.Append(Environment.NewLine).Append(Environment.NewLine);
                 DataTable dtNomina;
 
                 if (isRango)
@@ -288,12 +291,13 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                             EmpleadoNominaBinding nomina = new EmpleadoNominaBinding(row);
                             if (nomina.Estado_nomina.Equals("TERMINADO"))
                             {
-                                infoEgresos.Append("* Fecha: ").Append(nomina.Fecha_nomina.ToString("dd-MM-yyyy")).Append(" - ");
-                                infoEgresos.Append(nomina.Empleado.Nombre_empleado).Append(" - ");
-                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C"));
+                                infoEgresos.Append("*Fecha: ").Append(nomina.Fecha_nomina.ToString("dd-MM-yyyy")).Append(" | ");
+                                infoEgresos.Append(nomina.Empleado.Nombre_empleado).Append(" | ");
+                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(Environment.NewLine);
                                 if (!string.IsNullOrEmpty(nomina.Observaciones))
-                                    infoEgresos.Append(" - " + nomina.Observaciones).Append(Environment.NewLine);
-                                infoEgresos.Append(Environment.NewLine);
+                                    infoEgresos.Append("Observaciones: " + nomina.Observaciones).Append(Environment.NewLine);
+                                else
+                                    infoEgresos.Append(Environment.NewLine);
                             }
                         }
                     }
@@ -305,7 +309,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             if (this.chkInfoPagos.Checked)
             {
                 StringBuilder infoPagos = new StringBuilder();
-                infoPagos.Append("Métodos de pago: ").Append(Environment.NewLine);
+                infoPagos.Append(Environment.NewLine + "Métodos de pago: ").Append(Environment.NewLine);
                 foreach (DataRow rowPago in dtPagos.Rows)
                 {
                     int cantidad = Convert.ToInt32(rowPago["Cantidad"]);

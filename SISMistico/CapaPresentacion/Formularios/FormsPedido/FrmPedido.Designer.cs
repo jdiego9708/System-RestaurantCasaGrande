@@ -49,6 +49,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.chkPrintComandas = new System.Windows.Forms.CheckBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.txtInfoPedido = new System.Windows.Forms.TextBox();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.numericComandas = new System.Windows.Forms.NumericUpDown();
             this.groupBox1.SuspendLayout();
             this.panelBanner.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -57,6 +59,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.SuspendLayout();
             this.gbNumClientes.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericClientes)).BeginInit();
+            this.groupBox6.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericComandas)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -125,7 +129,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelBanner.Controls.Add(this.lblTitulo);
             this.panelBanner.Location = new System.Drawing.Point(0, 0);
             this.panelBanner.Name = "panelBanner";
-            this.panelBanner.Size = new System.Drawing.Size(1099, 54);
+            this.panelBanner.Size = new System.Drawing.Size(1200, 54);
             this.panelBanner.TabIndex = 5;
             // 
             // lblMesero
@@ -206,7 +210,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox4.Controls.Add(this.panelPedido);
             this.groupBox4.Location = new System.Drawing.Point(748, 150);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(337, 422);
+            this.groupBox4.Size = new System.Drawing.Size(438, 422);
             this.groupBox4.TabIndex = 8;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pedido";
@@ -222,20 +226,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelPedido.Location = new System.Drawing.Point(3, 21);
             this.panelPedido.Name = "panelPedido";
             this.panelPedido.PageSize = 10;
-            this.panelPedido.Size = new System.Drawing.Size(328, 395);
+            this.panelPedido.Size = new System.Drawing.Size(429, 395);
             this.panelPedido.TabIndex = 0;
             // 
             // groupBox5
             // 
             this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox5.Controls.Add(this.groupBox6);
             this.groupBox5.Controls.Add(this.gbNumClientes);
             this.groupBox5.Controls.Add(this.chkPrintComandas);
             this.groupBox5.Controls.Add(this.btnSave);
             this.groupBox5.Controls.Add(this.txtInfoPedido);
             this.groupBox5.Location = new System.Drawing.Point(748, 60);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(337, 84);
+            this.groupBox5.Size = new System.Drawing.Size(438, 84);
             this.groupBox5.TabIndex = 8;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Información";
@@ -243,7 +248,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             // gbNumClientes
             // 
             this.gbNumClientes.Controls.Add(this.numericClientes);
-            this.gbNumClientes.Location = new System.Drawing.Point(163, 13);
+            this.gbNumClientes.Location = new System.Drawing.Point(265, 13);
             this.gbNumClientes.Name = "gbNumClientes";
             this.gbNumClientes.Size = new System.Drawing.Size(81, 65);
             this.gbNumClientes.TabIndex = 9;
@@ -306,21 +311,58 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.txtInfoPedido.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtInfoPedido.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtInfoPedido.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.txtInfoPedido.Location = new System.Drawing.Point(250, 22);
+            this.txtInfoPedido.Location = new System.Drawing.Point(359, 22);
             this.txtInfoPedido.Multiline = true;
             this.txtInfoPedido.Name = "txtInfoPedido";
             this.txtInfoPedido.ReadOnly = true;
             this.txtInfoPedido.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtInfoPedido.Size = new System.Drawing.Size(81, 54);
+            this.txtInfoPedido.Size = new System.Drawing.Size(73, 54);
             this.txtInfoPedido.TabIndex = 0;
             this.txtInfoPedido.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.numericComandas);
+            this.groupBox6.Location = new System.Drawing.Point(156, 13);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(103, 65);
+            this.groupBox6.TabIndex = 30;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "# Comandas";
+            // 
+            // numericComandas
+            // 
+            this.numericComandas.BackColor = System.Drawing.Color.White;
+            this.numericComandas.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.numericComandas.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericComandas.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.numericComandas.Location = new System.Drawing.Point(17, 25);
+            this.numericComandas.Maximum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericComandas.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericComandas.Name = "numericComandas";
+            this.numericComandas.Size = new System.Drawing.Size(69, 28);
+            this.numericComandas.TabIndex = 29;
+            this.numericComandas.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.numericComandas.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
             // 
             // FrmPedido
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1097, 584);
+            this.ClientSize = new System.Drawing.Size(1198, 584);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
@@ -343,6 +385,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.groupBox5.PerformLayout();
             this.gbNumClientes.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericClientes)).EndInit();
+            this.groupBox6.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericComandas)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -368,5 +412,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.CheckBox chkPrintComandas;
         private System.Windows.Forms.GroupBox gbNumClientes;
         private System.Windows.Forms.NumericUpDown numericClientes;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.NumericUpDown numericComandas;
     }
 }

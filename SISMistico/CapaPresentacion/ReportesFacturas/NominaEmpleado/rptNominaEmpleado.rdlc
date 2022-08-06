@@ -259,7 +259,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=Parameters!TotalPropinas.Value</Value>
+                    <Value>=Parameters!Turno.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>SemiBold</FontWeight>
@@ -294,7 +294,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>=Parameters!Salario.Value</Value>
+                    <Value>=Parameters!Servicios.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontWeight>SemiBold</FontWeight>
@@ -307,7 +307,7 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>6.3864cm</Top>
+            <Top>6.35112cm</Top>
             <Left>0.02646cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
@@ -342,7 +342,7 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>7.12779cm</Top>
+            <Top>7.79863cm</Top>
             <Left>0.05292cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
@@ -377,8 +377,8 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>7.83391cm</Top>
-            <Left>0.05292cm</Left>
+            <Top>8.50475cm</Top>
+            <Left>0.02646cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
             <ZIndex>10</ZIndex>
@@ -413,8 +413,8 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>8.57531cm</Top>
-            <Left>0.05292cm</Left>
+            <Top>9.24615cm</Top>
+            <Left>0.02646cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
             <ZIndex>11</ZIndex>
@@ -429,8 +429,8 @@
             </Style>
           </Textbox>
           <Line Name="Line5">
-            <Top>9.35198cm</Top>
-            <Left>0.02646cm</Left>
+            <Top>10.02282cm</Top>
+            <Left>0cm</Left>
             <Height>0cm</Height>
             <Width>7.77354cm</Width>
             <ZIndex>12</ZIndex>
@@ -441,8 +441,8 @@
             </Style>
           </Line>
           <Line Name="Line6">
-            <Top>12.87197cm</Top>
-            <Left>1.16418cm</Left>
+            <Top>12.13057cm</Top>
+            <Left>1.13772cm</Left>
             <Height>0cm</Height>
             <Width>5.31292cm</Width>
             <ZIndex>13</ZIndex>
@@ -473,8 +473,8 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>12.94253cm</Top>
-            <Left>0.02646cm</Left>
+            <Top>12.20113cm</Top>
+            <Left>0cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
             <ZIndex>14</ZIndex>
@@ -489,8 +489,8 @@
             </Style>
           </Textbox>
           <Line Name="Line7">
-            <Top>14.59148cm</Top>
-            <Left>1.2171cm</Left>
+            <Top>13.85008cm</Top>
+            <Left>1.19064cm</Left>
             <Height>0cm</Height>
             <Width>5.31292cm</Width>
             <ZIndex>15</ZIndex>
@@ -521,8 +521,8 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>14.66204cm</Top>
-            <Left>0.07938cm</Left>
+            <Top>13.92064cm</Top>
+            <Left>0.05292cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.74708cm</Width>
             <ZIndex>16</ZIndex>
@@ -556,7 +556,8 @@
               </Paragraph>
             </Paragraphs>
             <rd:DefaultName>Textbox2</rd:DefaultName>
-            <Top>9.45781cm</Top>
+            <Top>10.02282cm</Top>
+            <Left>0.02646cm</Left>
             <Height>0.67084cm</Height>
             <Width>7.72062cm</Width>
             <ZIndex>17</ZIndex>
@@ -570,8 +571,43 @@
               <PaddingBottom>2pt</PaddingBottom>
             </Style>
           </Textbox>
+          <Textbox Name="Textbox14">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Parameters!Platos.Value</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontWeight>SemiBold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox2</rd:DefaultName>
+            <Top>7.09251cm</Top>
+            <Left>0.02646cm</Left>
+            <Height>0.67084cm</Height>
+            <Width>7.74708cm</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
         </ReportItems>
-        <Height>6.12499in</Height>
+        <Height>5.74468in</Height>
         <Style />
       </Body>
       <Width>7.90584cm</Width>
@@ -600,13 +636,13 @@
       <AllowBlank>true</AllowBlank>
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
-    <ReportParameter Name="TotalPropinas">
+    <ReportParameter Name="Turno">
       <DataType>String</DataType>
       <Nullable>true</Nullable>
       <AllowBlank>true</AllowBlank>
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
-    <ReportParameter Name="Salario">
+    <ReportParameter Name="Platos">
       <DataType>String</DataType>
       <Nullable>true</Nullable>
       <AllowBlank>true</AllowBlank>
@@ -636,11 +672,17 @@
       <AllowBlank>true</AllowBlank>
       <Prompt>ReportParameter1</Prompt>
     </ReportParameter>
+    <ReportParameter Name="Servicios">
+      <DataType>String</DataType>
+      <Nullable>true</Nullable>
+      <AllowBlank>true</AllowBlank>
+      <Prompt>ReportParameter1</Prompt>
+    </ReportParameter>
   </ReportParameters>
   <ReportParametersLayout>
     <GridLayoutDefinition>
       <NumberOfColumns>4</NumberOfColumns>
-      <NumberOfRows>2</NumberOfRows>
+      <NumberOfRows>3</NumberOfRows>
       <CellDefinitions>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
@@ -655,12 +697,12 @@
         <CellDefinition>
           <ColumnIndex>2</ColumnIndex>
           <RowIndex>0</RowIndex>
-          <ParameterName>TotalPropinas</ParameterName>
+          <ParameterName>Turno</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>3</ColumnIndex>
           <RowIndex>0</RowIndex>
-          <ParameterName>Salario</ParameterName>
+          <ParameterName>Platos</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
@@ -681,6 +723,11 @@
           <ColumnIndex>3</ColumnIndex>
           <RowIndex>1</RowIndex>
           <ParameterName>Observaciones</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>Servicios</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

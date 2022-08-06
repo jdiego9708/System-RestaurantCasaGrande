@@ -23,7 +23,7 @@ namespace CapaPresentacion
             InitializeComponent();
         }
 
-        public void ObtenerReporte()
+        public void ObtenerReporte(string titulo)
         {
             if (this.Controls.Count > 0)
             {

@@ -22,8 +22,9 @@ namespace CapaPresentacion.ReportesFacturas.NominaEmpleado
 
         public string FechaHora { get; set; }
         public string InformacionEmpleado { get; set; }
-        public string TotalPropinas { get; set; }
-        public string Salario { get; set; }
+        public string Turno { get; set; }
+        public string Platos { get; set; }
+        public string Servicios { get; set; }
         public string OtrosIngresos { get; set; }
         public string Egresos { get; set; }
         public string TotalPagar { get; set; }
@@ -44,15 +45,16 @@ namespace CapaPresentacion.ReportesFacturas.NominaEmpleado
         {
             try
             {
-                ReportParameter[] reportParameters = new ReportParameter[8];
+                ReportParameter[] reportParameters = new ReportParameter[9];
                 reportParameters[0] = new ReportParameter("FechaHora", FechaHora);
                 reportParameters[1] = new ReportParameter("InformacionEmpleado", InformacionEmpleado);
-                reportParameters[2] = new ReportParameter("TotalPropinas", TotalPropinas);
-                reportParameters[3] = new ReportParameter("Salario", Salario);
+                reportParameters[2] = new ReportParameter("Turno", Turno);
+                reportParameters[3] = new ReportParameter("Platos", Platos);
                 reportParameters[4] = new ReportParameter("OtrosIngresos", OtrosIngresos);
                 reportParameters[5] = new ReportParameter("Egresos", Egresos);
                 reportParameters[6] = new ReportParameter("TotalPagar", TotalPagar);
                 reportParameters[7] = new ReportParameter("Observaciones", Observaciones);
+                reportParameters[8] = new ReportParameter("Servicios", Servicios);
                 this.reportViewer1.LocalReport.SetParameters(reportParameters);
                 this.reportViewer1.RefreshReport();
 

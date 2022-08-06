@@ -110,7 +110,7 @@ namespace CapaPresentacion.Formularios.FormsIngresos
                             Observaciones = string.Empty,
                         };
                         frmReporteingresos.ObtenerReporte();
-                        frmReporteingresos.ImprimirFactura(1);
+                        frmReporteingresos.ImprimirFactura(2);
 
                         this.OnIngresoSuccess?.Invoke(ingreso, e);
                         this.Close();

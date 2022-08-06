@@ -119,7 +119,7 @@ namespace CapaPresentacion.Formularios.FormsEgresos
                             Observaciones = string.Empty,
                         };
                         frmReporteGastos.ObtenerReporte();
-                        frmReporteGastos.ImprimirFactura(1);
+                        frmReporteGastos.ImprimirFactura(2);
 
                         this.OnEgresoSuccess?.Invoke(egreso, e);
                         this.Close();
