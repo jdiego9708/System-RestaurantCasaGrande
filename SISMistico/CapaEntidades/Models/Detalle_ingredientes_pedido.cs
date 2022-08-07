@@ -18,6 +18,7 @@
                 this.Id_ingrediente = Convert.ToInt32(row["Id_ingrediente"]);
                 this.Id_pedido = Convert.ToInt32(row["Id_pedido"]);
                 this.Id_tipo = Convert.ToInt32(row["Id_tipo"]);
+                this.Id_detalle_pedido = Convert.ToInt32(row["Id_detalle_pedido"]);
                 this.Observaciones = Convert.ToString(row["Observaciones"]);
             }
             catch (Exception ex)
@@ -33,6 +34,8 @@
         public int Id_tipo { get; set; }
 
         public int Id_ingrediente { get; set; }
+
+        public int Id_detalle_pedido { get; set; }
 
         public Ingredientes Ingrediente { get; set; }
 

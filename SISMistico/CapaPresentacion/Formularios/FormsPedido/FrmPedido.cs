@@ -49,20 +49,18 @@
             }
         }
 
-        private bool Comprobaciones(out List<string> variablesPedido,
+        private bool Comprobaciones(out Pedidos pedido,
+            out List<Detalle_pedido> listDetallePedido,
             out DataTable dtDetallePedido,
-            out List<Detalle_ingredientes_pedido> listDetalleIngredientes,
             out DataTable dtPlatos,
             out DataTable dtBebidas)
         {
-            //Asignar la tabla de los detalles
-            dtDetallePedido = new DataTable("DetallePedido");
             dtPlatos = new DataTable("DetallePedidoPlatos");
             dtBebidas = new DataTable("DetallePedidoBebidas");
             //Asignar las variables del pedido, es decir los datos principales
-            variablesPedido = new List<string>();
-            //Asignar la lista de ingredientes del detalle del pedido
-            listDetalleIngredientes = new List<Detalle_ingredientes_pedido>();
+            pedido = new Pedidos();
+            listDetallePedido = new List<Detalle_pedido>();
+            dtDetallePedido = new DataTable();
 
             if (this.EmpleadoSelected == null)
             {
@@ -91,14 +89,19 @@
             else
                 tipo_pedido = "MESA";
 
-            variablesPedido = new List<string>
-                {
-                Convert.ToString(this.MesaSelected.Id_mesa),
-                Convert.ToString(this.EmpleadoSelected.Id_empleado),
-                Convert.ToString(this.ClienteSelected.Id_cliente),
-                "0", tipo_pedido, "", this.numericClientes.Value.ToString()
-                };
 
+            pedido = new Pedidos
+            {
+                Id_pedido = 0,
+                Id_mesa = this.MesaSelected.Id_mesa,
+                Id_empleado = this.EmpleadoSelected.Id_empleado,
+                Id_cliente = this.ClienteSelected.Id_cliente,
+                Fecha_pedido = DateTime.Now,
+                Hora_pedido = DateTime.Now.ToString("HH:mm"),
+                Tipo_pedido = tipo_pedido,
+                Observaciones_pedido = string.Empty,
+                CantidadClientes = (int)this.numericClientes.Value
+            };
 
             //Comprobar si hay productos seleccionados
             if (this.ProductsAddSelected == null && !this.IsEditar)
@@ -141,6 +144,19 @@
                     newRow["Total"] = pr.Cantidad * pr.Precio;
                     newRow["Observaciones"] = pr.Observaciones;
 
+                    Detalle_pedido detalle = new Detalle_pedido();
+
+                    if (this.IsEditar)
+                        detalle.Id_pedido = this.Pedido.Id_pedido;
+                    else
+                        detalle.Id_pedido = 0;
+
+                    detalle.Id_tipo = pr.Id_producto;
+                    detalle.Tipo = pr.Tipo_producto;
+                    detalle.Precio = pr.Precio;
+                    detalle.Cantidad = pr.Cantidad;
+                    detalle.Observaciones = pr.Observaciones;
+
                     //Agregamos la lista de detalles si es un plato
                     if (pr.Tipo_producto.Equals("PLATO"))
                     {
@@ -168,10 +184,16 @@
 
                                     nombre = info.ToString();
                                     newRow["Nombre"] = info.ToString();
-                                    listDetalleIngredientes.Add(detail);
+
+                                    if (detalle.ListDetalleIngredientes == null)
+                                        detalle.ListDetalleIngredientes = new List<Detalle_ingredientes_pedido>();
+
+                                    detalle.ListDetalleIngredientes.Add(detail);
                                 }
                             }
                         }
+
+                        listDetallePedido.Add(detalle);
 
                         DataRow newRowPlato = dtPlatos.NewRow();
                         newRowPlato["Id_tipo"] = pr.Id_producto;
@@ -187,6 +209,8 @@
                     {
                         CapaEntidades.Models.Bebidas bebida =
                             (CapaEntidades.Models.Bebidas)pr.Product;
+
+                        listDetallePedido.Add(detalle);
 
                         DataRow newRowBebida = dtBebidas.NewRow();
                         newRowBebida["Id_tipo"] = pr.Id_producto;
@@ -213,9 +237,9 @@
             try
             {
                 MensajeEspera.ShowWait("Cargando...");
-                if (this.Comprobaciones(out List<string> variablesPedido,
+                if (this.Comprobaciones(out Pedidos pedido,
+                                        out List<Detalle_pedido> listDetalle,
                                         out DataTable dtDetallePedido,
-                                        out List<Detalle_ingredientes_pedido> listDetalleIngredientes,
                                         out DataTable dtPlatos,
                                         out DataTable dtBebidas))
                 {
@@ -226,42 +250,51 @@
 
                     if (!this.IsEditar)
                     {
-                        rpta = NPedido.InsertarPedido(variablesPedido,
-                           dtDetallePedido, out id_pedido, out DataTable dtDetallesCompleto);
+                        rpta = NPedido.InsertarPedido(pedido);
+                        id_pedido = pedido.Id_pedido;
                     }
                     else
                     {
                         id_pedido = this.Pedido.Id_pedido;
-                        if (dtDetallePedido != null)
-                        {
-                            foreach (DataRow row in dtDetallePedido.Rows)
-                            {
-                                Detalle_pedido de = new Detalle_pedido(row);
-                                rpta = NPedido.ActualizarDetallePedido(de, datos.EmpleadoClaveMaestra.Id_empleado, "");
-                                if (!rpta.Equals("OK"))
-                                {
-                                    throw new Exception(rpta);
-                                }
-                            }
-                        }
+                        //if (dtDetallePedido != null)
+                        //{
+                        //    foreach (DataRow row in dtDetallePedido.Rows)
+                        //    {
+                        //        Detalle_pedido de = new Detalle_pedido(row);
+                        //        rpta = NPedido.ActualizarDetallePedido(de, datos.EmpleadoClaveMaestra.Id_empleado, "");
+                        //        if (!rpta.Equals("OK"))
+                        //        {
+                        //            throw new Exception(rpta);
+                        //        }
+                        //    }
+                        //}
                     }
 
                     if (rpta.Equals("OK"))
                     {
-                        //Cuando tengamos devuelta los detalles vamos a comprobar
-                        //cuales de esos detalles hay que ingresarles el detalle de almuerzo
-                        if (listDetalleIngredientes != null)
+                        foreach (Detalle_pedido detalle in listDetalle)
                         {
-                            if (listDetalleIngredientes.Count > 0)
-                            {
-                                foreach (Detalle_ingredientes_pedido de in listDetalleIngredientes)
-                                {
-                                    //Asignar el id pedido que es igual para todos los detalles
-                                    de.Id_pedido = id_pedido;
-                                    de.Observaciones = string.Empty;
-                                }
+                            detalle.Id_pedido = id_pedido;                         
 
-                                rpta = await NPedido.InsertarDetalleIngredientesPedido(listDetalleIngredientes);
+                            rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "");
+                            if (!rpta.Equals("OK"))
+                            {
+                                throw new Exception(rpta);
+                            }
+
+                            if (detalle.ListDetalleIngredientes != null)
+                            {
+                                if (detalle.ListDetalleIngredientes.Count > 0)
+                                {
+                                    foreach (Detalle_ingredientes_pedido detalleIngrediente in detalle.ListDetalleIngredientes)
+                                    {
+                                        detalleIngrediente.Id_detalle_pedido = detalle.Id_detalle_pedido;
+                                        detalleIngrediente.Id_pedido = detalle.Id_pedido;
+                                        detalleIngrediente.Observaciones = string.Empty;
+                                    }
+
+                                    rpta = await NPedido.InsertarDetalleIngredientesPedido(detalle.ListDetalleIngredientes);
+                                }
                             }
                         }
 
@@ -388,6 +421,9 @@
             if (this.ProductsSelected == null)
                 this.ProductsSelected = new List<ProductBinding>();
 
+            bool isNew = false;
+            ProductBinding productNew = null;
+
             //Comprobar existencia del producto en la lista de ProductsSelected
             List<ProductBinding> productExiste =
                 this.ProductsSelected.Where(x => x.Id_producto == product.Id_producto).ToList();
@@ -415,7 +451,7 @@
                         if (productExiste[0].ProductDetalles == null)
                             productExiste[0].ProductDetalles = detalles;
 
-                        bool isNew = false;
+
                         foreach (ProductDetalleBinding pr1 in detalles)
                         {
                             List<ProductDetalleBinding> find =
@@ -431,7 +467,7 @@
                         if (isNew)
                         {
                             //Si es new agregamos uno nuevo
-                            ProductBinding pr = new ProductBinding
+                            productNew = new ProductBinding
                             {
                                 Id_producto = product.Id_producto,
                                 Nombre = product.Nombre,
@@ -445,7 +481,7 @@
                                 Cantidad = 1,
                                 Product = plato,
                             };
-                            this.ProductsSelected.Add(pr);
+                            this.ProductsSelected.Add(productNew);
                         }
                         else
                             productExiste[0].Cantidad += 1;
@@ -482,6 +518,10 @@
             {
                 /**Si existe el producto en la lista de productos haremos:
                  * 1- Agregar +1 al producto en la lista existente**/
+
+                if (isNew && productNew != null)
+                    this.ProductsAddSelected.Add(productNew);
+
                 //productExisteAdd[0].Cantidad += 1;
                 //this.ProductsAddSelected.Add(productExiste[0]);
             }
@@ -993,6 +1033,7 @@
                 products = (from DataRow dr in dtDetalles.Rows
                             select new ProductBinding
                             {
+                                Id_detalle_producto = Convert.ToInt32(dr["Id_detalle_pedido"]),
                                 Nombre = Convert.ToString(dr["Nombre"]),
                                 Precio = Convert.ToDecimal(dr["Precio"]),
                                 Cantidad = Convert.ToInt32(dr["Cantidad"]),

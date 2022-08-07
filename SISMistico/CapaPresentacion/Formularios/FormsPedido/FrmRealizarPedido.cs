@@ -198,20 +198,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
                     if (TablaDetallePedido.Rows.Count > 0)
                     {
-                        rpta =
-                            NPedido.InsertarPedido(this.Variables(),
-                            TablaDetallePedido, 
-                            out id_pedido,
-                            out _);
+                        //rpta =
+                        //    NPedido.InsertarPedido(this.Variables(),
+                        //    TablaDetallePedido, 
+                        //    out id_pedido,
+                        //    out _);
                         if (rpta.Equals("OK"))
                         {
                             if (!this.IsDomicilio)
                             {
                                 FrmObservarMesas FrmObservarMesas = FrmObservarMesas.GetInstancia();
-                                FrmObservarMesas.ObtenerPedido(id_pedido, this.Numero_mesa, "PENDIENTE");
+                                FrmObservarMesas.ObtenerPedido(0, this.Numero_mesa, "PENDIENTE");
                             }
 
-                            this.comandas.Id_pedido = id_pedido;
+                            this.comandas.Id_pedido = 0;
                             this.comandas.AsignarTablas();
 
                             if (this.contextMenuDatosPedido.chkImprimirPedido.Checked)
@@ -249,7 +249,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
                             if (this.IsDomicilio)
                             {
-                                this.OnPedidoDomicilioSuccess?.Invoke(id_pedido, e);
+                                this.OnPedidoDomicilioSuccess?.Invoke(0, e);
                             }
 
 

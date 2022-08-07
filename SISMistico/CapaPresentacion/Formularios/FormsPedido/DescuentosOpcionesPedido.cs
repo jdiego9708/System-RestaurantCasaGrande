@@ -334,8 +334,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.lblPropinaSugerida.Text = propinaSugerida.ToString("C");
             this.lblPropinaSugerida.Tag = propinaSugerida;
 
-            this.txtPropina.Text = 0.ToString("C");
-            this.txtPropina.Tag = 0;
+            this.txtPropina.Text = propinaSugerida.ToString("C");
+            this.txtPropina.Tag = propinaSugerida;
 
             this.CrearTablaCuenta();
             this.LoadMetodosPago();

@@ -75,6 +75,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             foreach (DataRow row in dtDetallePedido.Rows)
             {
+                int id_detalle = Convert.ToInt32(row["Id_detalle_pedido"]);
                 int id_tipo = Convert.ToInt32(row["Id_tipo"]);
                 string tipo = Convert.ToString(row["Tipo"]);
                 string nombre = Convert.ToString(row["Nombre"]);
@@ -83,7 +84,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 {
                     info.Append("-" + nombre).Append(": ").Append(Environment.NewLine);
 
-                    DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_tipo = {0}", id_tipo));
+                    DataRow[] find = dtDetallePlatosPedido.Select(string.Format("Id_detalle_pedido = {0}", id_detalle));
                     if (find.Length > 0)
                     {
                         foreach (DataRow re in find)

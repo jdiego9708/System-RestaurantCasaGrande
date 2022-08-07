@@ -41,6 +41,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
 
             List<ProductDetalleBinding> detalles = (List<ProductDetalleBinding>)sender;
             //this.Product.ProductDetalles = detalles;
+            //this.Product.ProductDetalles = detalles;
             this.OnBtnSaveClick?.Invoke(new object[] { this.Product, detalles }, e);
             this.Close();
         }

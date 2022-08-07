@@ -17,6 +17,9 @@
         {
             try
             {
+                if (row.Table.Columns.Contains("Id_detalle_producto"))
+                    this.Id_detalle_producto = Convert.ToInt32(row["Id_detalle_producto"]);
+
                 this.Nombre = Convert.ToString(row["Nombre"]);
                 this.Id_producto = Convert.ToInt32(row["Id_producto"]);
                 this.Tipo_producto = Convert.ToString(row["Tipo_producto"]);
@@ -37,6 +40,7 @@
         public string Observaciones { get; set; }
         public int Cantidad { get; set; }
         public object Product { get; set; }
+        public int Id_detalle_producto { get; set; }
 
         public List<ProductDetalleBinding> ProductDetalles { get; set; }
         public string NombreImagen { get; set; }
@@ -87,6 +91,7 @@
             try
             {
                 this.Id_detalle_ingrediente_pedido = Convert.ToInt32(row["Id_detalle_ingrediente_pedido"]);
+                this.Id_detalle_pedido = Convert.ToInt32(row["Id_detalle_pedido"]);
                 this.Id_pedido = Convert.ToInt32(row["Id_pedido"]);
                 this.Id_tipo = Convert.ToInt32(row["Id_tipo"]);
                 this.Id_ingrediente = Convert.ToInt32(row["Id_ingrediente"]);
@@ -100,6 +105,7 @@
         }
 
         public int Id_detalle_ingrediente_pedido { get; set; }
+        public int Id_detalle_pedido { get; set; }
         public int Id_pedido { get; set; }
         public int Id_tipo { get; set; }       
         public int Id_ingrediente { get; set; }

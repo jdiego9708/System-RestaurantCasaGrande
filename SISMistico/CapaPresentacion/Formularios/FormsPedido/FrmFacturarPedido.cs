@@ -364,11 +364,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.dgvPedido.Enabled = true;
                 string[] columnsHeaderText =
                 {
-                        "Id pedido", "Id tipo", "Tipo", "Nombre", "Precio", "Cantidad", "Total", "Observaciones"
+                        "Id_detalle_pedido", "Id pedido", "Id tipo", "Tipo", "Nombre", "Precio", "Cantidad", "Total", "Observaciones"
                     };
                 bool[] columnsVisible =
                 {
-                        false, false, false, true, true, true, true, true
+                        false, false, false, true, true, true, true, true, true
                     };
                 this.dgvPedido =
                     DatagridString.ChangeHeaderTextAndVisible(this.dgvPedido, columnsHeaderText, columnsVisible);

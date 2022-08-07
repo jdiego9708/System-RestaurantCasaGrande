@@ -13,13 +13,10 @@ namespace CapaNegocio
     public class NPedido
     {
         #region INSERTAR PEDIDO
-        public static string InsertarPedido(List<string> variables, DataTable Detalles,
-            out int id_pedido, 
-            out DataTable dtDetallesCompleto)
+        public static string InsertarPedido(Pedidos pedido)
         {
             DPedidos DPedidos = new DPedidos();
-            return DPedidos.InsertarPedido(variables, Detalles, out id_pedido, 
-                out dtDetallesCompleto);
+            return DPedidos.InsertarPedido(pedido);
         }
 
         #endregion
@@ -90,6 +87,14 @@ namespace CapaNegocio
         {
             DPedidos DPedidos = new DPedidos();
             return await DPedidos.InsertarDetalleIngredientesPedido(detalles);
+        }
+        #endregion
+
+        #region INSERTAR DETALLES PEDIDOS
+        public static string InsertarDetallePedido(Detalle_pedido detalle)
+        {
+            DPedidos DPedidos = new DPedidos();
+            return DPedidos.InsertarDetallePedido(detalle);
         }
         #endregion
     }
