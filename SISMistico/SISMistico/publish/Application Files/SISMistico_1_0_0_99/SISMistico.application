@@ -11,17 +11,17 @@
     <deploymentProvider codebase="https://raw.githubusercontent.com/jdiego9708/System-RestaurantCasaGrande/master/SISMistico/SISMistico/publish/SISMistico.application" />
   </deployment>
   <compatibleFrameworks xmlns="urn:schemas-microsoft-com:clickonce.v2">
-    <framework targetVersion="4.5.2" profile="Full" supportedRuntime="4.0.30319" />
+    <framework targetVersion="4.8" profile="Full" supportedRuntime="4.0.30319" />
   </compatibleFrameworks>
   <dependency>
-    <dependentAssembly dependencyType="install" codebase="Application Files\SISMistico_1_0_0_99\SISMistico.exe.manifest" size="49756">
+    <dependentAssembly dependencyType="install" codebase="Application Files\SISMistico_1_0_0_99\SISMistico.exe.manifest" size="49070">
       <assemblyIdentity name="SISMistico.exe" version="1.0.0.99" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="msil" type="win32" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>65ZZQI+MjOIWf1WFKIs9rztpPUUxLWr1v/oG+W2bDYQ=</dsig:DigestValue>
+        <dsig:DigestValue>xxdfM6yaKQkGAxrhn7r1OHBpmQwwb74G84CkLQ9FPHE=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

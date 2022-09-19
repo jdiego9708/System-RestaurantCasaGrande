@@ -55,14 +55,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="CapaDatos.dll" size="102400">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="CapaDatos.dll" size="101888">
       <assemblyIdentity name="CapaDatos" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>YdWn5Qur7s83FiI2rtFwFyvkBMLLAurT0Ck3kuzQroc=</dsig:DigestValue>
+        <dsig:DigestValue>BKe4KL9p6qZpV0y54zlLugDvgZ2M4ko3ztRC6uy9lII=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -74,7 +74,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>fSE5QGvq2ZPlu4Lxj4HDnRRmMtzGtloJcXZ6f7xGUYs=</dsig:DigestValue>
+        <dsig:DigestValue>yDqCWiORpd30fQKodCNV0XO7kJbfJT+5HHYXsIQipKo=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -86,19 +86,19 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>KAyqLsSu20Fm8eI5VoLxZwJIr4dC0GDIVZPZd0b5hpQ=</dsig:DigestValue>
+        <dsig:DigestValue>1TdV/CfB0n9CuPphrjuvKIqC/OhyyQCQBhq8+a/XUGo=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="CapaPresentacion.dll" size="5215232">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="CapaPresentacion.dll" size="5224448">
       <assemblyIdentity name="CapaPresentacion" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>kk6n73VWuUn8+AjcRxi7IBYgHfvcLMAq9LAyiUNqG6w=</dsig:DigestValue>
+        <dsig:DigestValue>jDMxAAOwnQvAAefsgWmoR5s5SzeUBb709Sbj181WyxU=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -722,19 +722,19 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>dVp62Gi0RUxlypA5nkZhzVv0pWtqI8xy0KiBPLQGCZQ=</dsig:DigestValue>
+        <dsig:DigestValue>Ju3KgUgVo4M7qSHMsB+0HmqV59WB6ALQPNzF61/ul6g=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="stdole.dll" size="25464">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="stdole.dll" size="26536">
       <assemblyIdentity name="stdole" version="7.0.3300.0" publicKeyToken="B03F5F7F11D50A3A" language="neutral" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>2nbLf/RLhWBUej5XjBjxWPu6uxm4KuQbKC9HgBJ370k=</dsig:DigestValue>
+        <dsig:DigestValue>w29HsVbRk1A6ZlnXyaXocbvr5UwYuBHFQHG1hrMCaMk=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -750,18 +750,6 @@
       </hash>
     </dependentAssembly>
   </dependency>
-  <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="System.ValueTuple.dll" size="78992">
-      <assemblyIdentity name="System.ValueTuple" version="4.0.3.0" publicKeyToken="CC7B13FFCD2DDD51" language="neutral" processorArchitecture="msil" />
-      <hash>
-        <dsig:Transforms>
-          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
-        </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>1vsNz+4UkKgWgRftG1V1jxHbOEdUF7NmjRn4nctVy90=</dsig:DigestValue>
-      </hash>
-    </dependentAssembly>
-  </dependency>
   <file name="mycomputer.ico" size="67646">
     <hash>
       <dsig:Transforms>
@@ -771,13 +759,13 @@
       <dsig:DigestValue>5Hw67SS5ncQ9a3m88dDmUAozNpKrHaJDTu4fT7CUSrI=</dsig:DigestValue>
     </hash>
   </file>
-  <file name="SISMistico.exe.config" size="6600">
+  <file name="SISMistico.exe.config" size="6598">
     <hash>
       <dsig:Transforms>
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>4sBhZWhaw7Kada15SOv/Y5KB5zpm0tjLY8Qxvb0nHVA=</dsig:DigestValue>
+      <dsig:DigestValue>4ajThbWfQM45GIt/Gy8Zufoy9GqoGQlBEpIy0Ft447k=</dsig:DigestValue>
     </hash>
   </file>
   <file name="SqlServerTypes\readme.htm" size="2369">
