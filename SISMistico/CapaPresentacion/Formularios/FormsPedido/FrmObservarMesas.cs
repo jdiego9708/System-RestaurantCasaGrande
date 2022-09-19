@@ -163,7 +163,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     NPedido.BuscarPedidos("MESAS CON PEDIDO", DateTime.Now.ToString("yyyy-MM-dd"));
                 DataTable TablaMesas =
                     NPedido.BuscarPedidos("MESAS COMPLETAS", "");
-                this.Numero_mesas = TablaMesas.Rows.Count;
+                this.Numero_mesas = TablaMesas.Rows.Count - 2;
                 int positionX = 0;
                 int positionY = 0;
                 int contador = 1;

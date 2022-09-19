@@ -1,5 +1,8 @@
 ﻿using CapaNegocio;
+using CapaPresentacion.ReportesFacturas.Comandas;
+using CapaPresentacion.ReportesFacturas.FacturaFinal;
 using Microsoft.Reporting.WinForms;
+using Microsoft.ReportingServices.ReportProcessing.OnDemandReportObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +16,40 @@ namespace CapaPresentacion
         {
             InitializeComponent();
             this.Load += FrmFacturaFinal_Load;
+        }
+
+        private int ComprobacionNumFacturas()
+        {
+            var fecha = ConfigFacturas.Default.Fecha;
+            int numfac = ConfigFacturas.Default.NumFactura;
+
+            if (fecha == null)
+            {
+                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numfac = 1;
+                ConfigFacturas.Default.NumFactura = numfac;
+            }
+            else if (string.IsNullOrEmpty(fecha))
+            {
+                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numfac += 1;
+                ConfigFacturas.Default.NumFactura = numfac;
+            }
+            else if (DateTime.Now.ToString("yyyy-MM-dd") == fecha.ToString())
+            {
+                numfac += 1;
+                ConfigFacturas.Default.NumFactura = numfac;
+            }
+            else
+            {
+                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
+                numfac = 1;
+                ConfigFacturas.Default.NumFactura = numfac;
+            }
+
+            ConfigComandas.Default.Save();
+
+            return numfac;
         }
 
         public void AsignarReporte()
@@ -83,6 +120,12 @@ namespace CapaPresentacion
             int rows = this.TablaDetalleVenta.Rows.Count;
 
             this.Controls.Add(this.reportViewer1);
+
+            this.reportParameters = new ReportParameter[2];
+            this.reportParameters[0] = new ReportParameter("Titulo", "Restaurante Casa Grande");
+            this.reportParameters[1] = new ReportParameter("NumFactura", this.ComprobacionNumFacturas().ToString());
+
+            this.reportViewer1.LocalReport.SetParameters(this.reportParameters);
 
             ReportDataSource dsDatosPrincipales = new ReportDataSource("DatosPrincipales", this.TablaDatosPrincipales);
             reportViewer1.LocalReport.DataSources.Add(dsDatosPrincipales);

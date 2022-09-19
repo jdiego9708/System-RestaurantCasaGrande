@@ -8,16 +8,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CapaPresentacion.ReportesFacturas.Comandas {
+namespace CapaPresentacion.ReportesFacturas.FacturaFinal {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
-    internal sealed partial class ConfigComandas : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class ConfigFacturas : global::System.Configuration.ApplicationSettingsBase {
         
-        private static ConfigComandas defaultInstance = ((ConfigComandas)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new ConfigComandas())));
+        private static ConfigFacturas defaultInstance = ((ConfigFacturas)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new ConfigFacturas())));
         
-        public static ConfigComandas Default {
+        public static ConfigFacturas Default {
             get {
                 return defaultInstance;
             }
@@ -38,12 +38,12 @@ namespace CapaPresentacion.ReportesFacturas.Comandas {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int NumComanda {
+        public int NumFactura {
             get {
-                return ((int)(this["NumComanda"]));
+                return ((int)(this["NumFactura"]));
             }
             set {
-                this["NumComanda"] = value;
+                this["NumFactura"] = value;
             }
         }
     }

@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CapaPresentacion</RootNamespace>
     <AssemblyName>CapaPresentacion</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -565,6 +566,11 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>ConfigComandas.settings</DependentUpon>
     </Compile>
+    <Compile Include="ReportesFacturas\FacturaFinal\ConfigFacturas.Designer.cs">
+      <DependentUpon>ConfigFacturas.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
     <Compile Include="ReportesFacturas\GastosTurno\FrmReporteGastos.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1051,6 +1057,10 @@
     <None Include="ReportesFacturas\Comandas\ConfigComandas.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>ConfigComandas.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="ReportesFacturas\FacturaFinal\ConfigFacturas.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>ConfigFacturas.Designer.cs</LastGenOutput>
     </None>
     <None Include="Resources\add2.png" />
   </ItemGroup>
