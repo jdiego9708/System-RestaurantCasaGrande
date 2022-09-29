@@ -47,7 +47,7 @@ namespace CapaPresentacion
                 ConfigFacturas.Default.NumFactura = numfac;
             }
 
-            ConfigComandas.Default.Save();
+            ConfigFacturas.Default.Save();
 
             return numfac;
         }
