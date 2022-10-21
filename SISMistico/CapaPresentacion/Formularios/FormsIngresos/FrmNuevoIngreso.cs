@@ -106,7 +106,7 @@ namespace CapaPresentacion.Formularios.FormsIngresos
                             FechaHora = ingreso.Fecha_ingreso.ToLongDateString() + " - " + DateTime.Now.ToLongTimeString(),
                             InformacionEmpleado = infoEmpleado.ToString(),
                             InformacionIngreso = infoingreso.ToString(),
-                            Valor_ingreso = ingreso.Valor_ingreso.ToString("C"),
+                            Valor_ingreso = ingreso.Valor_ingreso.ToString("C").Replace(",00", ""),
                             Observaciones = string.Empty,
                         };
                         frmReporteingresos.ObtenerReporte();

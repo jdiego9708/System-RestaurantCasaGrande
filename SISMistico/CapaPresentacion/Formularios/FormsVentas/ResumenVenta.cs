@@ -39,11 +39,11 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     builder.Append("Entre " + fecha1.ToLongDateString() + " y " + fecha2.ToLongDateString() +
                         " se realizaron " + cantidadVentas + " ventas");
                     builder.Append(Environment.NewLine);
-                    builder.Append("El total de ventas fue de " + totalVentas.ToString("C"));
+                    builder.Append("El total de ventas fue de " + totalVentas.ToString("C").Replace(",00", ""));
                     builder.Append(Environment.NewLine);
-                    builder.Append("El total de propinas fue de " + totalPropinas.ToString("C"));
+                    builder.Append("El total de propinas fue de " + totalPropinas.ToString("C").Replace(",00", ""));
                     builder.Append(Environment.NewLine);
-                    builder.Append("El total de ventas sin propinas fue de " + totalVentasSinPropina.ToString("C"));
+                    builder.Append("El total de ventas sin propinas fue de " + totalVentasSinPropina.ToString("C").Replace(",00", ""));
                     builder.Append(Environment.NewLine);
 
                     if (pagosEfectivo > 0)

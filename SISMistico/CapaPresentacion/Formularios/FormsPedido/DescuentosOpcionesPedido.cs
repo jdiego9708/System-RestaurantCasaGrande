@@ -281,18 +281,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             decimal total_con_descuento = subtotal - (subtotal * descuento);
 
-            this.lblSubtotal.Text = subtotal.ToString("C");
+            this.lblSubtotal.Text = subtotal.ToString("C").Replace(",00", "");
             this.lblSubtotal.Tag = subtotal;
 
             if (descuento == 0)
             {
-                this.lblTotal.Text = subtotal.ToString("C");
+                this.lblTotal.Text = subtotal.ToString("C").Replace(",00", "");
                 this.lblTotal.Tag = subtotal;
                 this.Total = Convert.ToDecimal(subtotal);
             }
             else
             {
-                this.lblTotal.Text = total_con_descuento.ToString("C");
+                this.lblTotal.Text = total_con_descuento.ToString("C").Replace(",00", "");
                 this.lblTotal.Tag = total_con_descuento;
                 this.Total = Convert.ToDecimal(total_con_descuento);
             }
@@ -325,16 +325,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.lblTotal.Tag = this.Total_parcial;
             this.lblTotalParcial.Tag = this.Total_parcial;
 
-            this.lblTotalParcial.Text = this.Total_parcial.ToString("C");
-            this.lblTotal.Text = this.Total_parcial.ToString("C");
+            this.lblTotalParcial.Text = this.Total_parcial.ToString("C").Replace(",00", "");
+            this.lblTotal.Text = this.Total_parcial.ToString("C").Replace(",00", "");
 
             this.txtPropina.Enabled = false;
             double propinaSugerida = this.Total_parcial * 0.10;
 
-            this.lblPropinaSugerida.Text = propinaSugerida.ToString("C");
+            this.lblPropinaSugerida.Text = propinaSugerida.ToString("C").Replace(",00", "");
             this.lblPropinaSugerida.Tag = propinaSugerida;
 
-            this.txtPropina.Text = propinaSugerida.ToString("C");
+            this.txtPropina.Text = propinaSugerida.ToString("C").Replace(",00", "");
             this.txtPropina.Tag = propinaSugerida;
 
             this.CrearTablaCuenta();
@@ -373,7 +373,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         if (metodo.MetodoPago.MetodoPago.Equals("EFECTIVO"))
                         {
                             metodo.txtValor.Tag = this.Total;
-                            metodo.txtValor.Text = this.Total.ToString("C");
+                            metodo.txtValor.Text = this.Total.ToString("C").Replace(",00", "");
                         }
                     }
                 }

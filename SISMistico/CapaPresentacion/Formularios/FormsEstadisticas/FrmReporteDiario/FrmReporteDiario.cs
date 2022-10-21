@@ -112,17 +112,19 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 //else
                 //    resumenResultados.Append("Entre ").Append(date1.ToLongDateString() + " y ").Append(date2.ToLongDateString()).Append(" se registra la siguiente información:").Append(Environment.NewLine);
 
-                resumenResultados.Append("Total ingresos: ").Append(turno.Total_ingresos.ToString("C")).Append(Environment.NewLine);
+                resumenResultados.Append("Caja inicial: ").Append(turno.Valor_inicial.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
+
+                resumenResultados.Append("Total ingresos: ").Append(turno.Total_ingresos.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
                 if (this.chkInfoGastos.Checked)
-                    resumenResultados.Append("Total egresos: ").Append(turno.Total_egresos.ToString("C")).Append(Environment.NewLine);
+                    resumenResultados.Append("Total egresos: ").Append(turno.Total_egresos.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
-                resumenResultados.Append("Total ventas: ").Append(turno.Total_ventas.ToString("C")).Append(Environment.NewLine);
+                resumenResultados.Append("Total ventas: ").Append(turno.Total_ventas.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
                 if (this.chkInfoNomina.Checked)
-                    resumenResultados.Append("Total nomina: ").Append(turno.Total_nomina.ToString("C")).Append(Environment.NewLine);
+                    resumenResultados.Append("Total nomina: ").Append(turno.Total_nomina.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
-                resumenResultados.Append("Total: ").Append(turno.Total_turno.ToString("C")).Append(Environment.NewLine);
+                resumenResultados.Append("Total: ").Append(turno.Total_turno.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
                 if (this.chkInfoDetalleVentas.Checked)
                 {
@@ -165,7 +167,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                         foreach (TipoResumen re in detallesOrdenados)
                         {
                             resumenResultados.Append("* " + re.Nombre + " - Cantidad ").Append(re.Cantidad);
-                            resumenResultados.Append(" - Valor total: ").Append(re.Valor_total.ToString("C"));
+                            resumenResultados.Append(" - Valor total: ").Append(re.Valor_total.ToString("C").Replace(",00", "").Replace(",00", ""));
                             resumenResultados.Append(Environment.NewLine);
                         }
                     }
@@ -213,7 +215,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                             contador += 1;
                             Egresos egreso = new Egresos(row);
                             infoEgresos.Append(contador + ") Fecha: ").Append(egreso.Fecha_egreso).Append(" | ");
-                            infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(Environment.NewLine);
+                            infoEgresos.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
                             infoEgresos.Append("Observaciones: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);
                         }
                     }
@@ -254,7 +256,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                             contador += 1;
                             Ingresos ingreso = new Ingresos(row);
                             infoIngresos.Append(contador + ") Fecha: ").Append(ingreso.Fecha_ingreso.ToString("yyyy-MM-dd")).Append(" | ");
-                            infoIngresos.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C")).Append(Environment.NewLine);
+                            infoIngresos.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
                             infoIngresos.Append("Observaciones: ").Append(ingreso.Descripcion_ingreso).Append(Environment.NewLine);
                         }
                     }
@@ -293,7 +295,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                             {
                                 infoEgresos.Append("*Fecha: ").Append(nomina.Fecha_nomina.ToString("dd-MM-yyyy")).Append(" | ");
                                 infoEgresos.Append(nomina.Empleado.Nombre_empleado).Append(" | ");
-                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C")).Append(Environment.NewLine);
+                                infoEgresos.Append("Valor: ").Append(nomina.Total_nomina.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
                                 if (!string.IsNullOrEmpty(nomina.Observaciones))
                                     infoEgresos.Append("Observaciones: " + nomina.Observaciones).Append(Environment.NewLine);
                                 else
@@ -315,7 +317,7 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                     int cantidad = Convert.ToInt32(rowPago["Cantidad"]);
                     string metodo = Convert.ToString(rowPago["Metodo_pago"]);
                     decimal total = Convert.ToInt32(rowPago["Total"]);
-                    infoPagos.Append("*").Append(metodo).Append(" - Cantidad " + cantidad + " por valor de " + total.ToString("C")).Append(Environment.NewLine);
+                    infoPagos.Append("*").Append(metodo).Append(" - Cantidad " + cantidad + " por valor de " + total.ToString("C").Replace(",00", "")).Append(Environment.NewLine);
                 }
                 resumenResultados.Append(infoPagos);
             }

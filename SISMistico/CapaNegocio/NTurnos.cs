@@ -12,15 +12,31 @@ namespace CapaNegocio
 {
     public class NTurnos
     {
-        #region BUSCAR TURNOS
 
-        public static async Task<(string rpta, DataTable dtTurnos)> BuscarTurnos(string tipo_busqueda, string texto_busqueda1,
+        public static Task<(string rpta, DataTable dtTurnos)> BuscarTurnos(string tipo_busqueda, 
+            string texto_busqueda1,
             string texto_busqueda2)
         {
-            DEgresos DEgresos = new DEgresos();
-            return await DEgresos.BuscarEgreso(tipo_busqueda, texto_busqueda1, texto_busqueda2);
+            DTurnos DTurnos = new DTurnos();
+            return DTurnos.BuscarTurnos(tipo_busqueda, texto_busqueda1, texto_busqueda2);
         }
 
-        #endregion
+        public static Task<string> InsertarTurno(Turno turno)
+        {
+            DTurnos DTurno = new DTurnos();
+            return DTurno.InsertarTurno(turno);
+        }
+
+        public static Task<string> InsertarBase(int id_turno, decimal base_nueva)
+        {
+            DTurnos DTurno = new DTurnos();
+            return DTurno.InsertarBase(id_turno, base_nueva);   
+        }
+
+        public static Task<string> EditarEstadoTurno(int id_turno, string estado)
+        {
+            DTurnos DTurno = new DTurnos();
+            return DTurno.EditarEstadoTurno(id_turno, estado);
+        }
     }
 }

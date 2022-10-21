@@ -53,7 +53,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.btnGuardarPedidosBorradores.Text = "Pre-cuenta";
                 this.btnGuardarPedidosBorradores.Visible = true;
             }
-            this.lblTotalParcial.Text = this.Total_parcial.ToString("C");
+            this.lblTotalParcial.Text = this.Total_parcial.ToString("C").Replace(",00", "");
             this.lblTotalParcial.Tag = this.Total_parcial;
         }
 

@@ -113,7 +113,7 @@ namespace CapaPresentacion.Formularios.FormsMovimientos
                             Egresos egreso = new Egresos(row);
                             contador += 1;
                             info.Append(contador + "- EGRESO: ").Append(egreso.Fecha_egreso.ToLongDateString()).Append(" - ");
-                            info.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C")).Append(" - ");
+                            info.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C").Replace(",00", "")).Append(" - ");
                             info.Append("Descripción: ").Append(egreso.Descripcion_egreso).Append(Environment.NewLine);                           
                         }
                         
@@ -126,7 +126,7 @@ namespace CapaPresentacion.Formularios.FormsMovimientos
                             Ingresos ingreso = new Ingresos(row);
                             contador += 1;
                             info.Append(contador + "- INGRESO: ").Append(ingreso.Fecha_ingreso.ToLongDateString()).Append(" - ");
-                            info.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C")).Append(" - ");
+                            info.Append("Valor: ").Append(ingreso.Valor_ingreso.ToString("C").Replace(",00", "")).Append(" - ");
                             info.Append("Descripción: ").Append(ingreso.Descripcion_ingreso).Append(Environment.NewLine);
                         }
                     }

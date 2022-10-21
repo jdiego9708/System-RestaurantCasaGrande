@@ -53,7 +53,7 @@
             {
                 StringBuilder info = new StringBuilder();
                 info.Append(Tipo_producto + " - ").Append(this.Nombre).Append(Environment.NewLine);
-                info.Append("Precio: ").Append(this.Precio.ToString("C")).Append(Environment.NewLine);
+                info.Append("Precio: ").Append(this.Precio.ToString("C").Replace(",00", "")).Append(Environment.NewLine);
 
                 if (this.Cantidad > 0)
                     info.Append("Cantidad: ").Append(this.Cantidad).Append(Environment.NewLine);

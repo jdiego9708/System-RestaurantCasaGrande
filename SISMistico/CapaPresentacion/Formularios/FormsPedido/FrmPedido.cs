@@ -643,7 +643,7 @@
                         productoItem.OnBtnRemoveClick += ProductoItem_OnBtnRemoveClick;
                         controls.Add(productoItem);
                     }
-                    info.Append("Subtotal: ").Append(subtotal.ToString("C"));
+                    info.Append("Subtotal: ").Append(subtotal.ToString("C").Replace(",00", ""));
                     this.panelPedido.AddArrayControl(controls);
 
                     this.threadLoadImages = new Thread(new ThreadStart(() => LoadImagesProductsSelected()))
@@ -655,7 +655,7 @@
                 }
                 else
                 {
-                    info.Append("Subtotal: ").Append(0.ToString("C"));
+                    info.Append("Subtotal: ").Append(0.ToString("C").Replace(",00", ""));
                     this.panelPedido.BackgroundImage = Resources.SIN_IMAGENES;
                     this.panelPedido.BackgroundImageLayout = ImageLayout.Center;
                 }

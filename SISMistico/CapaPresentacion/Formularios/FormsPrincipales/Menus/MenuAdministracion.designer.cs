@@ -32,6 +32,13 @@
             this.btnEstadisticasDiarias = new System.Windows.Forms.Button();
             this.btnObservarMovimientos = new System.Windows.Forms.Button();
             this.btnHistorialVentas = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtBase = new System.Windows.Forms.TextBox();
+            this.btnGuardar = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.txtNuevaBase = new System.Windows.Forms.TextBox();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEstadisticasDiarias
@@ -77,7 +84,7 @@
             this.btnHistorialVentas.ForeColor = System.Drawing.Color.White;
             this.btnHistorialVentas.Image = ((System.Drawing.Image)(resources.GetObject("btnHistorialVentas.Image")));
             this.btnHistorialVentas.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnHistorialVentas.Location = new System.Drawing.Point(4, 108);
+            this.btnHistorialVentas.Location = new System.Drawing.Point(0, 108);
             this.btnHistorialVentas.Name = "btnHistorialVentas";
             this.btnHistorialVentas.Size = new System.Drawing.Size(188, 47);
             this.btnHistorialVentas.TabIndex = 10;
@@ -85,11 +92,76 @@
             this.btnHistorialVentas.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnHistorialVentas.UseVisualStyleBackColor = true;
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.txtBase);
+            this.groupBox1.Font = new System.Drawing.Font("Segoe UI Emoji", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox1.Location = new System.Drawing.Point(201, 7);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(160, 91);
+            this.groupBox1.TabIndex = 11;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Base";
+            // 
+            // txtBase
+            // 
+            this.txtBase.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(152)))), ((int)(((byte)(202)))));
+            this.txtBase.Font = new System.Drawing.Font("Segoe UI Emoji", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtBase.ForeColor = System.Drawing.Color.White;
+            this.txtBase.Location = new System.Drawing.Point(8, 34);
+            this.txtBase.Name = "txtBase";
+            this.txtBase.Size = new System.Drawing.Size(145, 43);
+            this.txtBase.TabIndex = 0;
+            this.txtBase.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // btnGuardar
+            // 
+            this.btnGuardar.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnGuardar.BackgroundImage")));
+            this.btnGuardar.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnGuardar.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
+            this.btnGuardar.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnGuardar.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Silver;
+            this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGuardar.Font = new System.Drawing.Font("Segoe UI Semibold", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnGuardar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.btnGuardar.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnGuardar.Location = new System.Drawing.Point(410, 103);
+            this.btnGuardar.Name = "btnGuardar";
+            this.btnGuardar.Size = new System.Drawing.Size(60, 60);
+            this.btnGuardar.TabIndex = 27;
+            this.btnGuardar.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnGuardar.UseVisualStyleBackColor = true;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.txtNuevaBase);
+            this.groupBox2.Font = new System.Drawing.Font("Segoe UI Emoji", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox2.Location = new System.Drawing.Point(367, 7);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(160, 91);
+            this.groupBox2.TabIndex = 12;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Nueva base";
+            // 
+            // txtNuevaBase
+            // 
+            this.txtNuevaBase.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(152)))), ((int)(((byte)(202)))));
+            this.txtNuevaBase.Font = new System.Drawing.Font("Segoe UI Emoji", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtNuevaBase.ForeColor = System.Drawing.Color.White;
+            this.txtNuevaBase.Location = new System.Drawing.Point(8, 34);
+            this.txtNuevaBase.Name = "txtNuevaBase";
+            this.txtNuevaBase.Size = new System.Drawing.Size(145, 43);
+            this.txtNuevaBase.TabIndex = 0;
+            this.txtNuevaBase.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
             // MenuAdministracion
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(152)))), ((int)(((byte)(202)))));
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.btnGuardar);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnHistorialVentas);
             this.Controls.Add(this.btnEstadisticasDiarias);
             this.Controls.Add(this.btnObservarMovimientos);
@@ -97,7 +169,11 @@
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MenuAdministracion";
-            this.Size = new System.Drawing.Size(195, 158);
+            this.Size = new System.Drawing.Size(538, 166);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -106,5 +182,10 @@
         public System.Windows.Forms.Button btnObservarMovimientos;
         public System.Windows.Forms.Button btnEstadisticasDiarias;
         public System.Windows.Forms.Button btnHistorialVentas;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox txtBase;
+        private System.Windows.Forms.Button btnGuardar;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox txtNuevaBase;
     }
 }

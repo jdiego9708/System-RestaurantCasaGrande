@@ -55,11 +55,11 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     this.lblMesa.Text += " " + Convert.ToString(Row_venta.Cells["Num_mesa"].Value);
                     this.lblEmpleado.Text += " " + Convert.ToString(Row_venta.Cells["Nombre_empleado"].Value);
                     this.lblCliente.Text += " " + Convert.ToString(Row_venta.Cells["Nombre_cliente"].Value);
-                    this.lblTotal_parcial.Text += " " + Convert.ToInt32(Row_venta.Cells["Total_parcial"].Value).ToString("C");
-                    this.lblPropina.Text += " " + Convert.ToInt32(Row_venta.Cells["Propina"].Value).ToString("C");
-                    this.lblSubTotal.Text += " " + Convert.ToInt32(Row_venta.Cells["Subtotal"].Value).ToString("C");
+                    this.lblTotal_parcial.Text += " " + Convert.ToInt32(Row_venta.Cells["Total_parcial"].Value).ToString("C").Replace(",00", "");
+                    this.lblPropina.Text += " " + Convert.ToInt32(Row_venta.Cells["Propina"].Value).ToString("C").Replace(",00", "");
+                    this.lblSubTotal.Text += " " + Convert.ToInt32(Row_venta.Cells["Subtotal"].Value).ToString("C").Replace(",00", "");
                     this.lblDescuento.Text += " " + Convert.ToString(Row_venta.Cells["Descuento"].Value);
-                    this.lblTotalFinal.Text += " " + Convert.ToInt32(Row_venta.Cells["Total_final"].Value).ToString("C");
+                    this.lblTotalFinal.Text += " " + Convert.ToInt32(Row_venta.Cells["Total_final"].Value).ToString("C").Replace(",00", "");
                     this.txtObservaciones.Text = Convert.ToString(Row_venta.Cells["Observaciones"].Value);
 
                     DataTable dtDetallePedido;

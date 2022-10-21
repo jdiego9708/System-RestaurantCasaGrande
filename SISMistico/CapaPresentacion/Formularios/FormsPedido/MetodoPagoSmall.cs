@@ -29,7 +29,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 if (chk.Text.Equals("EFECTIVO"))
                 {
                     this.txtValor.Tag = this.Total;
-                    this.txtValor.Text = this.Total.ToString("C");
+                    this.txtValor.Text = this.Total.ToString("C").Replace(",00", "");
                 }
             }
         }
@@ -84,7 +84,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private void AsignarDatos(MetodoPagoModel metodo)
         {
             this.chkMetodo.Text = metodo.MetodoPago;
-            this.txtValor.Text = 0.ToString("C");
+            this.txtValor.Text = 0.ToString("C").Replace(",00", "");
             this.txtValor.Tag = 0;
         }
 

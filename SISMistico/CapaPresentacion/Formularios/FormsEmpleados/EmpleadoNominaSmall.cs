@@ -96,7 +96,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
 
             this.EmpleadoNominaBinding.Turno = total_turno;
 
-            this.txtTurno.Text = total_turno.ToString("C");
+            this.txtTurno.Text = total_turno.ToString("C").Replace(",00", "");
 
             info.Append($"Total turno {total_turno:C}").Append(Environment.NewLine);
 
@@ -153,7 +153,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
                 return 0;
             }
             this.EmpleadoNominaBinding.Total_nomina = total_pagar;
-            this.lblTotal.Text = "Total a pagar " + total_pagar.ToString("C");
+            this.lblTotal.Text = "Total a pagar " + total_pagar.ToString("C").Replace(",00", "");
 
             if (this.observacion != null)
                 info.Append(this.observacion.txtObservacion.Text);
@@ -207,7 +207,7 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             this.txtPlatos.Text = empleadoNomina.Turno.ToString("N");
             this.txtServicios.Text = empleadoNomina.Platos.ToString("N");
             this.txtEgresos.Text = empleadoNomina.Egresos.ToString("N");
-            this.lblTotal.Text = empleadoNomina.Total_nomina.ToString("C");
+            this.lblTotal.Text = empleadoNomina.Total_nomina.ToString("C").Replace(",00", "");
             this.lblEstado.Text = empleadoNomina.Estado_nomina;
 
             //Buscar ultima nómina

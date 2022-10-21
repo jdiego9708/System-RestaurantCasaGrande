@@ -115,7 +115,7 @@ namespace CapaPresentacion.Formularios.FormsEgresos
                             FechaHora = egreso.Fecha_egreso.ToLongDateString() + " - " + DateTime.Now.ToLongTimeString(),
                             InformacionEmpleado = infoEmpleado.ToString(),
                             InformacionGasto = infoGasto.ToString(),
-                            Valor_gasto = egreso.Valor_egreso.ToString("C"),
+                            Valor_gasto = egreso.Valor_egreso.ToString("C").Replace(",00", ""),
                             Observaciones = string.Empty,
                         };
                         frmReporteGastos.ObtenerReporte();

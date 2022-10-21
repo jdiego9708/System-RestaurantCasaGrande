@@ -69,7 +69,7 @@
                 resumenResultados.Append(Environment.NewLine);
                 resumenResultados.Append("Concepto/Observaciones: ").Append(egreso.Descripcion_egreso);
                 resumenResultados.Append(Environment.NewLine);
-                resumenResultados.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C"));
+                resumenResultados.Append("Valor: ").Append(egreso.Valor_egreso.ToString("C").Replace(",00", ""));
                 resumenResultados.Append(Environment.NewLine);
                 resumenResultados.Append("Empleado que registra el gasto: ").Append(egreso.Empleado.Nombre_empleado);
                 resumenResultados.Append(Environment.NewLine);

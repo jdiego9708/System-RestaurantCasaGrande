@@ -92,12 +92,12 @@ namespace CapaPresentacion.Formularios.FormsEmpleados
             {
                 FechaHora = DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString(),
                 InformacionEmpleado = "Información de empleado: " + Environment.NewLine + infoEmpleado,
-                Turno = "Turno: " + empleadoNomina.Turno.ToString("C"),
-                Platos = "Platos: " + empleadoNomina.Platos.ToString("C"),
-                Servicios = "Servicio: " + empleadoNomina.Servicios.ToString("C"),
-                OtrosIngresos = "Otros ingresos: " + empleadoNomina.Otros_ingresos.ToString("C"),
-                Egresos = "Egresos: " + empleadoNomina.Egresos.ToString("C"),
-                TotalPagar = "Total a pagar: " + empleadoNomina.Total_nomina.ToString("C"),
+                Turno = "Turno: " + empleadoNomina.Turno.ToString("C").Replace(",00", ""),
+                Platos = "Platos: " + empleadoNomina.Platos.ToString("C").Replace(",00", ""),
+                Servicios = "Servicio: " + empleadoNomina.Servicios.ToString("C").Replace(",00", ""),
+                OtrosIngresos = "Otros ingresos: " + empleadoNomina.Otros_ingresos.ToString("C").Replace(",00", ""),
+                Egresos = "Egresos: " + empleadoNomina.Egresos.ToString("C").Replace(",00", ""),
+                TotalPagar = "Total a pagar: " + empleadoNomina.Total_nomina.ToString("C").Replace(",00", ""),
                 Observaciones = empleadoNomina.Observaciones,
             };
             frmReporte.ObtenerReporte();
