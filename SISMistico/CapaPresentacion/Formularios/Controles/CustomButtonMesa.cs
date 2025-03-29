@@ -54,7 +54,7 @@ namespace CapaPresentacion.Formularios
                             },
                             WindowState = FormWindowState.Maximized
                         };
-                        FrmPedido.ShowDialog();
+                        FrmPedido.Show();
                     }
                     else
                     {

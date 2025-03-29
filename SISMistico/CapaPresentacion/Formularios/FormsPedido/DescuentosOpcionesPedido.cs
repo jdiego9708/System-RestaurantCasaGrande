@@ -329,7 +329,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.lblTotal.Text = this.Total_parcial.ToString("C").Replace(",00", "");
 
             this.txtPropina.Enabled = false;
-            double propinaSugerida = this.Total_parcial * 0.10;
+            //double propinaSugerida = this.Total_parcial * 0.10;
+            double propinaSugerida = 0;
 
             this.lblPropinaSugerida.Text = propinaSugerida.ToString("C").Replace(",00", "");
             this.lblPropinaSugerida.Tag = propinaSugerida;

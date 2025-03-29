@@ -69,18 +69,18 @@ namespace CapaPresentacion.Formularios.FormsNotas
                         foreach (DataRow row in dtNotas.Rows)
                         {
                             ENotas eNota = new ENotas(row);
-                            NotaSmall notaSmall = new NotaSmall();
-                            notaSmall.AsignarDatos(eNota);
-                            controls.Add(notaSmall);
+                            //NotaSmall notaSmall = new NotaSmall();
+                            //notaSmall.AsignarDatos(eNota);
+                            //controls.Add(notaSmall);
                         }
                     }
                     else
                     {
                         this.lblResultados.Text = "Última nota. (Ver todas)";
                         ENotas eNota = new ENotas(dtNotas, 0);
-                        NotaSmall notaSmall = new NotaSmall();
-                        notaSmall.AsignarDatos(eNota);
-                        controls.Add(notaSmall);
+                        //NotaSmall notaSmall = new NotaSmall();
+                        //notaSmall.AsignarDatos(eNota);
+                        //controls.Add(notaSmall);
                     }
 
                     this.panelNotas.AddArrayControl(controls);

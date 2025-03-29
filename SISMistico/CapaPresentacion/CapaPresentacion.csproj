@@ -308,12 +308,6 @@
     <Compile Include="Formularios\FormsNotas\FrmObservarNotas.Designer.cs">
       <DependentUpon>FrmObservarNotas.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsNotas\NotaSmall.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Formularios\FormsNotas\NotaSmall.Designer.cs">
-      <DependentUpon>NotaSmall.cs</DependentUpon>
-    </Compile>
     <Compile Include="Formularios\FormsPedido\DatosMesaSmall.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -834,9 +828,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsNotas\FrmObservarNotas.resx">
       <DependentUpon>FrmObservarNotas.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsNotas\NotaSmall.resx">
-      <DependentUpon>NotaSmall.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsPedido\DatosMesaSmall.resx">
       <DependentUpon>DatosMesaSmall.cs</DependentUpon>
