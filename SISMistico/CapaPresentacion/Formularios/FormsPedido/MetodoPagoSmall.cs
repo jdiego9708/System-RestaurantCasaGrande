@@ -21,17 +21,13 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.chkMetodo.CheckedChanged += ChkMetodo_CheckedChanged;
         }
 
+        public event EventHandler OnChkMetodoCheckedChanged;
+
         private void ChkMetodo_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox chk = (CheckBox)sender;
-            if (chk.Checked)
-            {
-                if (chk.Text.Equals("EFECTIVO"))
-                {
-                    this.txtValor.Tag = this.Total;
-                    this.txtValor.Text = this.Total.ToString("C").Replace(",00", "");
-                }
-            }
+
+            this.OnChkMetodoCheckedChanged?.Invoke(this, EventArgs.Empty);   
         }
 
         private void Txt_KeyPress(object sender, KeyPressEventArgs e)

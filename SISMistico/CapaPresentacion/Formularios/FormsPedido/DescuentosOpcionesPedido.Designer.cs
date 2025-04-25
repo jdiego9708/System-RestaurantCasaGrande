@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.label1 = new System.Windows.Forms.Label();
             this.ListaDescuentos = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.txtPropina = new System.Windows.Forms.TextBox();
@@ -51,20 +50,15 @@
             this.txtPrecioDesechables = new System.Windows.Forms.TextBox();
             this.txtDomicilio = new System.Windows.Forms.TextBox();
             this.chkDomicilio = new System.Windows.Forms.CheckBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.txtDescuento = new System.Windows.Forms.TextBox();
+            this.radioButton1 = new System.Windows.Forms.RadioButton();
+            this.rdPorcentaje = new System.Windows.Forms.RadioButton();
             this.panelMetodosPago = new CapaPresentacion.Controles.CustomGridPanel();
             this.gbCupon.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(5, 87);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(176, 21);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Descuentos disponibles:";
             // 
             // ListaDescuentos
             // 
@@ -73,7 +67,7 @@
             this.ListaDescuentos.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.ListaDescuentos.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ListaDescuentos.FormattingEnabled = true;
-            this.ListaDescuentos.Location = new System.Drawing.Point(8, 112);
+            this.ListaDescuentos.Location = new System.Drawing.Point(10, 56);
             this.ListaDescuentos.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.ListaDescuentos.Name = "ListaDescuentos";
             this.ListaDescuentos.Size = new System.Drawing.Size(128, 29);
@@ -162,7 +156,7 @@
             // 
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotal.Location = new System.Drawing.Point(88, 202);
+            this.lblTotal.Location = new System.Drawing.Point(93, 210);
             this.lblTotal.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(53, 25);
@@ -173,7 +167,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(-2, 202);
+            this.label5.Location = new System.Drawing.Point(3, 210);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(73, 25);
@@ -184,7 +178,7 @@
             // 
             this.lblSubtotal.AutoSize = true;
             this.lblSubtotal.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSubtotal.Location = new System.Drawing.Point(84, 165);
+            this.lblSubtotal.Location = new System.Drawing.Point(83, 192);
             this.lblSubtotal.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSubtotal.Name = "lblSubtotal";
             this.lblSubtotal.Size = new System.Drawing.Size(83, 17);
@@ -194,7 +188,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(5, 161);
+            this.label6.Location = new System.Drawing.Point(4, 188);
             this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(71, 21);
@@ -280,6 +274,53 @@
             this.chkDomicilio.Text = "Cobrar domicilio";
             this.chkDomicilio.UseVisualStyleBackColor = true;
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.txtDescuento);
+            this.groupBox2.Controls.Add(this.radioButton1);
+            this.groupBox2.Controls.Add(this.rdPorcentaje);
+            this.groupBox2.Controls.Add(this.ListaDescuentos);
+            this.groupBox2.Location = new System.Drawing.Point(8, 85);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.groupBox2.Size = new System.Drawing.Size(317, 100);
+            this.groupBox2.TabIndex = 38;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Descuentos disponibles";
+            // 
+            // txtDescuento
+            // 
+            this.txtDescuento.Enabled = false;
+            this.txtDescuento.Location = new System.Drawing.Point(172, 56);
+            this.txtDescuento.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.txtDescuento.Name = "txtDescuento";
+            this.txtDescuento.Size = new System.Drawing.Size(125, 29);
+            this.txtDescuento.TabIndex = 39;
+            this.txtDescuento.Tag = "0";
+            // 
+            // radioButton1
+            // 
+            this.radioButton1.AutoSize = true;
+            this.radioButton1.Location = new System.Drawing.Point(172, 25);
+            this.radioButton1.Name = "radioButton1";
+            this.radioButton1.Size = new System.Drawing.Size(64, 25);
+            this.radioButton1.TabIndex = 3;
+            this.radioButton1.Text = "Valor";
+            this.radioButton1.UseVisualStyleBackColor = true;
+            // 
+            // rdPorcentaje
+            // 
+            this.rdPorcentaje.AutoSize = true;
+            this.rdPorcentaje.Checked = true;
+            this.rdPorcentaje.Location = new System.Drawing.Point(13, 25);
+            this.rdPorcentaje.Name = "rdPorcentaje";
+            this.rdPorcentaje.Size = new System.Drawing.Size(107, 25);
+            this.rdPorcentaje.TabIndex = 2;
+            this.rdPorcentaje.TabStop = true;
+            this.rdPorcentaje.Text = "Porcentajes";
+            this.rdPorcentaje.UseVisualStyleBackColor = true;
+            // 
             // panelMetodosPago
             // 
             this.panelMetodosPago.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -298,6 +339,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.txtDomicilio);
             this.Controls.Add(this.chkDomicilio);
             this.Controls.Add(this.txtPrecioDesechables);
@@ -316,8 +358,6 @@
             this.Controls.Add(this.gbCupon);
             this.Controls.Add(this.txtPropina);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.ListaDescuentos);
-            this.Controls.Add(this.label1);
             this.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -326,14 +366,14 @@
             this.gbCupon.ResumeLayout(false);
             this.gbCupon.PerformLayout();
             this.groupBox1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox gbCupon;
         private System.Windows.Forms.Label label12;
@@ -356,5 +396,9 @@
         public System.Windows.Forms.TextBox txtDomicilio;
         private System.Windows.Forms.CheckBox chkDomicilio;
         private CapaPresentacion.Controles.CustomGridPanel panelMetodosPago;
+        private System.Windows.Forms.GroupBox groupBox2;
+        public System.Windows.Forms.TextBox txtDescuento;
+        public System.Windows.Forms.RadioButton rdPorcentaje;
+        public System.Windows.Forms.RadioButton radioButton1;
     }
 }

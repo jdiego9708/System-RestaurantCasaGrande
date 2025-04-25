@@ -11,9 +11,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             InitializeComponent();
             this.Load += DescuentosOpcionesPedido_Load;
+
             this.txtPropina.LostFocus += Txt_LostFocus;
             this.txtPropina.GotFocus += Txt_GotFocus;
             this.txtPropina.KeyPress += Txt_KeyPress;
+
+            this.txtDescuento.LostFocus += Txt_LostFocus;
+            this.txtDescuento.GotFocus += Txt_GotFocus;
+            this.txtDescuento.KeyPress += Txt_KeyPress;
+
             this.ListaDescuentos.SelectedValueChanged += ListaDescuentos_SelectedValueChanged;
             this.lblPropinaSugerida.Click += LblPropinaSugerida_Click;
 
@@ -27,6 +33,24 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             this.chkDesechables.CheckedChanged += ChkDesechables_CheckedChanged;
             this.chkDomicilio.CheckedChanged += ChkDomicilio_CheckedChanged;
+
+            this.rdPorcentaje.CheckedChanged += RdPorcentaje_CheckedChanged;
+        }
+
+        private void RdPorcentaje_CheckedChanged(object sender, EventArgs e)
+        {
+            RadioButton rd = (RadioButton)sender;
+
+            if (rd.Checked)
+            {
+                this.ListaDescuentos.Enabled = true;
+                this.txtDescuento.Enabled = false;
+            }
+            else
+            {
+                this.ListaDescuentos.Enabled = false;
+                this.txtDescuento.Enabled = true;
+            }
         }
 
         private void ChkDomicilio_CheckedChanged(object sender, EventArgs e)
@@ -115,13 +139,14 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelMetodosPago.clearDataSource();
 
             List<UserControl> controls = new List<UserControl>();
-            foreach(MetodoPagoModel metodo in metodos)
+            foreach (MetodoPagoModel metodo in metodos)
             {
                 MetodoPagoSmall metodoPagoSmall = new MetodoPagoSmall
                 {
                     MetodoPago = metodo,
                     Total = this.Total,
                 };
+                metodoPagoSmall.OnChkMetodoCheckedChanged += MetodoPagoSmall_OnChkMetodoCheckedChanged;
 
                 if (metodo.Equals("EFECTIVO"))
                     metodoPagoSmall.chkMetodo.Checked = true;
@@ -130,6 +155,24 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
 
             this.panelMetodosPago.AddArrayControl(controls);
+        }
+
+        private void MetodoPagoSmall_OnChkMetodoCheckedChanged(object sender, EventArgs e)
+        {
+            MetodoPagoSmall metodoPagoSmall = (MetodoPagoSmall)sender;
+
+            if (metodoPagoSmall.chkMetodo.Checked)
+            {
+                this.OperacionSumarPrecios();
+
+                metodoPagoSmall.txtValor.Tag = this.Total;
+                metodoPagoSmall.txtValor.Text = this.Total.ToString("C").Replace(",00", "");
+            }
+            else
+            {
+                metodoPagoSmall.txtValor.Tag = 0;
+                metodoPagoSmall.txtValor.Text = 0.ToString("C").Replace(",00", "");
+            }
         }
 
         private bool ObtenerMetodosPago(out List<MetodoPagoModel> metodos_pago)
@@ -159,7 +202,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         {
                             //Mensajes.MensajeInformacion("Verifique los valores en métodos de pago");
                             return false;
-                        }                      
+                        }
                     }
                 }
             }
@@ -274,12 +317,30 @@ namespace CapaPresentacion.Formularios.FormsPedido
             if (!decimal.TryParse(this.txtDomicilio.Tag.ToString(), out decimal domicilio))
                 domicilio = 0;
 
-            decimal desc = Convert.ToDecimal(this.ListaDescuentos.SelectedValue);
-            decimal descuento = desc / 100;
-            int propina = Convert.ToInt32(this.txtPropina.Tag);
-            int subtotal = this.Total_parcial + propina + Convert.ToInt32(desechables) + Convert.ToInt32(domicilio);
+            decimal desc = 0;
+            decimal descuento = 0;
+            int propina = 0;
+            int subtotal = 0;
+            decimal total_con_descuento = 0;
 
-            decimal total_con_descuento = subtotal - (subtotal * descuento);
+            if (this.rdPorcentaje.Checked)
+            {
+                desc = Convert.ToDecimal(this.ListaDescuentos.SelectedValue);
+                descuento = desc / 100;
+                propina = Convert.ToInt32(this.txtPropina.Tag);
+                subtotal = this.Total_parcial + propina + Convert.ToInt32(desechables) + Convert.ToInt32(domicilio);
+                total_con_descuento = subtotal - (subtotal * descuento);
+            }
+            else
+            {
+                if (!decimal.TryParse(this.txtDescuento.Tag.ToString(), out desc))
+                    desc = 0;
+
+                descuento = desc;
+                propina = Convert.ToInt32(this.txtPropina.Tag);
+                subtotal = this.Total_parcial + propina + Convert.ToInt32(desechables) + Convert.ToInt32(domicilio);
+                total_con_descuento = subtotal - descuento;
+            }   
 
             this.lblSubtotal.Text = subtotal.ToString("C").Replace(",00", "");
             this.lblSubtotal.Tag = subtotal;
@@ -367,7 +428,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             if (this.panelMetodosPago.Controls.Count > 0)
             {
-                foreach(UserControl control in this.panelMetodosPago.controlsUser)
+                foreach (UserControl control in this.panelMetodosPago.controlsUser)
                 {
                     if (control is MetodoPagoSmall metodo)
                     {

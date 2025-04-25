@@ -93,13 +93,24 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             detallePago = this.opcionesPedido.TablaPago(this.IsPrecuenta);
 
+            string descuento;
+
+            if (this.opcionesPedido.rdPorcentaje.Checked)
+            {
+                descuento = this.opcionesPedido.ListaDescuentos.SelectedValue.ToString() + "%";
+            }
+            else
+            {
+                descuento = this.opcionesPedido.txtDescuento.Tag.ToString();
+            }
+
             List<string> vs = new List<string>
             {
                 Convert.ToString(this.Id_pedido),
                 Convert.ToString(this.Total_parcial),
                 Convert.ToString(this.opcionesPedido.txtPropina.Tag),
                 Convert.ToString(this.lblSubTotal.Tag),
-                Convert.ToString(this.opcionesPedido.ListaDescuentos.SelectedValue),
+                descuento,
                 Convert.ToString(this.opcionesPedido.txtCupon.Text),
                 Convert.ToString(this.opcionesPedido.txtPrecioDesechables.Tag),
                 Convert.ToString(this.opcionesPedido.txtDomicilio.Tag),
