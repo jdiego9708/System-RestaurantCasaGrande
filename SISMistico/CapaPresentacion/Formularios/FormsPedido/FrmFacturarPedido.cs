@@ -97,7 +97,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             if (this.opcionesPedido.rdPorcentaje.Checked)
             {
-                descuento = this.opcionesPedido.ListaDescuentos.SelectedValue.ToString() + "%";
+                descuento = this.opcionesPedido.ListaDescuentos.SelectedValue.ToString();
             }
             else
             {
