@@ -101,6 +101,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnCancelarPedido.Text = "Cancelar pedido";
             this.btnCancelarPedido.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCancelarPedido.UseVisualStyleBackColor = true;
+            this.btnCancelarPedido.Visible = false;
             // 
             // btnCambiarMesa
             // 
