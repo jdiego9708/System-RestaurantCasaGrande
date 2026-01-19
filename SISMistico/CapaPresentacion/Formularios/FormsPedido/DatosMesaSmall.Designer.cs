@@ -122,6 +122,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnCambiarMesa.Text = "Cambiar de mesa";
             this.btnCambiarMesa.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCambiarMesa.UseVisualStyleBackColor = true;
+            this.btnCambiarMesa.Visible = false;
             // 
             // btnEditarPedido
             // 
