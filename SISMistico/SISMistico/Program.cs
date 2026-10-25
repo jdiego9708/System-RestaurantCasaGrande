@@ -18,7 +18,10 @@ namespace SISMistico
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            // API móvil: apagada por defecto (ApiHabilitada); si falla al arrancar, el sistema abre igual.
+            CapaPresentacion.Api.ApiServer.Iniciar();
             Application.Run(new FrmIniciarSesion());
+            CapaPresentacion.Api.ApiServer.Detener();
         }
     }
 }

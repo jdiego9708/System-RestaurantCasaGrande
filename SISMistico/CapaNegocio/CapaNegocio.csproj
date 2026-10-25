@@ -51,6 +51,7 @@
     <Compile Include="NIngresos.cs" />
     <Compile Include="NIngredientes.cs" />
     <Compile Include="NNomina.cs" />
+    <Compile Include="NApiMovil.cs" />
     <Compile Include="NEmpleados.cs" />
     <Compile Include="NInsumos.cs" />
     <Compile Include="NMesas.cs" />

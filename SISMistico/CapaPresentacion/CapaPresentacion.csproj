@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AlphaBlendTextBox">
-      <HintPath>..\..\..\..\OTROS\AlphaBlendTextBox_src\bin\Debug\AlphaBlendTextBox.dll</HintPath>
+      <HintPath>..\libs\AlphaBlendTextBox.dll</HintPath>
     </Reference>
     <Reference Include="MetroFramework, Version=1.4.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
       <HintPath>..\packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.dll</HintPath>
@@ -68,6 +68,7 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -583,6 +584,22 @@
     <Compile Include="ReportesFacturas\NominaEmpleado\FrmReporteNominaEmpleado.Designer.cs">
       <DependentUpon>FrmReporteNominaEmpleado.cs</DependentUpon>
     </Compile>
+    <Compile Include="Api\ApiAuth.cs" />
+    <Compile Include="Api\ApiCatalogoHandlers.cs" />
+    <Compile Include="Api\ApiConfig.cs" />
+    <Compile Include="Api\ApiHandlers.cs" />
+    <Compile Include="Api\ApiIdempotencia.cs" />
+    <Compile Include="Api\ApiImagenesHandlers.cs" />
+    <Compile Include="Api\ApiImpresion.cs" />
+    <Compile Include="Api\ApiJson.cs" />
+    <Compile Include="Api\ApiLog.cs" />
+    <Compile Include="Api\ApiMesasHandlers.cs" />
+    <Compile Include="Api\ApiPedidosHandlers.cs" />
+    <Compile Include="Api\ApiRequest.cs" />
+    <Compile Include="Api\ApiResponse.cs" />
+    <Compile Include="Api\ApiRouter.cs" />
+    <Compile Include="Api\ApiServer.cs" />
+    <Compile Include="Api\ApiUi.cs" />
     <Compile Include="Servicios\ControladorImpresion.cs" />
     <Compile Include="Servicios\EnviarEmailErrores2.cs" />
     <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.cs">

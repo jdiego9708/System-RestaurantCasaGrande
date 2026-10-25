@@ -54,6 +54,7 @@
     <Compile Include="DEgresos.cs" />
     <Compile Include="DIngredientes.cs" />
     <Compile Include="DNomina.cs" />
+    <Compile Include="DApiMovil.cs" />
     <Compile Include="DEmpleados.cs" />
     <Compile Include="DErrores.cs" />
     <Compile Include="DInsumos.cs" />
