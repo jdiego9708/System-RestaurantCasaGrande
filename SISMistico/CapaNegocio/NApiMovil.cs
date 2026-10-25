@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 
 using CapaDatos;
@@ -28,6 +29,16 @@ namespace CapaNegocio
         public string Estado { get; set; }
     }
 
+    /// <summary>Resultado de buscar un empleado solo por PIN: uno, varios (ambiguo) o ninguno.</summary>
+    public class ResultadoPin
+    {
+        public EmpleadoMovil Unico { get; set; }
+        public List<EmpleadoMovil> Candidatos { get; set; }
+
+        public bool Ninguno { get { return Unico == null && (Candidatos == null || Candidatos.Count == 0); } }
+        public bool Ambiguo { get { return Unico == null && Candidatos != null && Candidatos.Count > 1; } }
+    }
+
     public class NApiMovil
     {
         private static readonly DApiMovil Datos = new DApiMovil();
@@ -35,6 +46,30 @@ namespace CapaNegocio
         public static bool ProbarConexion()
         {
             return Datos.ProbarConexion();
+        }
+
+        /// <summary>
+        /// Login solo por PIN. Los empleados ACTIVO tienen prioridad; si ninguno coincide se consideran los
+        /// inactivos (paridad con el escritorio, D12). Si queda más de uno, es ambiguo.
+        /// </summary>
+        public static ResultadoPin ResolverPorPin(int pin)
+        {
+            List<EmpleadoMovil> todos = new List<EmpleadoMovil>();
+            foreach (DataRow r in Datos.EmpleadosPorPin(pin).Rows)
+                todos.Add(new EmpleadoMovil
+                {
+                    IdEmpleado = Convert.ToInt32(r["Id_empleado"]),
+                    Nombre = Convert.ToString(r["Nombre_empleado"]),
+                    Cargo = Convert.ToString(r["Cargo_empleado"]),
+                    Estado = Convert.ToString(r["Estado"]),
+                    TienePin = true
+                });
+
+            List<EmpleadoMovil> activos = todos.FindAll(e => e.EstaActivo);
+            List<EmpleadoMovil> grupo = activos.Count > 0 ? activos : todos;
+            if (grupo.Count == 1)
+                return new ResultadoPin { Unico = grupo[0] };
+            return new ResultadoPin { Candidatos = grupo };
         }
 
         /// <summary>Devuelve el empleado si las credenciales coinciden; null si no.</summary>

@@ -87,18 +87,34 @@ Sin autenticación. Sirve para que el móvil descubra si el servidor está dispo
 
 ### `POST /auth/login`
 
-`id_empleado` es obligatorio y se acompaña de **una** de las dos credenciales:
+Hay tres formas de entrar; se manda **exactamente una credencial**:
 
 ```json
-// opción A: contraseña (igual que el escritorio)
-{ "id_empleado": 6120, "password": "••••••" }
+// A: solo PIN (clave maestra). Es la que usa la app del mesero
+{ "codigo_maestra": 9708 }
 
-// opción B: PIN (clave maestra) del mismo empleado
+// B: PIN de un empleado concreto (resuelve el 409 PIN_AMBIGUO)
 { "id_empleado": 6120, "codigo_maestra": 9708 }
+
+// C: contraseña (igual que el escritorio); exige id_empleado
+{ "id_empleado": 6120, "password": "••••••" }
 ```
 
-> **No se admite el PIN solo.** En producción hay PIN repetidos entre empleados activos y algunos no tienen
-> 4 dígitos ([02 §5.16](02-base-de-datos-y-hallazgos.md)), así que no identifican a nadie por sí mismos.
+> **Revisión 2026-10-24 (noche): el PIN solo vuelve a admitirse**, porque la app del mesero identifica al
+> empleado por su PIN. Se busca entre los empleados `ACTIVO` primero; si no hay ninguno, entre los inactivos
+> (paridad D12). `id_empleado = 0` nunca entra. Si **más de un** empleado comparte ese PIN:
+>
+> ```json
+> // 409 PIN_AMBIGUO
+> { "error": { "codigo": "PIN_AMBIGUO", "mensaje": "...",
+>   "detalle": { "candidatos": [ { "id_empleado": 6120, "nombre": "JUAN DIEGO DUQUE", "cargo": "MESERO", "activo": true } ] } } }
+> ```
+>
+> y el cliente repite con la opción B eligiendo uno. Una respuesta ambigua **cuenta como fallo** del
+> limitador (5/min/IP), para que no sirva de enumerador. **Riesgo aceptado:** 8 de los 26 empleados activos
+> tienen PIN de menos de 4 dígitos y es fácil adivinarlos; la mitigación es el limitador, la red local y que
+> el restaurante unifique los registros duplicados y use PIN únicos de 4 dígitos
+> ([diagnóstico](../db/diagnostico-pin.sql)).
 
 ```json
 // 200 OK
@@ -115,8 +131,8 @@ Sin autenticación. Sirve para que el móvil descubra si el servidor está dispo
 }
 ```
 
-Errores: `400 VALIDACION` (falta `id_empleado`, ambas credenciales o ninguna, `id_empleado` como texto o `<= 0`),
-`401 NO_AUTORIZADO` (`X-Api-Key`), `403 CLAVE_INVALIDA`, `429 DEMASIADOS_INTENTOS`.
+Errores: `400 VALIDACION` (ninguna o ambas credenciales, `password` sin `id_empleado`, PIN no entero o negativo),
+`401 NO_AUTORIZADO` (`X-Api-Key`), `403 CLAVE_INVALIDA`, `409 PIN_AMBIGUO`, `429 DEMASIADOS_INTENTOS`.
 **D12 (decidida el 2026-10-24): paridad con el escritorio**: la API no mira `Empleados.Estado`; un empleado
 `INACTIVO` con credenciales correctas entra, y queda una línea en el log. Implementado en la fase 1.
 `id_empleado = 0` (comodín "NINGUNO") se rechaza.
@@ -124,8 +140,7 @@ Errores: `400 VALIDACION` (falta `id_empleado`, ambas credenciales o ninguna, `i
 > La API **no llama a `sp_Login`**: ese SP cierra el turno anterior y abre uno nuevo cuando cambia la fecha
 > ([02 §5.18](02-base-de-datos-y-hallazgos.md)). Valida las credenciales con una consulta propia de solo lectura
 > sobre `Empleados`. `turno` es opcional y de solo lectura (último turno existente); si no hay, se omite.
-> El “usuario” es el **id numérico** del empleado. Si Flutter necesita login por nombre, se agrega un
-> `GET /empleados?q=` previo (solo activos, sin exponer `Password` ni `Codigo_maestro`).
+> Con el login por PIN ya no hace falta una lista pública de empleados (`GET /empleados`, antes B1): se descarta.
 
 ### `GET /auth/me`
 

@@ -20,6 +20,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 | [05 — Plan de trabajo](05-plan-de-trabajo.md) | Fases, archivos a crear/modificar, estado de la fase 0, pruebas y criterios de aceptación |
 | [06 — Decisiones pendientes](06-decisiones-pendientes.md) | Preguntas abiertas (D1 resuelta; D11–D13 nuevas) |
 | [07 — Anexos técnicos](07-anexos-tecnicos.md) | SP propuesto (borrador), esqueleto de código, comandos de diagnóstico, glosario, referencias |
+| [**App móvil (Flutter)**](app-movil/README.md) | Modelado previo al código de la app del mesero: alcance, arquitectura, módulos, modelo de datos, pantallas, librerías verificadas, pruebas y plan |
 | [`../db/`](../db/README.md) | Esquema de producción versionado, restauración de la copia local y scripts de diagnóstico |
 
 ---
@@ -90,6 +91,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 
 | Fecha | Cambio |
 |---|---|
+| 2026-10-24 (final) | **App Flutter escrita** en el repositorio nuevo `CasaGrandeMesero` (solo Android): paquete `casa_grande_api` (51 pruebas) y app con login por PIN, mesas, menú, pedido, bandeja con reintento y ajustes; `flutter analyze` sin errores y APK de depuración compilado. **Login solo por PIN** en la API (`409 PIN_AMBIGUO`, `db/diagnostico-pin.sql`, 43 pruebas en `Test-ApiFase1.ps1`). Detalle en [app-movil/09](app-movil/09-estado-de-la-implementacion.md) |
 | 2026-10-21 | Primera versión (análisis del código y de la LocalDB de desarrollo) |
 | 2026-10-24 (madrugada) | **Fase 3 implementada**: `POST /pedidos` atómico e idempotente (+ `GET /pedidos/{id}`), con el SP reescrito fila a fila; D14 decidida (los 4 tipos de ingrediente); 78/78 pruebas de extremo a extremo con concurrencia real; la impresión de comandas queda implementada pero sin probar con impresora |
 | 2026-10-24 (noche) | **Fase 2 implementada**: catálogo (tipos, platos, bebidas, ingredientes, clientes), mapa de mesas e imágenes; 65/65 pruebas contrastadas con la BD; D13 resuelta; hallazgos: ninguna imagen existe, mesa 21 duplicada, `CantidadClientes` siempre 0, ingredientes globales |

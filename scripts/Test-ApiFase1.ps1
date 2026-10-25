@@ -35,7 +35,9 @@ function Invoke-Api([string]$metodo, [string]$ruta, $cuerpo = $null, [hashtable]
     } catch {
         $resp = $_.Exception.Response
         if ($null -eq $resp) { throw }
-        $text = (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd()
+        # En PowerShell 5.1 el cuerpo del error ya viene leido en ErrorDetails; el stream queda vacio.
+        $text = $_.ErrorDetails.Message
+        if (-not $text) { try { $text = (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd() } catch { } }
         return [pscustomobject]@{ status = [int]$resp.StatusCode; json = $(if ($text) { $text | ConvertFrom-Json } else { $null }) }
     }
 }
@@ -49,12 +51,23 @@ function Invoke-Scalar([string]$sql) {
 # ---- credenciales de prueba desde la copia local (no se imprimen) ----
 $cn = New-Object System.Data.SqlClient.SqlConnection "Server=(localdb)\MSSQLLocalDB;Database=$Database;Integrated Security=true"
 $cn.Open(); $cmd = $cn.CreateCommand()
-$cmd.CommandText = "SELECT TOP 1 Id_empleado, Password, Codigo_maestro FROM Empleados WHERE Estado='ACTIVO' AND Password IS NOT NULL AND Password <> '' AND Codigo_maestro IS NOT NULL ORDER BY Id_empleado"
+$cmd.CommandText = "SELECT TOP 1 Id_empleado, Password, Codigo_maestro FROM Empleados WHERE Id_empleado > 0 AND Estado='ACTIVO' AND Password IS NOT NULL AND Password <> '' AND Codigo_maestro IS NOT NULL AND (SELECT COUNT(*) FROM Empleados x WHERE x.Id_empleado > 0 AND x.Codigo_maestro = Empleados.Codigo_maestro) = 1 ORDER BY Id_empleado"
 $r = $cmd.ExecuteReader(); [void]$r.Read()
 $idOk = [int]$r[0]; $passOk = [string]$r[1]; $pinOk = [int]$r[2]; $r.Close()
 $cmd.CommandText = "SELECT TOP 1 Id_empleado, Password FROM Empleados WHERE Id_empleado > 0 AND Estado<>'ACTIVO' AND Password IS NOT NULL AND Password <> '' ORDER BY Id_empleado"
 $r = $cmd.ExecuteReader(); $hayInactivo = $r.Read(); $idInact = 0; $passInact = ""
 if ($hayInactivo) { $idInact = [int]$r[0]; $passInact = [string]$r[1] }; $r.Close(); $cn.Close()
+
+# ---- datos para el login solo por PIN (los PIN no se imprimen) ----
+$pinDup = Invoke-Scalar "SELECT TOP 1 Codigo_maestro FROM Empleados WHERE Id_empleado > 0 AND Estado='ACTIVO' GROUP BY Codigo_maestro HAVING COUNT(*) > 1 ORDER BY Codigo_maestro"
+$idsDup = if ($null -ne $pinDup) { Invoke-Scalar "SELECT STRING_AGG(CAST(Id_empleado AS varchar(20)), ',') WITHIN GROUP (ORDER BY Id_empleado) FROM Empleados WHERE Id_empleado > 0 AND Estado='ACTIVO' AND Codigo_maestro = $pinDup" } else { $null }
+$pinTier = Invoke-Scalar "SELECT TOP 1 Codigo_maestro FROM Empleados WHERE Id_empleado > 0 GROUP BY Codigo_maestro HAVING SUM(CASE WHEN Estado='ACTIVO' THEN 1 ELSE 0 END) = 1 AND COUNT(*) > 1 ORDER BY Codigo_maestro"
+$idTier = if ($null -ne $pinTier) { Invoke-Scalar "SELECT Id_empleado FROM Empleados WHERE Id_empleado > 0 AND Estado='ACTIVO' AND Codigo_maestro = $pinTier" } else { $null }
+$pinInact = Invoke-Scalar "SELECT TOP 1 Codigo_maestro FROM Empleados e WHERE Id_empleado > 0 AND Estado<>'ACTIVO' AND Codigo_maestro IS NOT NULL AND (SELECT COUNT(*) FROM Empleados x WHERE x.Id_empleado > 0 AND x.Codigo_maestro = e.Codigo_maestro) = 1 ORDER BY Id_empleado"
+$idPinInact = if ($null -ne $pinInact) { Invoke-Scalar "SELECT Id_empleado FROM Empleados WHERE Id_empleado > 0 AND Codigo_maestro = $pinInact" } else { $null }
+$pin0 = Invoke-Scalar "SELECT Codigo_maestro FROM Empleados WHERE Id_empleado = 0"
+$pin0Libre = ($null -ne $pin0 -and $pin0 -isnot [DBNull]) -and ([int](Invoke-Scalar "SELECT COUNT(*) FROM Empleados WHERE Id_empleado > 0 AND Codigo_maestro = $pin0") -eq 0)
+$pinDesconocido = [int](Invoke-Scalar "SELECT ISNULL(MAX(Codigo_maestro), 0) + 7919 FROM Empleados")
 
 $turnosAntes = "{0}|{1}|{2}" -f (Invoke-Scalar "SELECT COUNT(*) FROM Turnos"), (Invoke-Scalar "SELECT MAX(Id_turno) FROM Turnos"), (Invoke-Scalar "SELECT MAX(CASE WHEN Estado_turno='ABIERTO' THEN 1 ELSE 0 END) FROM Turnos")
 
@@ -86,7 +99,9 @@ try {
     # 3. validacion del cuerpo
     Add-Result "login sin cuerpo -> 400" 400 (Invoke-Api POST "/auth/login" $null $k).status
     Add-Result "login JSON invalido -> 400" 400 (Invoke-Api POST "/auth/login" $null $k "{no es json").status
-    Add-Result "login solo PIN (sin id_empleado) -> 400" 400 (Invoke-Api POST "/auth/login" @{ codigo_maestra = $pinOk } $k).status
+    Add-Result "login password SIN id_empleado -> 400 (solo el PIN puede ir solo)" 400 (Invoke-Api POST "/auth/login" @{ password = $passOk } $k).status
+    Add-Result "login PIN negativo -> 400" 400 (Invoke-Api POST "/auth/login" @{ codigo_maestra = -1 } $k).status
+    Add-Result "login PIN como texto -> 400" 400 (Invoke-Api POST "/auth/login" @{ codigo_maestra = "$pinOk" } $k).status
     Add-Result "login password y PIN a la vez -> 400" 400 (Invoke-Api POST "/auth/login" @{ id_empleado = $idOk; password = $passOk; codigo_maestra = $pinOk } $k).status
     Add-Result "login id_empleado como texto -> 400" 400 (Invoke-Api POST "/auth/login" @{ id_empleado = "$idOk"; password = $passOk } $k).status
     $grande = '{"id_empleado":1,"password":"' + ('x' * 300000) + '"}'
@@ -101,6 +116,33 @@ try {
     $l2 = Invoke-Api POST "/auth/login" @{ id_empleado = $idOk; codigo_maestra = $pinOk } $k
     Add-Result "login con id + PIN -> 200" 200 $l2.status
     $token2 = $l2.json.token
+
+    # 4b. login SOLO por PIN (la app movil)
+    $lp = Invoke-Api POST "/auth/login" @{ codigo_maestra = $pinOk } $k
+    Add-Result "PIN solo, empleado con PIN unico -> 200 y ese empleado" "200|$idOk" ("{0}|{1}" -f $lp.status, $lp.json.empleado.id_empleado)
+    Add-Result "PIN solo: la sesion sirve (me)" 200 (Invoke-Api GET "/auth/me" $null @{ "X-Api-Key" = $apiKey; "Authorization" = "Bearer $($lp.json.token)" }).status
+    if ($null -ne $idTier) {
+        $lt = Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pinTier } $k
+        Add-Result "PIN de 1 activo + inactivos: gana el activo (200)" "200|$idTier" ("{0}|{1}" -f $lt.status, $lt.json.empleado.id_empleado)
+    }
+    if ($null -ne $idPinInact) {
+        $li = Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pinInact } $k
+        Add-Result "PIN unico de un INACTIVO: entra (paridad D12)" "200|$idPinInact" ("{0}|{1}" -f $li.status, $li.json.empleado.id_empleado)
+    }
+    # Los siguientes fallan a proposito (3 intentos); el siguiente login correcto limpia el contador.
+    if ($null -ne $pinDup) {
+        $ld = Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pinDup } $k
+        $cands = if ($ld.json.error.detalle) { (@($ld.json.error.detalle.candidatos | ForEach-Object { $_.id_empleado }) | Sort-Object) -join "," } else { "" }
+        Add-Result "PIN compartido por activos -> 409 PIN_AMBIGUO" "409|PIN_AMBIGUO" ("{0}|{1}" -f $ld.status, $ld.json.error.codigo)
+        Add-Result "PIN_AMBIGUO lista exactamente a los activos que lo comparten" $idsDup $cands
+        Add-Result "PIN_AMBIGUO no devuelve token ni PIN" "False" ((($ld.texto) -match 'token') -or (($ld.texto) -match "\b$pinDup\b"))
+        $tok = Invoke-Api POST "/auth/login" @{ id_empleado = [int](($idsDup -split ",")[0]); codigo_maestra = [int]$pinDup } $k
+        Add-Result "tras PIN_AMBIGUO, elegir quien eres (id + PIN) -> 200" 200 $tok.status
+    }
+    Add-Result "PIN que no existe -> 403 CLAVE_INVALIDA" "403|CLAVE_INVALIDA" (& { $x = Invoke-Api POST "/auth/login" @{ codigo_maestra = $pinDesconocido } $k; "{0}|{1}" -f $x.status, $x.json.error.codigo })
+    if ($pin0Libre) {
+        Add-Result "PIN del empleado 0 (NINGUNO) nunca entra -> 403" 403 (Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pin0 } $k).status
+    }
 
     # 5. /auth/me
     $auth = @{ "X-Api-Key" = $apiKey; "Authorization" = "Bearer $token" }

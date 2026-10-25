@@ -20,6 +20,10 @@ namespace CapaPresentacion.Api
             });
         }
 
+        /// <summary>
+        /// Tres modos: solo PIN (la app móvil), id_empleado + PIN, o id_empleado + password.
+        /// El PIN solo puede ser ambiguo (lo comparten varios empleados): 409 PIN_AMBIGUO con los candidatos.
+        /// </summary>
         public static ApiResponse Login(ApiRequest req)
         {
             string cuerpo, error;
@@ -30,29 +34,54 @@ namespace CapaPresentacion.Api
             if (datos == null)
                 return ApiResponse.Error(400, "VALIDACION", error);
 
-            int idEmpleado;
-            if (!ApiJson.TryEntero(datos, "id_empleado", out idEmpleado) || idEmpleado <= 0)
-                return ApiResponse.Error(400, "VALIDACION", "id_empleado es obligatorio y debe ser un entero positivo.");
+            bool hayId = datos.ContainsKey("id_empleado") && datos["id_empleado"] != null;
+            bool hayPassword = datos.ContainsKey("password") && datos["password"] != null;
+            bool hayPin = datos.ContainsKey("codigo_maestra") && datos["codigo_maestra"] != null;
 
-            // El PIN solo no identifica a nadie (hay PIN repetidos): siempre va con id_empleado.
-            string password = ApiJson.Texto(datos, "password");
-            int pin;
-            bool hayPin = datos.ContainsKey("codigo_maestra");
-            bool hayPassword = datos.ContainsKey("password");
             if (hayPassword == hayPin)
                 return ApiResponse.Error(400, "VALIDACION", "Envía exactamente una credencial: password o codigo_maestra.");
-            if (hayPassword && string.IsNullOrEmpty(password))
-                return ApiResponse.Error(400, "VALIDACION", "password debe ser un texto no vacío.");
-            if (hayPin && !ApiJson.TryEntero(datos, "codigo_maestra", out pin))
-                return ApiResponse.Error(400, "VALIDACION", "codigo_maestra debe ser un número entero.");
-            ApiJson.TryEntero(datos, "codigo_maestra", out pin);
+            if (hayPassword && !hayId)
+                return ApiResponse.Error(400, "VALIDACION", "password requiere id_empleado; solo el PIN puede ir solo.");
+
+            int idEmpleado = 0;
+            if (hayId && (!ApiJson.TryEntero(datos, "id_empleado", out idEmpleado) || idEmpleado <= 0))
+                return ApiResponse.Error(400, "VALIDACION", "id_empleado debe ser un entero positivo.");
+
+            string password = null;
+            if (hayPassword)
+            {
+                password = ApiJson.Texto(datos, "password");
+                if (string.IsNullOrEmpty(password))
+                    return ApiResponse.Error(400, "VALIDACION", "password debe ser un texto no vacío.");
+            }
+
+            int pin = 0;
+            if (hayPin && (!ApiJson.TryEntero(datos, "codigo_maestra", out pin) || pin < 0))
+                return ApiResponse.Error(400, "VALIDACION", "codigo_maestra debe ser un entero mayor o igual a 0.");
 
             int espera;
             if (ApiAuth.Bloqueada(req.Ip, out espera))
                 return ApiResponse.Error(429, "DEMASIADOS_INTENTOS",
                     "Demasiados intentos fallidos. Espera " + espera + " s.");
 
-            EmpleadoMovil emp = NApiMovil.ValidarEmpleado(idEmpleado, password, pin, hayPin);
+            EmpleadoMovil emp;
+            if (hayId)
+            {
+                emp = NApiMovil.ValidarEmpleado(idEmpleado, password, pin, hayPin);
+            }
+            else
+            {
+                ResultadoPin r = NApiMovil.ResolverPorPin(pin);
+                if (r.Ambiguo)
+                {
+                    // Un PIN válido pero compartido también cuenta como intento: frena el barrido de PIN.
+                    ApiAuth.RegistrarFallo(req.Ip);
+                    return ApiResponse.Error(409, "PIN_AMBIGUO",
+                        "Ese PIN lo comparten varios empleados; elige quién eres.", Candidatos(r.Candidatos));
+                }
+                emp = r.Unico;
+            }
+
             if (emp == null)
             {
                 ApiAuth.RegistrarFallo(req.Ip);
@@ -102,6 +131,20 @@ namespace CapaPresentacion.Api
                 { "cargo", e.Cargo },
                 { "codigo_maestra", e.TienePin }
             };
+        }
+
+        private static Dictionary<string, object> Candidatos(List<EmpleadoMovil> lista)
+        {
+            List<object> items = new List<object>();
+            foreach (EmpleadoMovil e in lista)
+                items.Add(new Dictionary<string, object>
+                {
+                    { "id_empleado", e.IdEmpleado },
+                    { "nombre", e.Nombre },
+                    { "cargo", e.Cargo },
+                    { "activo", e.EstaActivo }
+                });
+            return new Dictionary<string, object> { { "candidatos", items } };
         }
 
         /// <summary>Último turno, solo lectura; si no hay o falla la lectura, se omite.</summary>

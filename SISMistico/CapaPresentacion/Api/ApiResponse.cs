@@ -43,13 +43,13 @@ namespace CapaPresentacion.Api
             return new ApiResponse { Status = 204 };
         }
 
-        public static ApiResponse Error(int status, string codigo, string mensaje)
+        public static ApiResponse Error(int status, string codigo, string mensaje, object detalle = null)
         {
             Dictionary<string, object> error = new Dictionary<string, object>
             {
                 { "codigo", codigo },
                 { "mensaje", mensaje },
-                { "detalle", null }
+                { "detalle", detalle }
             };
             return new ApiResponse
             {
