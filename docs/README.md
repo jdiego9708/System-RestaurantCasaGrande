@@ -2,10 +2,12 @@
 
 Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 
-> **Estado:** borrador de trabajo, **revisado el 2026-10-24** con la base de datos de producción.
-> **Alcance de esta documentación:** Fase 1 — exponer endpoints locales (LAN) desde la aplicación
-> WinForms actual para que un futuro cliente Flutter pueda registrar pedidos **de mesa**.
-> **Nada de lo aquí descrito modifica el sistema en producción.** Es análisis + propuesta.
+> **Estado:** **actualizado el 2026-10-26**. La API móvil (fases 1–4) y la app Android están escritas y probadas
+> contra la copia local de producción; **todavía no hay nada desplegado en el restaurante**. Para el panorama
+> completo, empezar por [**00 — Estado del proyecto**](00-estado-del-proyecto.md).
+>
+> **Alcance:** exponer endpoints locales (LAN) desde la aplicación WinForms para que el cliente Flutter registre
+> pedidos **de mesa**.
 
 ---
 
@@ -13,6 +15,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 
 | Documento | Contenido |
 |---|---|
+| [**00 — Estado del proyecto**](00-estado-del-proyecto.md) | Qué está hecho, qué está verificado, qué falta y en qué orden (punto de entrada) |
 | [01 — Flujo actual de pedidos](01-flujo-actual-de-pedidos.md) | Cómo se guarda un pedido hoy: formularios activos y muertos, secuencia exacta, modelo de datos, reglas de negocio, estados reales |
 | [02 — Base de datos y hallazgos](02-base-de-datos-y-hallazgos.md) | Esquema **de producción**, SPs, comparación con el código, riesgos y matriz de impacto |
 | [03 — Propuesta de arquitectura](03-propuesta-api-movil.md) | API embebida en el `.exe`, componentes nuevos, seguridad, hilos, despliegue y red |
@@ -46,10 +49,10 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
    `CapaPresentacion/Api/`, reutilizando `CapaNegocio`/`CapaDatos`, y **un SP nuevo y aditivo** para que el alta
    desde móvil sea atómica. Los formularios y SPs existentes no se tocan.
 6. **Estimación:** 10–13 días hábiles para la fase 1 completa (endpoints de pedidos + catálogo + seguridad básica).
-   **Avance (2026-10-24):** fase 0 cerrada salvo red del PC del restaurante (IP fija, `urlacl`, firewall); fases 1, 2
-   y 3 de código hechas y probadas en localhost (login, catálogo, mesas, imágenes y **alta de pedidos atómica e
-   idempotente**). El SP está probado en la copia local pero **no desplegado en producción**. Siguiente: fase 4
-   (agregar/quitar ítems, estado, cancelar, imprimir). Ver [05](05-plan-de-trabajo.md).
+   **Avance (2026-10-26):** fases 0–4 de la API **hechas y probadas** en localhost (44 + 65 + 78 + 54 casos) y app
+   Android probada en un teléfono real, incluida la impresión a PDF y las operaciones de la fase 4. Faltan la red
+   del restaurante (D7), el despliegue en producción, el APK firmado y la impresora física. Ver
+   [00](00-estado-del-proyecto.md).
 
 ---
 
@@ -91,6 +94,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 
 | Fecha | Cambio |
 |---|---|
+| 2026-10-26 | **Fase 4 de la API y de la app**: listar pedidos, agregar/quitar líneas (PIN), `PENDIENTE → SALIENDO`, cancelar e imprimir (54/54); arreglo de empleados duplicados y PIN `0` (`db/02`); **login solo por PIN** ya sin PIN compartidos; impresión **real** con PDF automático en `Documentos\Casa Grande\Comandas`; el `$` va al inicio de los precios. Nuevo [00 — Estado del proyecto](00-estado-del-proyecto.md) |
 | 2026-10-24 (final) | **App Flutter escrita** en el repositorio nuevo `CasaGrandeMesero` (solo Android): paquete `casa_grande_api` (51 pruebas) y app con login por PIN, mesas, menú, pedido, bandeja con reintento y ajustes; `flutter analyze` sin errores y APK de depuración compilado. **Login solo por PIN** en la API (`409 PIN_AMBIGUO`, `db/diagnostico-pin.sql`, 43 pruebas en `Test-ApiFase1.ps1`). Detalle en [app-movil/09](app-movil/09-estado-de-la-implementacion.md) |
 | 2026-10-21 | Primera versión (análisis del código y de la LocalDB de desarrollo) |
 | 2026-10-24 (madrugada) | **Fase 3 implementada**: `POST /pedidos` atómico e idempotente (+ `GET /pedidos/{id}`), con el SP reescrito fila a fila; D14 decidida (los 4 tipos de ingrediente); 78/78 pruebas de extremo a extremo con concurrencia real; la impresión de comandas queda implementada pero sin probar con impresora |

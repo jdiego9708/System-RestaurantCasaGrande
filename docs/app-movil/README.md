@@ -1,8 +1,10 @@
-# App móvil del mesero (Flutter) — modelado
+# App móvil del mesero (Flutter)
 
-> **Estado:** diseño previo al código (2026-10-24). Nada de lo que sigue está implementado.
+> **Estado:** **implementada y probada en un S24 Ultra (2026-10-26)**. Los documentos 01–08 son el diseño; el
+> código real vive en `D:\Repositorios\CasaGrandeMesero` y las diferencias y el estado están en
+> [09](09-estado-de-la-implementacion.md).
 > **Qué es:** una app para que los meseros tomen pedidos de mesa desde el celular, hablando por la red local con la API
-> que ya corre dentro del escritorio ([contrato v1](../04-contrato-api-v1.md); fases 1–3 implementadas y probadas).
+> que ya corre dentro del escritorio ([contrato v1](../04-contrato-api-v1.md); fases 1–4 implementadas y probadas).
 > **Qué no es:** no reemplaza al escritorio. Facturar, caja, inventario y reportes siguen allí.
 
 ---
@@ -56,5 +58,6 @@ Cada una trae una recomendación; el resto del modelado asume las recomendadas.
 | A7 | Identidad visual | Material 3 con color semilla del restaurante; **falta logo y paleta** | Solo afecta tema e ícono |
 | A8 | Identificador de la app | `com.casagrande.mesero` (cambiable hasta publicar) | Cambiarlo después obliga a reinstalar |
 
-Dependencias del lado del servidor (lista completa en [08](08-plan-y-dependencias-con-la-api.md)): **B1** `GET /empleados`
-(para A5) y la **fase 4** de la API para editar pedidos.
+Dependencias del lado del servidor: **ninguna pendiente**. `GET /empleados` (B1) se descartó con el login por PIN y
+la **fase 4** de la API (editar, precuenta, cancelar e imprimir) está implementada; ver
+[09](09-estado-de-la-implementacion.md) y [00](../00-estado-del-proyecto.md).
