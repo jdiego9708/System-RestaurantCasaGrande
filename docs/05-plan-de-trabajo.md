@@ -168,7 +168,7 @@ y se refleja en el escritorio.
 | 4.3 `DELETE /pedidos/{id}/items/{id_detalle_pedido}` | ✅ por `Id_detalle_pedido`, `clave_maestra` de cualquier empleado (como `FrmComprobacion`), `?cantidad=`; al borrar la línea se borran sus ingredientes | `db/04_sp_Movil_Quitar_item.sql` |
 | 4.4 `PATCH /pedidos/{id}/estado` | ✅ solo `PENDIENTE → SALIENDO`; se pasa la mesa actual porque el SP la reescribe | `ApiPedidosAcciones.CambiarEstado` |
 | 4.5 `POST /pedidos/{id}/cancelar` | ✅ `observaciones` 1–200; el SP reemplaza las observaciones del pedido (queda el motivo) | `ApiPedidosAcciones.Cancelar` |
-| 4.6 `POST /pedidos/{id}/imprimir` | ✅ `PLATOS`/`BEBIDAS`/`TODO`, 1–5 copias, `202`; `409` si ya hay una en curso. **Sin probar con impresora real**: la prueba usa `ApiImpresionSimulada` | `Api/ApiImpresion.cs` |
+| 4.6 `POST /pedidos/{id}/imprimir` | ✅ `PLATOS`/`BEBIDAS`/`TODO`, 1–5 copias, `202`; `409` si ya hay una en curso. Imprime en la impresora predeterminada; si es de PDF (Microsoft Print to PDF), guarda el archivo solo en `Documentos\Casa Grande\Comandas` sin diálogo | `Api/ApiImpresion.cs`, `FrmComandas.GuardarPdf` |
 | 4.7 Pruebas | ✅ `scripts/Test-ApiFase4.ps1`: **51/51**, con limpieza verificada | `scripts/` |
 
 **Pendiente de la fase 4:** la app móvil todavía no tiene pantallas para editar el pedido, pasar a `SALIENDO`,

@@ -1,5 +1,7 @@
 using System;
 using System.Data;
+using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -85,14 +87,6 @@ namespace CapaPresentacion.Api
 
         private static void Imprimir(int idPedido, string tipo, int copias)
         {
-            if (ApiConfig.ImpresionSimulada)
-            {
-                // Solo para pruebas: no toca la impresora ni abre formularios.
-                ApiLog.Info("Impresion simulada (ApiImpresionSimulada=true): id_pedido=" + idPedido +
-                            " tipo=" + tipo + " copias=" + copias);
-                return;
-            }
-
             DataSet ds = NApiMovil.PedidoCompleto(idPedido);
             DataTable platos = TablaComanda();
             DataTable bebidas = TablaComanda();
@@ -129,26 +123,93 @@ namespace CapaPresentacion.Api
                 destino.Rows.Add(fila);
             }
 
+            // Igual que el escritorio: se imprime en la impresora predeterminada. La diferencia es que, si esa
+            // impresora es de PDF (Microsoft Print to PDF, Adobe PDF...), el archivo se guarda solo en Documentos
+            // en vez de abrir el diálogo de "Guardar como", que dejaría la petición colgada.
+            string impresora = ImpresoraPredeterminada();
+            bool aPdf = EsImpresoraPdf(impresora);
+            string carpeta = CarpetaComandas();
+
             using (FrmComandas comandas = new FrmComandas())
             {
                 comandas.Id_pedido = idPedido;
-                for (int copia = 0; copia < copias; copia++)
+                for (int copia = 1; copia <= copias; copia++)
                 {
                     if (bebidas.Rows.Count > 0 && tipo != "PLATOS")
                     {
                         comandas.ObtenerReporte("Casa Grande | Bebidas");
                         comandas.AsignarTablas(bebidas);
-                        comandas.ImprimirFactura(1);
+                        if (aPdf)
+                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "bebidas", copia)));
+                        else
+                            comandas.ImprimirFactura(1);
                     }
                     if (platos.Rows.Count > 0 && tipo != "BEBIDAS")
                     {
                         comandas.ObtenerReporte("Casa Grande | Platos");
                         comandas.AsignarTablas(platos);
-                        comandas.ImprimirFactura(1);
+                        if (aPdf)
+                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "platos", copia)));
+                        else
+                            comandas.ImprimirFactura(1);
                     }
                 }
             }
-            ApiLog.Info("Comandas enviadas a la impresora: id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias);
+
+            ApiLog.Info(aPdf
+                ? "Comandas en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias + " carpeta=" + carpeta
+                : "Comandas enviadas a la impresora '" + impresora + "': id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias);
+        }
+
+        /// <summary>Impresora predeterminada de Windows; cadena vacía si no hay ninguna.</summary>
+        private static string ImpresoraPredeterminada()
+        {
+            try
+            {
+                foreach (string nombre in PrinterSettings.InstalledPrinters)
+                {
+                    PrinterSettings s = new PrinterSettings { PrinterName = nombre };
+                    if (s.IsDefaultPrinter)
+                        return nombre;
+                }
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Error("No se pudo leer la impresora predeterminada", ex);
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// True si la impresora genera un archivo (Microsoft Print to PDF, Adobe PDF...). Sin impresora también
+        /// se devuelve true: es preferible dejar el PDF guardado a reventar con un mensaje en la cara.
+        /// </summary>
+        private static bool EsImpresoraPdf(string impresora)
+        {
+            if (string.IsNullOrWhiteSpace(impresora))
+                return true;
+            return impresora.IndexOf("PDF", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>Documentos\Casa Grande\Comandas, o lo que diga ApiComandasCarpeta (relativo a Documentos).</summary>
+        private static string CarpetaComandas()
+        {
+            string configurada = ApiConfig.ComandasCarpeta;
+            if (!string.IsNullOrWhiteSpace(configurada))
+                return Path.IsPathRooted(configurada)
+                    ? configurada
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), configurada);
+
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "Casa Grande",
+                "Comandas");
+        }
+
+        private static string NombrePdf(int idPedido, string grupo, int copia)
+        {
+            return string.Format("comanda-{0}-{1:yyyyMMdd-HHmmss}-{2}-{3}",
+                idPedido, DateTime.Now, grupo, copia);
         }
 
         private static DataTable TablaComanda()

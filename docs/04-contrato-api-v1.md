@@ -520,9 +520,13 @@ Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIEN
 `tipo` ∈ `PLATOS` | `BEBIDAS` | `TODO`. Responde `202 Accepted` y ejecuta la impresión en el hilo de UI.
 `409` si ya hay una impresión en curso.
 
-> **Implementado en la fase 4** (1 a 5 copias). No se probó con impresora real: la prueba de la fase 4 usa
-> `ApiImpresionSimulada=true` en el `.exe.config`, que solo deja constancia en el log. `503 SIN_UI` si el
-> escritorio no tiene hilo de interfaz al que encolar.
+> **Implementado en la fase 4** (1 a 5 copias). Se comporta como el escritorio: imprime en la **impresora
+> predeterminada de Windows**. La diferencia es que, cuando esa impresora genera un archivo (Microsoft Print to
+> PDF, Adobe PDF…), el PDF se guarda **solo** en `Documentos\Casa Grande\Comandas` sin abrir el diálogo de
+> "Guardar como" que dejaría la petición colgada; el nombre es
+> `comanda-{id_pedido}-{aaaaMMdd-HHmmss}-{platos|bebidas}-{copia}.pdf`. La carpeta se puede cambiar con
+> `ApiComandasCarpeta` (relativa a Documentos). `503 SIN_UI` si el escritorio no tiene hilo de interfaz al que
+> encolar.
 
 ---
 

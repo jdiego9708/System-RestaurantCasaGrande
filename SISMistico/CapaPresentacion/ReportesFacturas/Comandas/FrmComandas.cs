@@ -78,24 +78,7 @@ namespace CapaPresentacion
         {
             try
             {
-
-                //Asignar parámetros de observaciones y horas
-                int num = this.ComprobacionNumComandas();
-
-                ReportParameter[] reportParameters = new ReportParameter[4];
-                reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
-                reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
-                reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
-                reportParameters[3] = new ReportParameter("Titulo", Titulo == string.Empty ? "Casa Grande" : Titulo);
-                this.reportViewer1.LocalReport.SetParameters(reportParameters);
-
-                ReportDataSource dsDatosPedido = new ReportDataSource("DatosPedido", this.TablaDatosPedido);
-                reportViewer1.LocalReport.DataSources.Add(dsDatosPedido);
-
-                ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
-                reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
-
-                this.reportViewer1.RefreshReport();
+                PrepararReporte();
 
                 int contador = 0;
                 while (contador != Repetir)
@@ -110,6 +93,50 @@ namespace CapaPresentacion
             {
                 Mensajes.MensajeErrorForm(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Renderiza el reporte actual a PDF y lo guarda en <paramref name="carpeta"/> (la crea si no existe).
+        /// Se usa desde la API móvil cuando la impresora predeterminada es de PDF: así no aparece el diálogo
+        /// de "Guardar como" de Windows. Devuelve la ruta del archivo.
+        /// </summary>
+        public string GuardarPdf(string carpeta, string nombreArchivo)
+        {
+            PrepararReporte();
+
+            string mimeType, encoding, extension;
+            string[] streams;
+            Warning[] warnings;
+            byte[] bytes = reportViewer1.LocalReport.Render("PDF", null,
+                out mimeType, out encoding, out extension, out streams, out warnings);
+
+            Directory.CreateDirectory(carpeta);
+            string ruta = Path.Combine(carpeta, nombreArchivo + ".pdf");
+            File.WriteAllBytes(ruta, bytes);
+            return ruta;
+        }
+
+        /// <summary>Parámetros, orígenes de datos y refresco del reporte, tal como los deja ImprimirFactura.</summary>
+        private void PrepararReporte()
+        {
+            // Asignar parámetros de observaciones y horas
+            int num = this.ComprobacionNumComandas();
+
+            ReportParameter[] reportParameters = new ReportParameter[4];
+            reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
+            reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
+            reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
+            reportParameters[3] = new ReportParameter("Titulo", Titulo == string.Empty || Titulo == null ? "Casa Grande" : Titulo);
+            this.reportViewer1.LocalReport.SetParameters(reportParameters);
+
+            this.reportViewer1.LocalReport.DataSources.Clear();
+            ReportDataSource dsDatosPedido = new ReportDataSource("DatosPedido", this.TablaDatosPedido);
+            reportViewer1.LocalReport.DataSources.Add(dsDatosPedido);
+
+            ReportDataSource dsDetallePedido = new ReportDataSource("DetallePedido", this.TablaDetallePedido);
+            reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
+
+            this.reportViewer1.RefreshReport();
         }
 
         public void AsignarTablas()

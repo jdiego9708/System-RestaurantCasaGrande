@@ -4,8 +4,10 @@
     y lo opera (agregar, quitar, SALIENDO, cancelar, imprimir). Al terminar BORRA todo lo que creo y verifica
     que los conteos vuelven a los iniciales.
 
-    La impresion se prueba con ApiImpresionSimulada=true en el .exe.config (no toca la impresora); el script
-    guarda y restaura ese valor.
+    La impresion es REAL: se comporta como el escritorio e imprime en la impresora predeterminada. Si esa
+    impresora es de PDF (Microsoft Print to PDF, Adobe PDF...), la comanda se guarda sola en
+    Documentos\Casa Grande\Comandas sin abrir el dialogo de "Guardar como"; la prueba comprueba el archivo y lo
+    borra. En un equipo con impresora fisica, la prueba IMPRIME de verdad (una copia de platos y otra de bebidas).
 
     Requisitos: .\SISMistico\run-local.ps1 -Rebuild -NoRun, la copia restaurada (db\Restore-ProdCopy.ps1) y los
     SP nuevos (db\03_sp_Movil_Agregar_items.sql y db\04_sp_Movil_Quitar_item.sql).
@@ -82,16 +84,12 @@ function Ings($ids) { @($ids | ForEach-Object { @{ id_ingrediente = [int]$_; obs
 $antes = "{0}|{1}|{2}" -f (Sql-Scalar "SELECT COUNT(*) FROM Pedidos"), (Sql-Scalar "SELECT COUNT(*) FROM Detalle_pedido"), (Sql-Scalar "SELECT COUNT(*) FROM Detalle_ingredientes_pedido")
 $maxAntes = [int](Sql-Scalar "SELECT ISNULL(MAX(Id_pedido), 0) FROM Pedidos")
 
-# Impresión simulada: guardar el valor y ponerlo en true.
-$simOriginal = ($cfg.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiImpresionSimulada' }).value
-$nodo = $cfg.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiImpresionSimulada' }
-if (-not $nodo) {
-    $nodo = $cfg.CreateElement("add")
-    [void]$nodo.SetAttribute("key", "ApiImpresionSimulada")
-    [void]$cfg.configuration.appSettings.AppendChild($nodo)
-}
-$nodo.SetAttribute("value", "true")
-$cfg.Save($exeConfig)
+# Impresión real: se detecta si la impresora predeterminada genera PDF para comprobar el archivo.
+$documentos = [Environment]::GetFolderPath('MyDocuments')
+$carpetaPdf = Join-Path $documentos "Casa Grande\Comandas"
+$impresora = (Get-CimInstance Win32_Printer -ErrorAction SilentlyContinue | Where-Object { $_.Default } | Select-Object -First 1).Name
+$esPdf = (-not $impresora) -or ($impresora -match 'PDF')
+Write-Host ("Impresora predeterminada: {0} ({1})" -f $(if ($impresora) { $impresora } else { 'ninguna' }), $(if ($esPdf) { 'se guardara el PDF en Documentos' } else { 'se imprimira de verdad' }))
 
 Get-Process SISMistico -ErrorAction SilentlyContinue | ForEach-Object { throw "Ya hay un SISMistico abierto (PID $($_.Id)); cierralo antes." }
 $logDir = Join-Path $buildDir "logs"
@@ -199,7 +197,25 @@ try {
     Add-Result "imprimir copias 0 -> 400" 400 (Invoke-Api "/pedidos/$id/imprimir" $h "POST" @{ tipo = "TODO"; copias = 0 }).status
     Add-Result "imprimir pedido inexistente -> 404" 404 (Invoke-Api "/pedidos/999999999/imprimir" $h "POST" @{ }).status
     $imp = Invoke-Api "/pedidos/$id/imprimir" $h "POST" @{ tipo = "TODO"; copias = 1 }
-    Add-Result "imprimir (simulada) -> 202" 202 $imp.status
+    Add-Result "imprimir (real) -> 202" 202 $imp.status
+    if ($esPdf) {
+        # La impresión va en el hilo de UI después del 202: se espera a que aparezca el archivo.
+        $archivo = $null
+        for ($i = 0; $i -lt 20 -and -not $archivo; $i++) {
+            Start-Sleep -Milliseconds 500
+            $archivo = Get-ChildItem $carpetaPdf -Filter "comanda-$id-*.pdf" -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        Add-Result "imprimir: guarda el PDF en Documentos sin dialogo" "True" ([bool]$archivo)
+        if ($archivo) {
+            $bytes = [IO.File]::ReadAllBytes($archivo.FullName)
+            $cabecera = [Text.Encoding]::ASCII.GetString($bytes, 0, 4)
+            Add-Result "el archivo guardado es un PDF" "%PDF" $cabecera
+            Add-Result "el PDF no esta vacio" "True" ($bytes.Length -gt 1000)
+            Remove-Item $archivo.FullName -Force
+        }
+    } else {
+        Add-Result "impresora fisica: no se genera PDF" "False" (Test-Path $carpetaPdf)
+    }
 }
 finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
@@ -207,13 +223,6 @@ finally {
     try {
         Sql-Exec "DELETE FROM Detalle_ingredientes_pedido WHERE Id_pedido > $maxAntes; DELETE FROM Detalle_pedido WHERE Id_pedido > $maxAntes; DELETE FROM Pedidos WHERE Id_pedido > $maxAntes;"
     } catch { Write-Host "No se pudo limpiar la copia: $_" -ForegroundColor Red }
-    # Devolver ApiImpresionSimulada a como estaba.
-    try {
-        [xml]$cfg2 = Get-Content $exeConfig
-        $n = $cfg2.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiImpresionSimulada' }
-        if ($simOriginal) { $n.SetAttribute("value", $simOriginal) } else { [void]$cfg2.configuration.appSettings.RemoveChild($n) }
-        $cfg2.Save($exeConfig)
-    } catch { Write-Host "No se pudo restaurar ApiImpresionSimulada: $_" -ForegroundColor Yellow }
 }
 
 $despues = "{0}|{1}|{2}" -f (Sql-Scalar "SELECT COUNT(*) FROM Pedidos"), (Sql-Scalar "SELECT COUNT(*) FROM Detalle_pedido"), (Sql-Scalar "SELECT COUNT(*) FROM Detalle_ingredientes_pedido")

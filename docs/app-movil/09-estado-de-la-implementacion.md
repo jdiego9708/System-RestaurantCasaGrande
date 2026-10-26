@@ -79,5 +79,6 @@ Conexión por USB con `adb reverse tcp:8099 tcp:8099` y en la app servidor `loca
 * Probar por WiFi de la LAN (`urlacl`, regla de firewall, IP fija y `ApiKey` definitiva: D7).
 * Fase 4 de la API y de la app: agregar/quitar ítems, `PENDIENTE → SALIENDO`, cancelar e imprimir.
 * Pruebas de widgets, del envío con fallos (matriz red/401/409/422/503) y de Drift.
-* Archivo de firma y APK de release; impresión de comandas con impresora real; desplegar el SP y el arreglo de
-  datos en producción.
+* Archivo de firma y APK de release; impresión de comandas con impresora **física** (la ruta de PDF ya está
+  probada: si la impresora predeterminada es Microsoft Print to PDF, el archivo se guarda en Documentos); desplegar
+  el SP y el arreglo de datos en producción.

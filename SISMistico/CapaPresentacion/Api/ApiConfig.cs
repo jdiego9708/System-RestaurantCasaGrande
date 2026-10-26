@@ -55,12 +55,12 @@ namespace CapaPresentacion.Api
         }
 
         /// <summary>
-        /// No manda nada a la impresora: solo lo deja en el log. Existe para que las pruebas puedan cubrir
-        /// POST /pedidos/{id}/imprimir sin una impresora real (ApiImpresionSimulada=true).
+        /// Carpeta donde la API guarda las comandas en PDF cuando la impresora predeterminada es de PDF.
+        /// Relativa a Documentos del usuario si no es una ruta absoluta; por defecto "Casa Grande\Comandas".
         /// </summary>
-        public static bool ImpresionSimulada
+        public static string ComandasCarpeta
         {
-            get { return string.Equals(Leer("ApiImpresionSimulada", "false"), "true", StringComparison.OrdinalIgnoreCase); }
+            get { return Leer("ApiComandasCarpeta", string.Empty); }
         }
 
         /// <summary>Carpeta de imágenes: ApiImagenesCarpeta o, si no está, la RUTAIMAGES que ya usa el escritorio.</summary>
