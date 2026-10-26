@@ -22,6 +22,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 | [04 — Contrato de API v1](04-contrato-api-v1.md) | Endpoints, JSON, validaciones, códigos de error, máquina de estados |
 | [05 — Plan de trabajo](05-plan-de-trabajo.md) | Fases, archivos a crear/modificar, estado de la fase 0, pruebas y criterios de aceptación |
 | [06 — Decisiones pendientes](06-decisiones-pendientes.md) | Preguntas abiertas (D1 resuelta; D11–D13 nuevas) |
+| [**08 — Instalación desde cero**](08-instalacion-desde-cero.md) | Guía paso a paso para el PC del restaurante (requisitos, base de datos, instalador, red) y para cada celular Android |
 | [07 — Anexos técnicos](07-anexos-tecnicos.md) | SP propuesto (borrador), esqueleto de código, comandos de diagnóstico, glosario, referencias |
 | [**App móvil (Flutter)**](app-movil/README.md) | Modelado previo al código de la app del mesero: alcance, arquitectura, módulos, modelo de datos, pantallas, librerías verificadas, pruebas y plan |
 | [`../db/`](../db/README.md) | Esquema de producción versionado, restauración de la copia local y scripts de diagnóstico |
@@ -94,6 +95,7 @@ Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.
 
 | Fecha | Cambio |
 |---|---|
+| 2026-10-26 (guía) | Nuevo [08 — Instalación desde cero](08-instalacion-desde-cero.md) y `db/verificar-despliegue.sql` (comprobación de solo lectura de los SP y los PIN). APK de release generado (62,8 MB), sin probar en teléfono |
 | 2026-10-26 (instalador) | **Instalador real `Setup.exe`** (Inno Setup) en `installer/` que reemplaza a ClickOnce, con `Publicar-Instalador.ps1` para generarlo y copiarlo al restaurante; configura la API móvil y la red al instalar. Compila; falta probar la instalación en un PC real. El indicador de dispositivos ya compila. Botón «Domicilio» reubicado junto al indicador |
 | 2026-10-26 (LAN) | **Indicador de dispositivos conectados** en la pantalla de Mesas del escritorio (IP con petición autenticada en los últimos 90 s) y **`scripts/Configurar-Red.ps1`** para la prueba por WiFi (D7): urlacl, firewall, perfil de red, IP y datos para los celulares. Pendiente compilar y ejecutarlo en el PC del restaurante |
 | 2026-10-26 (comandas) | **Comanda siempre activa y con copias**: `POST /pedidos` acepta `copias_comandas` (1–5); la confirmación del pedido en la app tiene el checkbox fijo y un control de copias (2 por defecto); se elimina el ajuste «imprimir por defecto». Documentado que el `flutter` del `PATH` es el 3.11.5 y el proyecto necesita `D:\DevTools\flutter-3.47.8`. Detalle en [app-movil/09](app-movil/09-estado-de-la-implementacion.md) |

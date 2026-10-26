@@ -25,6 +25,7 @@ trabajar contra una copia local. Contexto y hallazgos en [`docs/02`](../docs/02-
 | `02_unificar_empleados_duplicados.revert.sql` | Devuelve `Codigo_maestro` y `Estado` desde ese respaldo y lo elimina |
 | `03_sp_Movil_Agregar_items.sql` | **Fase 4.** Agrega líneas a un pedido existente en una transacción (precio de catálogo, ingredientes por línea, solo si está `PENDIENTE`/`SALIENDO`). Aditivo; **no desplegado en producción** |
 | `04_sp_Movil_Quitar_item.sql` | **Fase 4.** Quita unidades de una línea por `Id_detalle_pedido`; si desaparece, borra sus ingredientes en la misma transacción. Aditivo; **no desplegado en producción** |
+| `verificar-despliegue.sql` | **Solo lectura.** Comprueba que estén los tres SP nuevos, que no haya PIN compartidos entre activos ni PIN en cero, y cuenta mesas y pedidos. Se usa al desplegar en el restaurante ([`docs/08`](../docs/08-instalacion-desde-cero.md)) |
 | `03_*.revert.sql`, `04_*.revert.sql` | `DROP PROCEDURE` de los dos anteriores |
 
 Los respaldos originales **no** están en el repositorio (el completo tiene 280 MB de datos reales: empleados,
