@@ -257,6 +257,9 @@ existe. `SISMistico/run-local.ps1` hace el cambio solo en el `.exe.config` de la
 
 ### 8.2 Comandos de instalación (una vez, como administrador)
 
+> **Atajo:** `scripts/Configurar-Red.ps1` hace lo de abajo y más. Usa el `sddl` de «Todos» en lugar de
+> `user="Everyone"`, porque ese nombre no existe en Windows en español (allí es «Todos»).
+
 ```bat
 :: Reserva de URL para que el listener funcione sin ejecutar como admin
 netsh http add urlacl url=http://+:8099/ user="Everyone"

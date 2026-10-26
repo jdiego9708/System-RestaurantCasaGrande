@@ -46,7 +46,7 @@ implementados y probados. Solo B7 es imprescindible para probar en el restaurant
 | El PC se duerme/apaga o el `.exe` no está abierto | Media | API caída | Banner "Servidor no disponible" con la última conexión; documentar arranque automático; los pedidos esperan en la bandeja |
 | Choque de versiones de `analyzer` entre generadores | Media | No compila | Verificarlo el primer día (F0); fijar versiones; subir el generador atrasado |
 | El contrato de la API cambia | Media | Roturas | Versionado `/v1`, DTOs tolerantes, pruebas `live` en CI local, OpenAPI (B10) |
-| Impresión de comandas sin probar con impresora real | Media | Comandas que no salen o avisos modales en el escritorio | `imprimir_comandas` apagado por defecto; prueba en sitio (B9) |
+| Impresión de comandas sin probar con impresora real | Media | Comandas que no salen o avisos modales en el escritorio | La app ahora envía siempre `imprimir_comandas: true` con 2 copias por defecto (`ApiImprimirComandas` solo rige si el request no lo indica); prueba en sitio (B9) |
 | Dos meseros abren la misma mesa a la vez | Media | Un `409` | Diseñado: el segundo ve el conflicto con el número de pedido |
 | Un teléfono viejo con poca memoria | Media | Lentitud | Probar en gama baja en F5; presupuesto de rendimiento |
 | Cambio de Flutter/Dart a mitad del proyecto | Baja | Roturas de generación | Versión fijada; actualizar solo entre releases |

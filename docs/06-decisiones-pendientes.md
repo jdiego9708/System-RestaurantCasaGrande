@@ -265,7 +265,8 @@ no una regla de negocio; la API no los permite.
 ## D4 (actualización) — impresión de comandas desde el móvil
 
 Implementada la opción B (`imprimir_comandas` por petición; por defecto `ApiImprimirComandas=false`). Encola la
-impresión en el hilo de UI y responde antes. **No probada con impresora real.** Ver [04 §6.1](04-contrato-api-v1.md).
+impresión en el hilo de UI y responde antes. **No probada con impresora real.** (2026-10-26) Se añadió
+`copias_comandas` (1–5, por defecto 1); la app del mesero siempre imprime y pide 2 copias por defecto. Ver [04 §6.1](04-contrato-api-v1.md).
 
 ---
 

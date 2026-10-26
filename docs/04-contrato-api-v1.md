@@ -317,6 +317,7 @@ incluida concurrencia real). **Idempotente:** repetir el mismo `idempotencia` de
   "tipo_pedido": "MESA",
   "observaciones": "",
   "imprimir_comandas": false,
+  "copias_comandas": 1,
   "items": [
     { "tipo": "PLATO", "id_tipo": 80812, "cantidad": 2, "observaciones": "sin cebolla",
       "ingredientes": [ { "id_ingrediente": 1012 }, { "id_ingrediente": 1026 },
@@ -358,6 +359,7 @@ Campos:
 | `tipo_pedido` | string | sí | Solo `MESA` en la v1 (el restaurante nunca ha registrado un domicilio; D2). `DOMICILIO` → `422` |
 | `observaciones` | string | no | máx. 200 |
 | `imprimir_comandas` | bool | no (`ApiImprimirComandas`, por defecto `false`) | encola la impresión después de responder |
+| `copias_comandas` | int | no (por defecto `1`) | 1 a 5; copias de cada comanda que se imprimen cuando `imprimir_comandas` es `true`. Fuera de rango → `400` |
 | `items` | array | sí | 1..`ApiMaxItems` (200); más → `400` |
 | `items[].tipo` | string | sí | `PLATO` \| `BEBIDA` |
 | `items[].id_tipo` | int | sí | debe existir (`404`) y estar `ACTIVO` (`422`) |
@@ -395,8 +397,9 @@ Reglas de servidor (en orden):
     después (best effort, no pueden fallar la petición).
 
 **Impresión.** `imprimir_comandas` encola, en el hilo de UI del escritorio, el mismo `FrmComandas` que usa `FrmPedido`
-(una copia de bebidas y otra de platos, con los ingredientes bajo cada plato). Por defecto está **apagada**
-(`ApiImprimirComandas=false`). **No está probada con una impresora real**: si falla, `FrmComandas` muestra su aviso
+(`copias_comandas` copias de bebidas y otras tantas de platos, con los ingredientes bajo cada plato; 1 si no se indica).
+Si el request no trae `imprimir_comandas`, rige `ApiImprimirComandas` (por defecto **apagada**); la app del mesero lo
+envía siempre en `true` con 2 copias por defecto. **No está probada con una impresora real**: si falla, `FrmComandas` muestra su aviso
 modal en el escritorio, como cuando falla una impresión hecha desde allí.
 
 ### 6.2 `GET /pedidos/{id}`

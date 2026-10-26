@@ -131,6 +131,8 @@ namespace CapaPresentacion.Api
                     req.Sesion = ApiAuth.Buscar(req.Token);
                     if (req.Sesion == null)
                         return ApiResponse.Error(401, "NO_AUTORIZADO", "Token ausente, inválido o vencido.");
+                    ApiAuth.RegistrarActividad(req.DireccionIp,
+                        req.Sesion.Empleado != null ? req.Sesion.Empleado.Nombre : null);
                 }
             }
             return encontrada.Handler(req);

@@ -48,7 +48,7 @@ Estados que **toda** pantalla con datos cubre: *cargando* (esqueletos, no ruedas
 | P7 | **Resultado del envío** | orders | Confirmar o explicar | `SubmitResult` / `OutboxEntry` | Ver pedido · Volver a mesas · Reintentar · Descartar |
 | P8 | **Detalle del pedido** | orders | Ver lo pedido y su total | `Order` | (MVP-2) Agregar · Quitar · Precuenta · Cancelar · Reimprimir |
 | P9 | **Pendientes de envío** | orders | Ver y resolver la bandeja | `OutboxEntry[]` | Reintentar · Ver · Editar (borrador nuevo) · Descartar |
-| P10 | **Ajustes** | settings | Diagnóstico y preferencias | `ServerInfo`, `Session`, versión | Cambiar servidor · Cerrar sesión · Imprimir por defecto · Tema · Actualizar menú |
+| P10 | **Ajustes** | settings | Diagnóstico y preferencias | `ServerInfo`, `Session`, versión | Cambiar servidor · Cerrar sesión · Tema · Actualizar menú |
 | P11 | **Registros** | settings | Ver el registro local para soporte | Talker | Filtrar · Copiar |
 
 ## 3. Maquetas de las pantallas críticas
@@ -136,7 +136,8 @@ Estados que **toda** pantalla con datos cubre: *cargando* (esqueletos, no ruedas
 │    Crema · Coco · Frijol · Sin bebida  │
 │ 3 × Gaseosa 400 ml      $ 12.000 │
 │ Comensales [ – ] 2 [ + ]   Nota general [ ... ] │
-│ ☐ Imprimir comanda en cocina                │   ← por defecto = preferencia
+│ ☑ Imprimir comanda en cocina                │   ← siempre marcado (deshabilitado)
+│ Copias de la comanda [ – ] 2 [ + ]          │   ← 2 por defecto, de 1 a 5
 ├──────────────────────────────┤
 │ Total estimado          $ 58.500 │
 │ [ Enviar a cocina ]              │

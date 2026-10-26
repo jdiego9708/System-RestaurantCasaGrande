@@ -141,7 +141,7 @@ Los DTOs viven en `casa_grande_api` (con `@JsonKey(name: …)` para el snake_cas
 | `GET /platos` | `DishDto{id_plato,nombre,precio,id_tipo_plato,tipo_plato,descripcion,detallado,carta,imagen_url}` | `Dish` | `precio` (int) → `Pesos`; `imagen_url` `null`→sin imagen |
 | `GET /bebidas` | `BeverageDto{id_bebida,nombre,precio,id_tipo_bebida,tipo_bebida,descripcion,imagen_url}` | `Beverage` | |
 | `GET /ingredientes` | `IngredientDto{id_ingrediente,tipo,nombre,descripcion,estado}` | `Ingredient` | `tipo`→`IngredientKind`; `estado=="ACTIVO"`→`isActive` |
-| `POST /pedidos` | `CreateOrderDto{idempotencia,id_mesa,id_cliente,cantidad_clientes,tipo_pedido,observaciones,imprimir_comandas,items[{tipo,id_tipo,cantidad,observaciones,ingredientes[{id_ingrediente}]}]}` | construido desde `Draft` | `tipo_pedido` = `"MESA"` siempre; `id_cliente` = 0; **no se envía `precio`** |
+| `POST /pedidos` | `CreateOrderDto{idempotencia,id_mesa,id_cliente,cantidad_clientes,tipo_pedido,observaciones,imprimir_comandas,copias_comandas,items[{tipo,id_tipo,cantidad,observaciones,ingredientes[{id_ingrediente}]}]}` | construido desde `Draft` | `tipo_pedido` = `"MESA"` siempre; `id_cliente` = 0; **no se envía `precio`** |
 | `POST /pedidos` · `GET /pedidos/{id}` | `OrderDto{id_pedido,id_mesa,num_mesa,id_cliente,cliente,id_empleado,empleado,estado,fecha,hora,tipo_pedido,observaciones,cantidad_clientes,total,items[…],impreso?}` | `Order`, `SubmitResult` | `items[].id_detalle_pedido`→`OrderLine.id`; `impreso`→`printQueued` |
 | Error | `{error:{codigo,mensaje,detalle}}` | `AppFailure` (ver 5) | |
 
@@ -150,7 +150,7 @@ un campo obligatorio ausente es `UnexpectedFailure` con el nombre del campo en e
 
 **Construcción del cuerpo de `POST /pedidos`** (caso de uso `BuildOrderPayload`): una entrada de `items` **por `DraftLine`**,
 en el orden del borrador; `ingredientes` = los 4 ids del mapa (solo platos personalizables); `observaciones` recortadas;
-`idempotencia` = `Draft.id`; `imprimir_comandas` = preferencia del usuario (por defecto `false`).
+`idempotencia` = `Draft.id`; `imprimir_comandas` = siempre `true`; `copias_comandas` = lo que elige el mesero en la confirmación (2 por defecto, de 1 a 5).
 
 ## 4. Esquema local (SQLite con Drift)
 
@@ -214,7 +214,7 @@ Por qué así:
 | `session.token` · `session.expiresAt` | `flutter_secure_storage` | Token de 8 h y su vencimiento |
 | `server.host` · `server.port` | `shared_preferences` | Dirección del servidor (no es secreto) |
 | `session.employee` | `shared_preferences` | `Employee` en JSON (id, nombre, cargo) para pintar la UI al arrancar |
-| `ui.themeMode` · `order.printByDefault` · `ui.tablesPollSeconds` | `shared_preferences` | Preferencias |
+| `ui.themeMode` · `ui.tablesPollSeconds` | `shared_preferences` | Preferencias |
 | `ui.lastEmployeeId` | `shared_preferences` | Para preseleccionar en el Login |
 
 Al **cerrar sesión**: se borran token y vencimiento; los borradores y la bandeja **se conservan** (son del dispositivo y de la

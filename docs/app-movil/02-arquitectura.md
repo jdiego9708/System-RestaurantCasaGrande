@@ -136,7 +136,7 @@ classDiagram
 | Dato | Dónde | Por qué |
 |---|---|---|
 | Token, clave de la API | `flutter_secure_storage` (Keystore/Keychain) | Secretos |
-| Servidor (host, puerto), preferencias (imprimir por defecto, tema) | `shared_preferences` | No son secretos |
+| Servidor (host, puerto), preferencias (tema) | `shared_preferences` | No son secretos |
 | Borradores, bandeja de salida, caché de menú | **Drift** (SQLite) | Consultas reactivas, transacciones, migraciones |
 
 ### 7.1 Menú: caché primero (*stale-while-revalidate*)

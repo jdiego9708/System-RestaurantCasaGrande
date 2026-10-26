@@ -29,6 +29,49 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.Load += FrmNuevoPedido_Load;
             this.btnCargar.Click += BtnCargar_Click;
             this.btnDomicilio.Click += BtnDomicilio_Click;
+
+            this.timerDispositivos = new System.Windows.Forms.Timer { Interval = 5000 };
+            this.timerDispositivos.Tick += (s, e) => this.ActualizarDispositivos();
+            this.toolTipDispositivos = new ToolTip();
+            this.Load += (s, e) =>
+            {
+                this.ActualizarDispositivos();
+                this.timerDispositivos.Start();
+            };
+            this.FormClosed += (s, e) =>
+            {
+                this.timerDispositivos.Stop();
+                this.timerDispositivos.Dispose();
+                this.toolTipDispositivos.Dispose();
+            };
+        }
+
+        private readonly System.Windows.Forms.Timer timerDispositivos;
+        private readonly ToolTip toolTipDispositivos;
+
+        /// <summary>
+        /// Dispositivos móviles con actividad reciente en la API (una petición con sesión en los últimos 90 s).
+        /// Se oculta si la API no está activa; el tooltip lista empleado, IP y hace cuánto hablaron.
+        /// </summary>
+        private void ActualizarDispositivos()
+        {
+            bool activa = CapaPresentacion.Api.ApiServer.Activo;
+            this.panelDispositivos.Visible = activa;
+            this.lblDispositivos.Visible = activa;
+            if (!activa)
+                return;
+
+            List<CapaPresentacion.Api.ApiDispositivo> activos = CapaPresentacion.Api.ApiAuth.DispositivosActivos();
+            this.lblDispositivos.Text = activos.Count + (activos.Count == 1 ? " DISPOSITIVO" : " DISPOSITIVOS");
+            this.panelDispositivos.BackColor = activos.Count > 0 ? Color.DodgerBlue : Color.Gray;
+
+            string detalle = activos.Count == 0
+                ? "Ningún dispositivo ha consultado la API en el último minuto y medio."
+                : string.Join(Environment.NewLine, activos.ConvertAll(d =>
+                    (string.IsNullOrEmpty(d.Empleado) ? "(sin nombre)" : d.Empleado) + " · " + d.Ip +
+                    " · hace " + Math.Max(0, (int)(DateTime.Now - d.Ultima).TotalSeconds) + " s"));
+            this.toolTipDispositivos.SetToolTip(this.panelDispositivos, detalle);
+            this.toolTipDispositivos.SetToolTip(this.lblDispositivos, detalle);
         }
 
 

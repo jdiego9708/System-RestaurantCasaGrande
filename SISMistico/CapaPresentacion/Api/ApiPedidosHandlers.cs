@@ -51,6 +51,7 @@ namespace CapaPresentacion.Api
             public string TipoPedido;
             public string Observaciones;
             public bool? Imprimir;
+            public int CopiasComandas = 1;
             public List<Item> Items = new List<Item>();
         }
 
@@ -126,7 +127,10 @@ namespace CapaPresentacion.Api
                 bool encolada = false;
                 ApiImpresion.RefrescarMapaDeMesas(idPedido, numMesa);
                 if (imprimir)
-                    encolada = ApiImpresion.ImprimirComandas(idPedido);
+                {
+                    bool ocupado;
+                    encolada = ApiImpresion.ImprimirComandas(idPedido, "TODO", s.CopiasComandas, out ocupado);
+                }
                 pedido["impreso"] = encolada;
 
                 ApiResponse ok = ApiResponse.Creado(pedido);
@@ -180,6 +184,10 @@ namespace CapaPresentacion.Api
                 { error = "imprimir_comandas debe ser true o false."; return null; }
                 s.Imprimir = (bool)d["imprimir_comandas"];
             }
+
+            if (Presente(d, "copias_comandas") &&
+                (!ApiJson.TryEntero(d, "copias_comandas", out s.CopiasComandas) || s.CopiasComandas < 1 || s.CopiasComandas > 5))
+            { error = "copias_comandas debe ser un entero entre 1 y 5."; return null; }
 
             IList<object> items = Lista(d.ContainsKey("items") ? d["items"] : null);
             if (items == null || items.Count == 0)

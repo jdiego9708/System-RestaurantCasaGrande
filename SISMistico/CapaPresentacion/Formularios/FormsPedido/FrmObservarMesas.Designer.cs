@@ -36,6 +36,8 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.label4 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.panelDispositivos = new System.Windows.Forms.Panel();
+            this.lblDispositivos = new System.Windows.Forms.Label();
             this.btnDomicilio = new System.Windows.Forms.Button();
             this.btnCargar = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -101,9 +103,28 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(29, 26);
             this.panel3.TabIndex = 10;
-            // 
+            //
+            // panelDispositivos
+            //
+            this.panelDispositivos.BackColor = System.Drawing.Color.Gray;
+            this.panelDispositivos.Location = new System.Drawing.Point(391, 12);
+            this.panelDispositivos.Name = "panelDispositivos";
+            this.panelDispositivos.Size = new System.Drawing.Size(29, 26);
+            this.panelDispositivos.TabIndex = 12;
+            this.panelDispositivos.Visible = false;
+            //
+            // lblDispositivos
+            //
+            this.lblDispositivos.AutoSize = true;
+            this.lblDispositivos.Location = new System.Drawing.Point(422, 16);
+            this.lblDispositivos.Name = "lblDispositivos";
+            this.lblDispositivos.Size = new System.Drawing.Size(104, 17);
+            this.lblDispositivos.TabIndex = 13;
+            this.lblDispositivos.Text = "0 DISPOSITIVOS";
+            this.lblDispositivos.Visible = false;
+            //
             // btnDomicilio
-            // 
+            //
             this.btnDomicilio.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.btnDomicilio.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnDomicilio.FlatAppearance.BorderColor = System.Drawing.Color.Silver;
@@ -114,7 +135,7 @@
             this.btnDomicilio.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDomicilio.Image = ((System.Drawing.Image)(resources.GetObject("btnDomicilio.Image")));
             this.btnDomicilio.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDomicilio.Location = new System.Drawing.Point(391, 5);
+            this.btnDomicilio.Location = new System.Drawing.Point(540, 5);
             this.btnDomicilio.Name = "btnDomicilio";
             this.btnDomicilio.Size = new System.Drawing.Size(200, 35);
             this.btnDomicilio.TabIndex = 32;
@@ -148,6 +169,8 @@
             this.ClientSize = new System.Drawing.Size(1088, 635);
             this.Controls.Add(this.btnCargar);
             this.Controls.Add(this.btnDomicilio);
+            this.Controls.Add(this.lblDispositivos);
+            this.Controls.Add(this.panelDispositivos);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.panel3);
@@ -176,6 +199,8 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panelDispositivos;
+        private System.Windows.Forms.Label lblDispositivos;
         private System.Windows.Forms.Button btnDomicilio;
         private System.Windows.Forms.Button btnCargar;
     }

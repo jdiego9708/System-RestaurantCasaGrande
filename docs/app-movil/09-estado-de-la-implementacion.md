@@ -33,7 +33,9 @@ Workspace de Dart con dos paquetes:
 
 ## Versiones y conflictos resueltos
 
-Flutter 3.47.8 / Dart 3.13.7 instalado en `D:\DevTools` en paralelo al existente. Riverpod 3, freezed 4,
+Flutter 3.47.8 / Dart 3.13.7 instalado en `D:\DevTools\flutter-3.47.8`, en paralelo al existente. **El `flutter` del
+`PATH` (`D:\DevTools\flutter`) es el 3.11.5 y no sirve para este proyecto** (`pub get` falla: exige SDK ^3.13.0); hay
+que usar la ruta completa o poner `D:\DevTools\flutter-3.47.8\bin` al inicio del `PATH` de la sesión. Riverpod 3, freezed 4,
 go_router 18, Drift, Dio 5. `build_runner` fijado a `<2.17.0` por conflicto con `riverpod_generator`; el paquete
 api prueba con `flutter_test` porque `test` choca con freezed ≥ 4.0.2.
 
@@ -55,6 +57,46 @@ api prueba con `flutter_test` porque `test` choca con freezed ≥ 4.0.2.
 * El símbolo de pesos pasó al inicio en toda la app (`$ 5.000`) cambiando solo `Pesos.format()`.
 * Cuidado con el tema: `filledButtonTheme`/`outlinedButtonTheme` usan `minimumSize: Size.fromHeight(...)`, que
   equivale a ancho infinito; cualquier botón dentro de un `Row` debe llevar `minimumSize` propio o rompe el layout.
+
+## Comanda siempre activa y número de copias (2026-10-26)
+
+* En **Confirmación del pedido** (`review_order_screen.dart`) el checkbox «Imprimir comanda en cocina» queda marcado y
+  deshabilitado: la app siempre envía `imprimir_comandas: true`. Debajo hay un control `− n +` («Copias de la
+  comanda») con el mismo estilo que Comensales: **2 por defecto, de 1 a 5** (constantes `defaultComandaCopies`,
+  `minComandaCopies` y `maxComandaCopies` en `submit_order.dart`). Las copias no se guardan entre pedidos.
+* Nuevo campo `copias_comandas` en `POST /pedidos` ([04 §6.1](../04-contrato-api-v1.md)): el escritorio imprime esa
+  cantidad de copias de la comanda de platos y de la de bebidas. Si no llega, 1 (clientes antiguos sin cambios);
+  fuera de 1–5, `400`. En la app es `CreateOrderDto.comandaCopies`, y viaja dentro del payload de la bandeja.
+* Se **eliminó el ajuste «Imprimir comanda por defecto»** y con él `PrintByDefault`, `StoreKeys.printByDefault` y sus
+  dos textos; ya no tenía efecto.
+* **Despliegue:** primero el escritorio y después la app. Con el escritorio viejo el campo se ignora y sale 1 copia.
+  Los pedidos que ya estaban en la bandeja se envían con 1 copia (se guardaron sin el campo).
+* Verificado: `flutter analyze` sin avisos nuevos y `flutter test` en verde. **El cambio de C# no se compiló ni se
+  probó**, y la pantalla no se ha probado en el teléfono ni con impresora física.
+
+## Indicador de dispositivos y script de red (2026-10-26)
+
+* **Indicador «N DISPOSITIVOS»** en `FrmObservarMesas`, a la derecha de SALIENDO. `ApiRouter` anota, en
+  `ApiAuth.RegistrarActividad`, la IP de cada petición con sesión válida; un dispositivo cuenta como conectado si hizo
+  alguna en los últimos **90 s** (la app consulta las mesas cada pocos segundos). Se cuenta **por IP**, no por sesión
+  (las sesiones duran 8 h y un re-login las duplicaría). Con `adb reverse` el teléfono aparece como `127.0.0.1`. Un
+  `Timer` de 5 s lo refresca; el tooltip lista empleado, IP y segundos desde la última petición; se oculta si la API
+  no está activa. Es memoria del proceso: se pierde al cerrar el escritorio. **Compila** (`run-local.ps1 -Rebuild
+  -NoRun`, que usa los *reference assemblies* de NuGet; con MSBuild a secas falla por falta del Developer Pack de
+  .NET 4.8). **No se ha visto en pantalla** ni probado con un teléfono. El botón «Domicilio» (oculto en la v1) se movió
+  a x=540 para no encimarse con el indicador.
+* **`scripts/Configurar-Red.ps1`** prepara el PC del restaurante para la LAN real (urlacl, firewall, perfil de red, IP,
+  suspensión) y al final imprime los datos para los celulares. Probado solo con `-SoloInformar`; las acciones con
+  administrador están sin ejecutar. Ver [`scripts/README.md`](../../scripts/README.md).
+
+## Instalador real que reemplaza a ClickOnce (2026-10-26)
+
+`installer/` construye `SISRestaurante-Setup-<versión>.exe` (~10 MB) con **Inno Setup 6**; `Publicar-Instalador.ps1`
+compila en Release, empaqueta, calcula el SHA-256 y lo copia a una USB o carpeta (`-Destino`). Instala en
+`Archivos de programa`, da permiso de escritura a los usuarios (la app reescribe su `.exe.config`), activa y configura
+la API móvil (clave, puerto, `urlacl`, firewall), conserva el `.exe.config` al actualizar y limpia red al desinstalar.
+Detalle, opciones evaluadas y advertencias en [`installer/README.md`](../../installer/README.md).
+**El instalador compila, pero no se ha ejecutado** (instalar, actualizar, desinstalar) en un PC real, y no está firmado.
 
 ## Prueba en teléfono real (S24 Ultra, 2026-10-26)
 

@@ -190,7 +190,7 @@ los iniciales. Los cuatro leen el `ApiKey` del `.exe.config` de la compilación 
 | D1 | Esquema real de producción obtenido y versionado |
 | D2 (parcial) | Alcance **solo mesas** (0 domicilios en 38.579 pedidos) — **falta el visto bueno formal** |
 | D3 | Login **solo por PIN**; si se comparte, `409` con selector; PIN `0` no es credencial |
-| D4 | Imprimir comandas por petición (`imprimir_comandas`), apagado por defecto |
+| D4 | Imprimir comandas por petición (`imprimir_comandas` + `copias_comandas`, 1–5); apagado por defecto en el servidor, pero la app del mesero lo envía siempre activo con 2 copias |
 | D5 | Desde el móvil: crear y agregar libremente; quitar y cancelar con PIN; facturar **no** |
 | D6 | SP transaccional nuevo en lugar de reutilizar el guardado no atómico del escritorio (aprobado para la copia) |
 | D9 | Cliente opcional en mesa (`0 / NINGUNO`) |

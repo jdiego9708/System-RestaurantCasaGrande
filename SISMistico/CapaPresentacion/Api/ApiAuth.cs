@@ -15,6 +15,14 @@ namespace CapaPresentacion.Api
         public DateTime Expira { get; set; }
     }
 
+    /// <summary>Dispositivo (IP) que hizo una petición autenticada hace poco.</summary>
+    public sealed class ApiDispositivo
+    {
+        public string Ip { get; set; }
+        public string Empleado { get; set; }
+        public DateTime Ultima { get; set; }
+    }
+
     /// <summary>Sesiones en memoria (se pierden al cerrar el .exe), clave compartida, límite de intentos y lista de IP.</summary>
     public static class ApiAuth
     {
@@ -25,6 +33,41 @@ namespace CapaPresentacion.Api
             new ConcurrentDictionary<string, ApiSesion>();
         private static readonly Dictionary<string, List<DateTime>> Fallos =
             new Dictionary<string, List<DateTime>>();
+
+        /// <summary>Un dispositivo cuenta como conectado si hizo una petición con sesión en este lapso.</summary>
+        public static readonly TimeSpan VentanaActividad = TimeSpan.FromSeconds(90);
+        private static readonly ConcurrentDictionary<string, ApiDispositivo> Actividad =
+            new ConcurrentDictionary<string, ApiDispositivo>();
+
+        /// <summary>Anota la última petición autenticada de una IP (se cuenta por IP, no por sesión).</summary>
+        public static void RegistrarActividad(IPAddress ip, string empleado)
+        {
+            if (ip == null)
+                return;
+            if (ip.IsIPv4MappedToIPv6)
+                ip = ip.MapToIPv4();
+            string clave = ip.ToString();
+            Actividad[clave] = new ApiDispositivo { Ip = clave, Empleado = empleado, Ultima = DateTime.Now };
+        }
+
+        /// <summary>Dispositivos con actividad dentro de <see cref="VentanaActividad"/>, el más reciente primero.</summary>
+        public static List<ApiDispositivo> DispositivosActivos()
+        {
+            DateTime limite = DateTime.Now - VentanaActividad;
+            List<ApiDispositivo> lista = new List<ApiDispositivo>();
+            foreach (KeyValuePair<string, ApiDispositivo> kv in Actividad)
+            {
+                if (kv.Value.Ultima >= limite)
+                    lista.Add(kv.Value);
+                else
+                {
+                    ApiDispositivo viejo;
+                    Actividad.TryRemove(kv.Key, out viejo);
+                }
+            }
+            lista.Sort((a, b) => b.Ultima.CompareTo(a.Ultima));
+            return lista;
+        }
 
         /// <summary>Comparación en tiempo constante de X-Api-Key.</summary>
         public static bool ClaveValida(string recibida)
