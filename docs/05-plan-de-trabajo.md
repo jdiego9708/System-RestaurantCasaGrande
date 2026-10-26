@@ -171,9 +171,21 @@ y se refleja en el escritorio.
 | 4.6 `POST /pedidos/{id}/imprimir` | ✅ `PLATOS`/`BEBIDAS`/`TODO`, 1–5 copias, `202`; `409` si ya hay una en curso. Imprime en la impresora predeterminada; si es de PDF (Microsoft Print to PDF), guarda el archivo solo en `Documentos\Casa Grande\Comandas` sin diálogo | `Api/ApiImpresion.cs`, `FrmComandas.GuardarPdf` |
 | 4.7 Pruebas | ✅ `scripts/Test-ApiFase4.ps1`: **51/51**, con limpieza verificada | `scripts/` |
 
-**Pendiente de la fase 4:** la app móvil todavía no tiene pantallas para editar el pedido, pasar a `SALIENDO`,
-cancelar ni imprimir (hoy solo crea pedidos y los lista en la bandeja). `GET /mesas/{id}/pedido` sigue sin existir:
-el móvil consulta el detalle con `GET /pedidos/{id}`, que ya devuelve lo necesario.
+**Pendiente de la fase 4:** probar la impresión con una impresora **física** (la ruta de PDF ya se validó: con
+"Microsoft Print to PDF" como predeterminada el archivo se guarda en `Documentos\Casa Grande\Comandas`).
+`GET /mesas/{id}/pedido` sigue sin existir: el móvil consulta el detalle con `GET /pedidos/{id}`.
+
+### App móvil de la fase 4 (2026-10-26): implementada y probada en el S24
+
+* Pantalla del pedido (`order_detail_screen.dart`): estado, líneas, total y acciones.
+* **Agregar productos** (`add_order_items_sheet.dart`): carrito local con búsqueda, pestañas Platos/Bebidas y el
+  configurador de ingredientes reutilizado; envía `POST /pedidos/{id}/items`.
+* **Precuenta** (`PATCH .../estado` a `SALIENDO`), **quitar una unidad** con diálogo de PIN
+  (`DELETE .../items/{id}`) y **cancelar** con motivo obligatorio (`POST .../cancelar`).
+* **Imprimir** desde la barra superior (`POST .../imprimir`).
+* Después de cada acción se recarga el pedido y se avisa al mapa de mesas (`dataChanged`), y el mapa del
+  escritorio se refresca sin reescribir estados (`RecargarMesas`).
+* Precios: el símbolo `$` pasó al **inicio** en toda la app (`$ 5.000`), incluido el formateador `Pesos`.
 
 ---
 

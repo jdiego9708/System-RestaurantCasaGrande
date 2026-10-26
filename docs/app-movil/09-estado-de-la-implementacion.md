@@ -40,9 +40,21 @@ api prueba con `flutter_test` porque `test` choca con freezed ≥ 4.0.2.
 ## Verificado
 
 * `flutter analyze`: sin errores (19 avisos de estilo, todos informativos).
-* `flutter test`: 5 pruebas de dominio en la app y 52 en el paquete api.
+* `flutter test`: 6 pruebas de dominio en la app y 52 en el paquete api.
 * `flutter build apk --debug`: compila.
 * `scripts/Test-ApiFase1.ps1`: **44/44**.
+
+## Fase 4 en la app (2026-10-26)
+
+* `order_detail_screen.dart` pasa a `ConsumerStatefulWidget`: muestra el pedido, permite **agregar productos**,
+  **precuenta** (`SALIENDO`), **quitar una unidad** (con PIN) y **cancelar** (con motivo), y **imprimir** desde la
+  barra superior. La barra de acciones desaparece cuando el pedido ya no es editable.
+* `add_order_items_sheet.dart`: carrito local con búsqueda y pestañas Platos/Bebidas; reutiliza el configurador de
+  ingredientes y envía `POST /pedidos/{id}/items`.
+* Tras cada acción se invalida el detalle y se avisa con `dataChanged`, de modo que el mapa de mesas se recarga.
+* El símbolo de pesos pasó al inicio en toda la app (`$ 5.000`) cambiando solo `Pesos.format()`.
+* Cuidado con el tema: `filledButtonTheme`/`outlinedButtonTheme` usan `minimumSize: Size.fromHeight(...)`, que
+  equivale a ancho infinito; cualquier botón dentro de un `Row` debe llevar `minimumSize` propio o rompe el layout.
 
 ## Prueba en teléfono real (S24 Ultra, 2026-10-26)
 
@@ -59,6 +71,11 @@ Conexión por USB con `adb reverse tcp:8099 tcp:8099` y en la app servidor `loca
 | Refresco del escritorio | la mesa pasó a OCUPADA sin tocar nada |
 | Envío sin conexión | pedido a la bandeja, mesa en "Por enviar" |
 | Reenvío al volver la conexión | 201, sin duplicados |
+| Detalle del pedido y "Agregar productos" | 200; línea nueva y total actualizado |
+| Precuenta (`SALIENDO`) | chip "Saliendo" y `PATCH` 200 |
+| Quitar una unidad con PIN | línea eliminada, total recalculado |
+| Cancelar con motivo | chip "Cancelado", barra de acciones oculta |
+| Imprimir | `202` y PDF guardado en `Documentos\Casa Grande\Comandas` |
 
 ### Hallazgos corregidos
 

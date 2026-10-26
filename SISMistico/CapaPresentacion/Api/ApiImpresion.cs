@@ -26,8 +26,8 @@ namespace CapaPresentacion.Api
         {
             ApiUi.Ejecutar("refrescar mesas", () =>
             {
-                // Application.OpenForms solo se toca desde el hilo de UI; no se usa GetInstancia() porque crearía el formulario.
-                foreach (Form f in Application.OpenForms)
+                // Se copia la lista: CargarMesas puede abrir el aviso de espera y modificar OpenForms.
+                foreach (Form f in Application.OpenForms.Cast<Form>().ToArray())
                 {
                     CapaPresentacion.Formularios.FormsPedido.FrmObservarMesas mapa =
                         f as CapaPresentacion.Formularios.FormsPedido.FrmObservarMesas;
@@ -45,7 +45,7 @@ namespace CapaPresentacion.Api
         {
             ApiUi.Ejecutar("recargar mesas", () =>
             {
-                foreach (Form f in Application.OpenForms)
+                foreach (Form f in Application.OpenForms.Cast<Form>().ToArray())
                 {
                     CapaPresentacion.Formularios.FormsPedido.FrmObservarMesas mapa =
                         f as CapaPresentacion.Formularios.FormsPedido.FrmObservarMesas;
