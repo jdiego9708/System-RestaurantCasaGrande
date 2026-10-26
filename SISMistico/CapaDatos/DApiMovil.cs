@@ -268,12 +268,16 @@ namespace CapaDatos
             return ds;
         }
 
-        /// <summary>Empleados reales (Id > 0, el comodín 0 "NINGUNO" nunca) cuyo PIN coincide. Sin contraseña.</summary>
+        /// <summary>
+        /// Empleados reales (Id > 0, el comodín 0 "NINGUNO" nunca) cuyo PIN coincide. Sin contraseña.
+        /// El PIN 0 no cuenta como PIN: es "sin PIN" escrito como número (se normaliza en db/02).
+        /// </summary>
         public DataTable EmpleadosPorPin(int pin)
         {
             const string sql =
                 "SELECT Id_empleado, Nombre_empleado, Cargo_empleado, Estado, Codigo_maestro " +
-                "FROM Empleados WHERE Id_empleado > 0 AND Codigo_maestro = @Pin ORDER BY Id_empleado";
+                "FROM Empleados WHERE Id_empleado > 0 AND Codigo_maestro > 0 AND Codigo_maestro = @Pin " +
+                "ORDER BY Id_empleado";
             return Consultar(sql, cmd => cmd.Parameters.Add("@Pin", SqlDbType.Int).Value = pin);
         }
 

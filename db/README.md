@@ -21,6 +21,8 @@ trabajar contra una copia local. Contexto y hallazgos en [`docs/02`](../docs/02-
 | `01_sp_Movil_Insertar_pedido.revert.sql` | Reversión del anterior (`DROP PROCEDURE IF EXISTS`) |
 | `pruebas-sp-movil-insertar-pedido.sql` | 50 comprobaciones del SP nuevo (alta válida, precios de catálogo, ingredientes, varias filas del mismo plato con ingredientes distintos, casos de error, rollback real). Deja la copia intacta |
 | `diagnostico-fase3.sql` | Cómo guarda el escritorio los ingredientes de los platos detallados (patrón por línea, sopa en carta, líneas sin ingredientes, cantidades) |
+| `02_unificar_empleados_duplicados.sql` | **Arreglo de datos**: deja una sola ficha con PIN por persona (reasigna la historia a la superviviente, desactiva las duplicadas sin borrarlas) y convierte el PIN `0` en `NULL`. Idempotente; respalda antes en `Empleados_respaldo_unificacion`. Ejecutado en la copia el 2026-10-26; **falta en producción** |
+| `02_unificar_empleados_duplicados.revert.sql` | Devuelve `Codigo_maestro` y `Estado` desde ese respaldo y lo elimina |
 
 Los respaldos originales **no** están en el repositorio (el completo tiene 280 MB de datos reales: empleados,
 claves, ventas). Viven en `D:\Usuario_JUAN_DIEGO\Escritorio\Casa Grande\`.
@@ -37,6 +39,9 @@ cd D:\Repositorios\System-RestaurantCasaGrande\db
 
 .\Invoke-Sql.ps1 -File .\01_sp_Movil_Insertar_pedido.sql          # crea el SP en la copia
 .\Invoke-Sql.ps1 -File .\pruebas-sp-movil-insertar-pedido.sql     # debe terminar en "50 OK de 50"
+
+.\Invoke-Sql.ps1 -File .\02_unificar_empleados_duplicados.sql     # unifica fichas y limpia PIN 0
+.\Invoke-Sql.ps1 -File .\02_unificar_empleados_duplicados.revert.sql   # solo si hay que deshacerlo
 ```
 
 La API y la app de escritorio contra esta copia: `SISMistico\run-local.ps1` (ver [`scripts/`](../scripts) para las
@@ -54,6 +59,9 @@ Cadena de conexión de la copia: `Server=(localdb)\MSSQLLocalDB;Database=CasaGra
   subirla a ningún sitio.
 * Las pruebas que escriben (`pruebas-*.sql`) van envueltas en `BEGIN TRANSACTION … ROLLBACK`. Aun así, ejecutarlas
   solo contra `CasaGrandeBD_prod`, nunca contra el servidor del restaurante.
+* `02_unificar_empleados_duplicados.sql` **sí escribe** (es un arreglo de datos, no una prueba). Es idempotente:
+  volver a ejecutarlo informa "PIN compartido entre ACTIVO: 0" y no cambia nada. Deja respaldo en
+  `dbo.Empleados_respaldo_unificacion` y su `.revert.sql` restaura `Codigo_maestro` y `Estado`.
 
 ## Comparación esquema ↔ código (tarea 0.2)
 

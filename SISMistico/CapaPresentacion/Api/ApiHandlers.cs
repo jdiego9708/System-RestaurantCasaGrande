@@ -56,8 +56,8 @@ namespace CapaPresentacion.Api
             }
 
             int pin = 0;
-            if (hayPin && (!ApiJson.TryEntero(datos, "codigo_maestra", out pin) || pin < 0))
-                return ApiResponse.Error(400, "VALIDACION", "codigo_maestra debe ser un entero mayor o igual a 0.");
+            if (hayPin && (!ApiJson.TryEntero(datos, "codigo_maestra", out pin) || pin <= 0))
+                return ApiResponse.Error(400, "VALIDACION", "codigo_maestra debe ser un entero mayor que 0.");
 
             int espera;
             if (ApiAuth.Bloqueada(req.Ip, out espera))
@@ -133,18 +133,37 @@ namespace CapaPresentacion.Api
             };
         }
 
+        /// <summary>
+        /// Candidatos de un PIN compartido. `duplicado` marca las fichas que repiten nombre con otra del
+        /// mismo grupo: casi siempre es una persona registrada dos veces y hay que unificarla en la BD
+        /// (db/02_unificar_empleados_duplicados.sql). El cliente lo avisa en pantalla.
+        /// </summary>
         private static Dictionary<string, object> Candidatos(List<EmpleadoMovil> lista)
         {
             List<object> items = new List<object>();
+            bool hayDuplicados = false;
             foreach (EmpleadoMovil e in lista)
+            {
+                int mismoNombre = 0;
+                foreach (EmpleadoMovil otro in lista)
+                    if (string.Equals(otro.Nombre, e.Nombre, StringComparison.OrdinalIgnoreCase))
+                        mismoNombre++;
+                bool duplicado = mismoNombre > 1;
+                hayDuplicados |= duplicado;
                 items.Add(new Dictionary<string, object>
                 {
                     { "id_empleado", e.IdEmpleado },
                     { "nombre", e.Nombre },
                     { "cargo", e.Cargo },
-                    { "activo", e.EstaActivo }
+                    { "activo", e.EstaActivo },
+                    { "duplicado", duplicado }
                 });
-            return new Dictionary<string, object> { { "candidatos", items } };
+            }
+            return new Dictionary<string, object>
+            {
+                { "candidatos", items },
+                { "duplicados", hayDuplicados }
+            };
         }
 
         /// <summary>Último turno, solo lectura; si no hay o falla la lectura, se omite.</summary>

@@ -86,7 +86,8 @@ namespace CapaNegocio
                 Nombre = Convert.ToString(r["Nombre_empleado"]),
                 Cargo = Convert.ToString(r["Cargo_empleado"]),
                 Estado = Convert.ToString(r["Estado"]),
-                TienePin = r["Codigo_maestro"] != DBNull.Value
+                TienePin = r["Codigo_maestro"] != DBNull.Value &&
+                           Convert.ToInt32(r["Codigo_maestro"]) > 0
             };
         }
 

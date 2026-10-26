@@ -11,7 +11,7 @@
 |---|---|---|---|
 | D1 | Esquema de BD de producción | ✅ | **Resuelta 2026-10-24**: esquema obtenido, versionado en `db/` y coincide con el código |
 | D2 | Alcance: mesas y/o domicilio | 🔴 Sí | **Propuesta cerrada por datos** (0 domicilios en 38.579 pedidos): solo mesas. Falta tu visto bueno |
-| D3 | Login del móvil | 🟠 No | `id_empleado` + (contraseña **o** PIN). **Solo PIN descartado** (PIN repetidos) |
+| D3 | Login del móvil | 🟠 No | ✅ **Decidida 2026-10-24 (noche): solo PIN**; si el PIN se comparte, `409` con selector. Fichas duplicadas unificadas en `db/02` (2026-10-26) |
 | D4 | Impresión de comandas desde el móvil | 🟠 No | Sí, opcional por request (`imprimir_comandas`) |
 | D5 | Permisos del móvil | 🟠 No | Crear + agregar; quitar/cancelar solo con PIN |
 | D6 | Persistencia transaccional (SP nuevo) | 🔴 Sí | Aprobar `sp_Movil_Insertar_pedido` (aditivo) |
@@ -77,10 +77,20 @@ es `MESA`; el restaurante nunca ha registrado un domicilio. Esto inclina la deci
 identifica al empleado en cada pedido.
 **Impacto:** define `POST /auth/login` y si `clave_maestra` viaja en cada request.
 
-> **Actualización 2026-10-24:** la opción B (solo PIN) queda **descartada por los datos**: entre los 26 empleados
-> activos hay 2 PIN repetidos (4 empleados) y 8 PIN que no tienen 4 dígitos. El PIN solo no identifica a nadie.
-> Las opciones A y C se mantienen **siempre con `id_empleado`** (contraseña o PIN de ese empleado). Además, el
-> login de la API no usa `sp_Login` porque ese SP cierra y abre turnos ([02 §5.18](02-base-de-datos-y-hallazgos.md)).
+> **Decisión final 2026-10-24 (noche): opción B, solo PIN.** La app del mesero escribe el PIN y la API resuelve
+> al empleado; si el PIN lo comparten varios, responde `409 PIN_AMBIGUO` con los candidatos y la app muestra un
+> selector. Sustituye a la propuesta C, que exigía `id_empleado` en cada login. El PIN `0` se rechaza (no es una
+> credencial) y el login de la API no usa `sp_Login`, porque ese SP cierra y abre turnos
+> ([02 §5.18](02-base-de-datos-y-hallazgos.md)).
+>
+> **2026-10-26, prueba con el teléfono real:** el selector mostraba dos fichas idénticas porque varias personas
+> estaban registradas dos veces. Se corrigió la base de datos
+> ([`db/02_unificar_empleados_duplicados.sql`](../db/02_unificar_empleados_duplicados.sql)): quedó **una ficha con
+> PIN por persona** (historia reasignada a la superviviente, duplicadas sin PIN e INACTIVO, sin borrar filas) y el
+> PIN `0` pasó a `NULL`. En la copia, la duda del 409 desapareció: 24 activos, 0 PIN compartidos. Lo mismo se
+> siembra en la UI: si algún día vuelve a haber fichas repetidas, la API manda `duplicados`/`duplicado` y la app
+> avisa. **Queda pendiente lo que no se puede inventar desde el sistema:** cambiar los PIN de menos de 4 dígitos
+> (8 activos) y decidir a mano el caso `SANTIAGO`, que tiene dos fichas con historia y PIN distinto.
 
 ---
 
@@ -264,7 +274,7 @@ impresión en el hilo de UI y responde antes. **No probada con impresora real.**
 ```
 D1: ✅ resuelta
 D2: [A/B/C]  →  _____________________________
-D3: [A/B/C]  →  _____________________________
+D3: ✅ solo PIN (409 con selector); fichas duplicadas unificadas en db/02
 D4: [A/B/C]  →  _____________________________
 D5: [sí/no por acción]
 D6: [A/B/C]  →  _____________________________

@@ -16,8 +16,17 @@ $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Data
 $buildDir = Join-Path $PSScriptRoot "..\SISMistico\SISMistico\bin\LocalBuild"
 $exe = (Resolve-Path (Join-Path $buildDir "SISMistico.exe")).Path
-$apiKey = "cambiar-esta-clave"   # valor de ejemplo: solo se admite con prefijo localhost
+$apiKey = "cambiar-esta-clave"   # se reemplaza abajo por el ApiKey real de la compilación local
 $results = New-Object System.Collections.Generic.List[object]
+
+# La clave de la compilación local (puede ser la de ejemplo o una propia; run-local.ps1 no la cambia).
+$exeConfig = Join-Path $buildDir "SISMistico.exe.config"
+if (Test-Path $exeConfig) {
+    [xml]$cfg = Get-Content $exeConfig
+    $clave = ($cfg.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiKey' }).value
+    if ($clave) { $apiKey = $clave }
+}
+$fixtureId = 0
 
 function Add-Result([string]$caso, $esperado, $obtenido) {
     $ok = ("$esperado" -eq "$obtenido")
@@ -45,7 +54,11 @@ function Invoke-Api([string]$metodo, [string]$ruta, $cuerpo = $null, [hashtable]
 function Invoke-Scalar([string]$sql) {
     $cn = New-Object System.Data.SqlClient.SqlConnection "Server=(localdb)\MSSQLLocalDB;Database=$Database;Integrated Security=true"
     $cn.Open(); $cmd = $cn.CreateCommand(); $cmd.CommandText = $sql
-    $v = $cmd.ExecuteScalar(); $cn.Close(); return $v
+    $v = $cmd.ExecuteScalar(); $cn.Close()
+    # ExecuteScalar devuelve [DBNull] cuando la consulta no trae filas: tratarlo como $null evita
+    # que un "WHERE columna = $null" se arme como "columna = " y rompa el SQL.
+    if ($v -is [DBNull]) { return $null }
+    return $v
 }
 
 # ---- credenciales de prueba desde la copia local (no se imprimen) ----
@@ -130,17 +143,30 @@ try {
         Add-Result "PIN unico de un INACTIVO: entra (paridad D12)" "200|$idPinInact" ("{0}|{1}" -f $li.status, $li.json.empleado.id_empleado)
     }
     # Los siguientes fallan a proposito (3 intentos); el siguiente login correcto limpia el contador.
+    # Desde db/02_unificar_empleados_duplicados.sql la copia no tiene PIN repetidos entre ACTIVO, asi
+    # que el 409 se prueba prestando una ficha inactiva: se le pone el PIN de un activo y se marca
+    # ACTIVO. El "finally" la devuelve a (sin PIN, INACTIVO).
+    if ($null -eq $pinDup) {
+        $fixtureId = [int](Invoke-Scalar "SELECT TOP 1 Id_empleado FROM Empleados WHERE Id_empleado > 0 AND Estado <> 'ACTIVO' AND Codigo_maestro IS NULL ORDER BY Id_empleado")
+        if ($fixtureId -gt 0) {
+            $pinDup = $pinOk
+            Invoke-Scalar ("UPDATE Empleados SET Codigo_maestro = {0}, Estado = 'ACTIVO' WHERE Id_empleado = {1}" -f $pinDup, $fixtureId) | Out-Null
+            $idsDup = (@($idOk, $fixtureId) | Sort-Object) -join ","
+        }
+    }
     if ($null -ne $pinDup) {
         $ld = Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pinDup } $k
         $cands = if ($ld.json.error.detalle) { (@($ld.json.error.detalle.candidatos | ForEach-Object { $_.id_empleado }) | Sort-Object) -join "," } else { "" }
         Add-Result "PIN compartido por activos -> 409 PIN_AMBIGUO" "409|PIN_AMBIGUO" ("{0}|{1}" -f $ld.status, $ld.json.error.codigo)
         Add-Result "PIN_AMBIGUO lista exactamente a los activos que lo comparten" $idsDup $cands
         Add-Result "PIN_AMBIGUO no devuelve token ni PIN" "False" ((($ld.texto) -match 'token') -or (($ld.texto) -match "\b$pinDup\b"))
+        Add-Result "PIN_AMBIGUO informa si hay fichas duplicadas" "False" ([bool]$ld.json.error.detalle.duplicados)
         $tok = Invoke-Api POST "/auth/login" @{ id_empleado = [int](($idsDup -split ",")[0]); codigo_maestra = [int]$pinDup } $k
         Add-Result "tras PIN_AMBIGUO, elegir quien eres (id + PIN) -> 200" 200 $tok.status
     }
     Add-Result "PIN que no existe -> 403 CLAVE_INVALIDA" "403|CLAVE_INVALIDA" (& { $x = Invoke-Api POST "/auth/login" @{ codigo_maestra = $pinDesconocido } $k; "{0}|{1}" -f $x.status, $x.json.error.codigo })
-    if ($pin0Libre) {
+    Add-Result "PIN 0 (sin PIN) no es credencial -> 400" 400 (Invoke-Api POST "/auth/login" @{ codigo_maestra = 0 } $k).status
+    if ($pin0Libre -and [int]$pin0 -ne 0) {
         Add-Result "PIN del empleado 0 (NINGUNO) nunca entra -> 403" 403 (Invoke-Api POST "/auth/login" @{ codigo_maestra = [int]$pin0 } $k).status
     }
 
@@ -179,6 +205,10 @@ try {
     Add-Result "bloqueada la IP, ni el login correcto pasa -> 429" 429 (Invoke-Api POST "/auth/login" @{ id_empleado = $idOk; password = $passOk } $k).status
 }
 finally {
+    if ($fixtureId -gt 0) {
+        # Devolver la ficha prestada para el 409 a su estado original.
+        Invoke-Scalar ("UPDATE Empleados SET Codigo_maestro = NULL, Estado = 'INACTIVO' WHERE Id_empleado = {0}" -f $fixtureId) | Out-Null
+    }
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
 }
 

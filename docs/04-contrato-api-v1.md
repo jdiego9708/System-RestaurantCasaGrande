@@ -102,18 +102,29 @@ Hay tres formas de entrar; se manda **exactamente una credencial**:
 
 > **Revisión 2026-10-24 (noche): el PIN solo vuelve a admitirse**, porque la app del mesero identifica al
 > empleado por su PIN. Se busca entre los empleados `ACTIVO` primero; si no hay ninguno, entre los inactivos
-> (paridad D12). `id_empleado = 0` nunca entra. Si **más de un** empleado comparte ese PIN:
+> (paridad D12). `id_empleado = 0` nunca entra y `codigo_maestra = 0` se rechaza con `400` (un PIN en blanco
+> no identifica a nadie: en la BD se normalizó a `NULL`, ver [db/02](../db/02_unificar_empleados_duplicados.sql)).
+> Si **más de un** empleado comparte ese PIN:
 >
 > ```json
 > // 409 PIN_AMBIGUO
 > { "error": { "codigo": "PIN_AMBIGUO", "mensaje": "...",
->   "detalle": { "candidatos": [ { "id_empleado": 6120, "nombre": "JUAN DIEGO DUQUE", "cargo": "MESERO", "activo": true } ] } } }
+>   "detalle": {
+>     "candidatos": [
+>       { "id_empleado": 111195, "nombre": "KAROL ESTRADA", "cargo": "ADMINISTRADOR", "activo": true, "duplicado": true },
+>       { "id_empleado": 116195, "nombre": "KAROL ESTRADA", "cargo": "ADMINISTRADOR", "activo": true, "duplicado": true }
+>     ],
+>     "duplicados": true } } }
 > ```
 >
+> `duplicado` (por candidato) y `duplicados` (en `detalle`) marcan los nombres repetidos dentro del grupo: casi
+> siempre es la misma persona registrada dos veces y hay que unificar la ficha en la base de datos. La app lo
+> avisa en el selector y muestra el número de ficha para poder distinguirlas.
+>
 > y el cliente repite con la opción B eligiendo uno. Una respuesta ambigua **cuenta como fallo** del
-> limitador (5/min/IP), para que no sirva de enumerador. **Riesgo aceptado:** 8 de los 26 empleados activos
-> tienen PIN de menos de 4 dígitos y es fácil adivinarlos; la mitigación es el limitador, la red local y que
-> el restaurante unifique los registros duplicados y use PIN únicos de 4 dígitos
+> limitador (5/min/IP), para que no sirva de enumerador. **Riesgo aceptado:** los PIN de menos de 4 dígitos
+> siguen siendo fáciles de adivinar y no se pueden inventar desde el sistema; la mitigación es el limitador,
+> la red local y que el restaurante los cambie por PIN únicos de 4 dígitos
 > ([diagnóstico](../db/diagnostico-pin.sql)).
 
 ```json
@@ -131,7 +142,7 @@ Hay tres formas de entrar; se manda **exactamente una credencial**:
 }
 ```
 
-Errores: `400 VALIDACION` (ninguna o ambas credenciales, `password` sin `id_empleado`, PIN no entero o negativo),
+Errores: `400 VALIDACION` (ninguna o ambas credenciales, `password` sin `id_empleado`, PIN no entero, negativo o `0`),
 `401 NO_AUTORIZADO` (`X-Api-Key`), `403 CLAVE_INVALIDA`, `409 PIN_AMBIGUO`, `429 DEMASIADOS_INTENTOS`.
 **D12 (decidida el 2026-10-24): paridad con el escritorio**: la API no mira `Empleados.Estado`; un empleado
 `INACTIVO` con credenciales correctas entra, y queda una línea en el log. Implementado en la fase 1.
