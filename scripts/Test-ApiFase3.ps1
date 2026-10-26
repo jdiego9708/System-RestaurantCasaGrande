@@ -21,8 +21,16 @@ Add-Type -AssemblyName System.Data
 Add-Type -AssemblyName System.Net.Http
 $buildDir = Join-Path $PSScriptRoot "..\SISMistico\SISMistico\bin\LocalBuild"
 $exe = (Resolve-Path (Join-Path $buildDir "SISMistico.exe")).Path
-$apiKey = "cambiar-esta-clave"
+$apiKey = "cambiar-esta-clave"   # se reemplaza abajo por el ApiKey real de la compilación local
 $results = New-Object System.Collections.Generic.List[object]
+
+# La clave de la compilación local (puede ser la de ejemplo o una propia; run-local.ps1 no la cambia).
+$exeConfig = Join-Path $buildDir "SISMistico.exe.config"
+if (Test-Path $exeConfig) {
+    [xml]$cfg = Get-Content $exeConfig
+    $clave = ($cfg.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiKey' }).value
+    if ($clave) { $apiKey = $clave }
+}
 $cs = "Server=(localdb)\MSSQLLocalDB;Database=$Database;Integrated Security=true"
 
 function Add-Result([string]$caso, $esperado, $obtenido) {

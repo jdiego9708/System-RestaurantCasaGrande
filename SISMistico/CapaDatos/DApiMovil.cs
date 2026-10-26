@@ -241,9 +241,143 @@ namespace CapaDatos
             }
         }
 
-        /// <summary>Cabecera (tabla 0), líneas (1) e ingredientes (2) de un pedido.</summary>
-        public DataSet PedidoCompleto(int idPedido)
+        // ------------------------------------------------------------------------------------------
+        // Operaciones sobre pedidos existentes (fase 4)
+        // ------------------------------------------------------------------------------------------
+
+        /// <summary>Listado resumido (sin ítems) de los pedidos de una fecha, con filtros opcionales.</summary>
+        public DataTable Pedidos(DateTime fecha, string estado, int? numMesa)
         {
+            const string sql =
+                "SELECT p.Id_pedido, p.Id_mesa, ISNULL(m.Num_mesa, 0) AS Num_mesa, p.Id_cliente, " +
+                "  ISNULL(c.Nombre_cliente, '') AS Cliente, p.Id_empleado, ISNULL(e.Nombre_empleado, '') AS Empleado, " +
+                "  p.Estado_pedido, p.Fecha_pedido, p.Hora_pedido, p.Tipo_pedido, ISNULL(p.CantidadClientes, 0) AS CantidadClientes, " +
+                "  ISNULL((SELECT SUM(d.Precio * d.Cantidad) FROM Detalle_pedido d WHERE d.Id_pedido = p.Id_pedido), 0) AS Total, " +
+                "  (SELECT COUNT(*) FROM Detalle_pedido d WHERE d.Id_pedido = p.Id_pedido) AS Lineas " +
+                "FROM Pedidos p " +
+                "LEFT JOIN Mesas m ON m.Id_mesa = p.Id_mesa " +
+                "LEFT JOIN Clientes c ON c.Id_cliente = p.Id_cliente " +
+                "LEFT JOIN Empleados e ON e.Id_empleado = p.Id_empleado " +
+                "WHERE p.Fecha_pedido = @Fecha " +
+                "AND (@Estado IS NULL OR p.Estado_pedido = @Estado) " +
+                "AND (@Mesa IS NULL OR m.Num_mesa = @Mesa) " +
+                "ORDER BY p.Id_pedido DESC";
+            return Consultar(sql, cmd =>
+            {
+                cmd.Parameters.Add("@Fecha", SqlDbType.Date).Value = fecha.Date;
+                cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 50).Value = (object)estado ?? DBNull.Value;
+                cmd.Parameters.Add("@Mesa", SqlDbType.Int).Value = (object)numMesa ?? DBNull.Value;
+            });
+        }
+
+        /// <summary>Estado, mesa y número de mesa actuales del pedido. Tabla vacía si no existe.</summary>
+        public DataTable EstadoPedido(int idPedido)
+        {
+            const string sql =
+                "SELECT p.Id_pedido, p.Estado_pedido, p.Id_mesa, ISNULL(m.Num_mesa, 0) AS Num_mesa " +
+                "FROM Pedidos p LEFT JOIN Mesas m ON m.Id_mesa = p.Id_mesa WHERE p.Id_pedido = @Id";
+            return Consultar(sql, cmd => cmd.Parameters.Add("@Id", SqlDbType.Int).Value = idPedido);
+        }
+
+        /// <summary>Una línea concreta del pedido; tabla vacía si no existe o es de otro pedido.</summary>
+        public DataTable DetalleDePedido(int idPedido, int idDetalle)
+        {
+            const string sql =
+                "SELECT Id_detalle_pedido, Tipo, Id_tipo, Precio, Cantidad, Observaciones " +
+                "FROM Detalle_pedido WHERE Id_pedido = @Pedido AND Id_detalle_pedido = @Detalle";
+            return Consultar(sql, cmd =>
+            {
+                cmd.Parameters.Add("@Pedido", SqlDbType.Int).Value = idPedido;
+                cmd.Parameters.Add("@Detalle", SqlDbType.Int).Value = idDetalle;
+            });
+        }
+
+        /// <summary>Agrega líneas con sp_Movil_Agregar_items. Devuelve cuántas filas creó (0 si el SP falló).</summary>
+        public int AgregarItemsMovil(int idPedido, string itemsJson)
+        {
+            using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Movil_Agregar_items", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = idPedido;
+                cmd.Parameters.Add("@Items", SqlDbType.NVarChar, -1).Value = itemsJson;
+                SqlParameter salida = cmd.Parameters.Add("@Filas", SqlDbType.Int);
+                salida.Direction = ParameterDirection.Output;
+
+                cn.Open();
+                cmd.ExecuteNonQuery();
+                return Convert.ToInt32(salida.Value);
+            }
+        }
+
+        /// <summary>Quita unidades con sp_Movil_Quitar_item. Devuelve lo que queda en la línea (0 = eliminada).</summary>
+        public int QuitarItemMovil(int idPedido, int idDetalle, int cantidad)
+        {
+            using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Movil_Quitar_item", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = idPedido;
+                cmd.Parameters.Add("@Id_detalle_pedido", SqlDbType.Int).Value = idDetalle;
+                cmd.Parameters.Add("@Cantidad", SqlDbType.Int).Value = cantidad;
+                SqlParameter salida = cmd.Parameters.Add("@CantidadRestante", SqlDbType.Int);
+                salida.Direction = ParameterDirection.Output;
+
+                cn.Open();
+                cmd.ExecuteNonQuery();
+                return Convert.ToInt32(salida.Value);
+            }
+        }
+
+        /// <summary>
+        /// Cambia el estado con sp_Cambiar_estado_pedido. Hay que pasarle la mesa actual del pedido: ese SP
+        /// reescribe Id_mesa y con 0 movería el pedido a la mesa 0.
+        /// </summary>
+        public void CambiarEstadoPedido(int idPedido, string estado, int idMesa)
+        {
+            using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Cambiar_estado_pedido", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = idPedido;
+                cmd.Parameters.Add("@Estado", SqlDbType.VarChar, 50).Value = estado;
+                cmd.Parameters.Add("@Id_mesa", SqlDbType.Int).Value = idMesa;
+
+                cn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>Deja el pedido CANCELADO con sp_Cancelar_pedido (ese SP reemplaza las observaciones).</summary>
+        public void CancelarPedido(int idPedido, string observaciones)
+        {
+            using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Cancelar_pedido", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = idPedido;
+                cmd.Parameters.Add("@Observaciones", SqlDbType.VarChar, 200).Value = observaciones;
+
+                cn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>True si algún empleado real tiene ese PIN (autorización de quitar/cancelar, como FrmComprobacion).</summary>
+        public bool ExistePin(int pin)
+        {
+            DataTable t = Consultar(
+                "SELECT COUNT(*) FROM Empleados WHERE Id_empleado > 0 AND Codigo_maestro > 0 AND Codigo_maestro = @Pin",
+                cmd => cmd.Parameters.Add("@Pin", SqlDbType.Int).Value = pin);
+            return Convert.ToInt32(t.Rows[0][0]) > 0;
+        }
+
+        /// <summary>Cabecera (tabla 0), líneas (1) e ingredientes (2) de un pedido.</summary>
+        public DataSet PedidoCompleto(int idPedido)        {
             const string sql =
                 "SELECT p.Id_pedido, p.Id_mesa, m.Num_mesa, p.Id_cliente, c.Nombre_cliente, p.Id_empleado, e.Nombre_empleado, " +
                 "p.Estado_pedido, p.Fecha_pedido, p.Hora_pedido, p.Tipo_pedido, p.Observaciones_pedido, p.CantidadClientes " +

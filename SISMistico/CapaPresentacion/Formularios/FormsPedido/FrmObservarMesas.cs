@@ -97,6 +97,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
+        /// <summary>
+        /// Vuelve a leer el estado de todas las mesas desde la base de datos, sin escribir nada.
+        /// La usa la API tras cambiar un pedido (agregar/quitar líneas, pasar a SALIENDO o cancelar):
+        /// ObtenerPedido escribe el estado, así que no sirve para refrescar.
+        /// </summary>
+        public void RecargarMesas()
+        {
+            this.CargarMesas();
+        }
+
         public void ObtenerPedido(int id_pedido, int numero_mesa, string estado)
         {
             foreach (Control control in panelMesas.Controls)

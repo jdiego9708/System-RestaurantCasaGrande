@@ -26,13 +26,13 @@ namespace CapaPresentacion.Api
         // Serializa el alta: la comprobación de mesa libre + el INSERT + guardar la clave son una sola sección crítica.
         private static readonly SemaphoreSlim Candado = new SemaphoreSlim(1, 1);
 
-        private sealed class Ing
+        internal sealed class Ing
         {
             public int Id;
             public string Observaciones;
         }
 
-        private sealed class Item
+        internal sealed class Item
         {
             public string Tipo;
             public int IdTipo;
@@ -42,7 +42,7 @@ namespace CapaPresentacion.Api
             public List<Ing> Ingredientes = new List<Ing>();
         }
 
-        private sealed class Solicitud
+        internal sealed class Solicitud
         {
             public string Clave;
             public int IdMesa;
@@ -187,6 +187,22 @@ namespace CapaPresentacion.Api
             if (items.Count > ApiConfig.MaxItems)
             { error = "items admite como máximo " + ApiConfig.MaxItems + " elementos."; return null; }
 
+            List<Item> listaItems = LeerItems(items, out error);
+            if (listaItems == null)
+                return null;
+            s.Items = listaItems;
+            return s;
+        }
+
+        /// <summary>
+        /// Lee la lista de items (400). La comparten el alta de pedido y el agregar a un pedido existente.
+        /// Devuelve null y deja el motivo en <paramref name="error"/> si la forma no es válida.
+        /// </summary>
+        internal static List<Item> LeerItems(IList<object> items, out string error)
+        {
+            error = null;
+            List<Item> lista = new List<Item>();
+
             for (int i = 0; i < items.Count; i++)
             {
                 Dictionary<string, object> it = items[i] as Dictionary<string, object>;
@@ -233,9 +249,9 @@ namespace CapaPresentacion.Api
                         item.Ingredientes.Add(ing);
                     }
                 }
-                s.Items.Add(item);
+                lista.Add(item);
             }
-            return s;
+            return lista;
         }
 
         // ---- reglas de negocio (404 / 409 / 422) ----
@@ -258,12 +274,21 @@ namespace CapaPresentacion.Api
             if (!NApiMovil.ClienteActivo(s.IdCliente))
                 return ApiResponse.Error(404, "NO_ENCONTRADO", "El cliente " + s.IdCliente + " no existe o no está activo.");
 
+            return ValidarProductos(s.Items);
+        }
+
+        /// <summary>
+        /// Productos e ingredientes de una lista de items (404 si no existe, 422 si está inactivo o no cumple
+        /// las reglas de ingredientes). La comparten el alta y el agregar a un pedido existente.
+        /// </summary>
+        internal static ApiResponse ValidarProductos(List<Item> itItems)
+        {
             // Productos: existen (404) y están activos (422).
             Dictionary<string, bool> detallado = new Dictionary<string, bool>();
             foreach (bool esPlato in new[] { true, false })
             {
                 string tipo = esPlato ? "PLATO" : "BEBIDA";
-                List<int> ids = s.Items.Where(i => i.Tipo == tipo).Select(i => i.IdTipo).Distinct().ToList();
+                List<int> ids = itItems.Where(i => i.Tipo == tipo).Select(i => i.IdTipo).Distinct().ToList();
                 if (ids.Count == 0) continue;
                 Dictionary<int, DataRow> hallados = NApiMovil.Productos(esPlato, "[" + string.Join(",", ids) + "]")
                     .Rows.Cast<DataRow>().ToDictionary(r => Convert.ToInt32(r["Id"]));
@@ -279,15 +304,15 @@ namespace CapaPresentacion.Api
             }
 
             // Ingredientes: existen y están activos; los platos detallados llevan uno de cada tipo; los demás, ninguno.
-            List<int> idsIng = s.Items.SelectMany(i => i.Ingredientes).Select(g => g.Id).Distinct().ToList();
+            List<int> idsIng = itItems.SelectMany(i => i.Ingredientes).Select(g => g.Id).Distinct().ToList();
             Dictionary<int, DataRow> ingredientes = idsIng.Count == 0
                 ? new Dictionary<int, DataRow>()
                 : NApiMovil.IngredientesPorIds("[" + string.Join(",", idsIng) + "]").Rows.Cast<DataRow>()
                       .ToDictionary(r => Convert.ToInt32(r["Id_ingrediente"]));
 
-            for (int n = 0; n < s.Items.Count; n++)
+            for (int n = 0; n < itItems.Count; n++)
             {
-                Item it = s.Items[n];
+                Item it = itItems[n];
                 string donde = "items[" + n + "]";
                 bool pideIngredientes = it.Tipo == "PLATO" && detallado[it.Tipo + it.IdTipo];
 
@@ -326,10 +351,16 @@ namespace CapaPresentacion.Api
         }
 
         /// <summary>JSON para el SP: una entrada por fila, en el orden recibido. El precio no viaja: lo toma el SP del catálogo.</summary>
-        private static string ArmarItemsSp(Solicitud s)
+        internal static string ArmarItemsSp(Solicitud s)
+        {
+            return ArmarItemsSp(s.Items);
+        }
+
+        /// <summary>Igual que el anterior, para el agregar a un pedido existente.</summary>
+        internal static string ArmarItemsSp(List<Item> items)
         {
             List<object> lista = new List<object>();
-            foreach (Item it in s.Items)
+            foreach (Item it in items)
             {
                 Dictionary<string, object> d = new Dictionary<string, object>
                 {

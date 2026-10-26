@@ -54,6 +54,15 @@ namespace CapaPresentacion.Api
             get { return string.Equals(Leer("ApiImprimirComandas", "false"), "true", StringComparison.OrdinalIgnoreCase); }
         }
 
+        /// <summary>
+        /// No manda nada a la impresora: solo lo deja en el log. Existe para que las pruebas puedan cubrir
+        /// POST /pedidos/{id}/imprimir sin una impresora real (ApiImpresionSimulada=true).
+        /// </summary>
+        public static bool ImpresionSimulada
+        {
+            get { return string.Equals(Leer("ApiImpresionSimulada", "false"), "true", StringComparison.OrdinalIgnoreCase); }
+        }
+
         /// <summary>Carpeta de imágenes: ApiImagenesCarpeta o, si no está, la RUTAIMAGES que ya usa el escritorio.</summary>
         public static string ImagenesCarpeta
         {

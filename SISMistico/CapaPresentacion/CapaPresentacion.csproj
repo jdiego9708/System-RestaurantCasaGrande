@@ -594,6 +594,7 @@
     <Compile Include="Api\ApiJson.cs" />
     <Compile Include="Api\ApiLog.cs" />
     <Compile Include="Api\ApiMesasHandlers.cs" />
+    <Compile Include="Api\ApiPedidosAcciones.cs" />
     <Compile Include="Api\ApiPedidosHandlers.cs" />
     <Compile Include="Api\ApiRequest.cs" />
     <Compile Include="Api\ApiResponse.cs" />

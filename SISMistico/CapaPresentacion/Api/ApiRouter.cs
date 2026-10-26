@@ -41,7 +41,15 @@ namespace CapaPresentacion.Api
 
             // Fase 3: alta de pedidos
             Nueva("POST", "/pedidos",                     false, true, ApiPedidosHandlers.Crear),
-            Nueva("GET",  "/pedidos/{id}",                false, true, ApiPedidosHandlers.Obtener)
+            Nueva("GET",  "/pedidos/{id}",                false, true, ApiPedidosHandlers.Obtener),
+
+            // Fase 4: listado y operaciones sobre un pedido existente
+            Nueva("GET",    "/pedidos",                                  false, true, ApiPedidosAcciones.Listar),
+            Nueva("POST",   "/pedidos/{id}/items",                       false, true, ApiPedidosAcciones.AgregarItems),
+            Nueva("DELETE", "/pedidos/{id}/items/{id_detalle_pedido}",   false, true, ApiPedidosAcciones.QuitarItem),
+            Nueva("PATCH",  "/pedidos/{id}/estado",                      false, true, ApiPedidosAcciones.CambiarEstado),
+            Nueva("POST",   "/pedidos/{id}/cancelar",                    false, true, ApiPedidosAcciones.Cancelar),
+            Nueva("POST",   "/pedidos/{id}/imprimir",                    false, true, ApiPedidosAcciones.Imprimir)
         };
 
         private static Ruta Nueva(string metodo, string plantilla, bool publica, bool token,

@@ -59,9 +59,11 @@
 | 404 | `NO_ENCONTRADO` | Pedido, mesa, producto o imagen inexistente |
 | 409 | `MESA_OCUPADA` | La mesa ya tiene un pedido `PENDIENTE`/`SALIENDO` del día |
 | 409 | `CONFLICTO` | Escritura concurrente sobre el mismo pedido |
+| 409 | `IMPRESION_EN_CURSO` | Ya hay una impresión de comandas en curso |
 | 422 | `REGLA_NEGOCIO` | Producto inactivo, cantidad ≤ 0, estado no permitido, `tipo_pedido` distinto de `MESA` |
 | 500 | `ERROR_BD` | Excepción SQL (mensaje saneado) |
 | 503 | `BD_NO_DISPONIBLE` | No hay conexión a SQL Server |
+| 503 | `SIN_UI` | El escritorio no tiene interfaz a la que encolar la impresión |
 
 ---
 
@@ -425,7 +427,16 @@ modal en el escritorio, como cuando falla una impresión hecha desde allí.
 
 ### 6.3 `GET /pedidos?fecha=2026-10-21&estado=PENDIENTE&mesa=1`
 
-Listado resumido (sin ítems). Fecha por defecto: hoy.
+> **Implementado en la fase 4.** Listado resumido (sin ítems). Fecha por defecto: hoy (`yyyy-MM-dd`); `estado`
+> debe ser `PENDIENTE`, `SALIENDO`, `CANCELADO` o `DISPONIBLE`; `mesa` es el **número** de mesa. Cualquier filtro
+> mal formado → `400`.
+
+```json
+{ "fecha": "2026-10-21", "estado": "PENDIENTE", "mesa": 1,
+  "pedidos": [ { "id_pedido": 1234, "id_mesa": 1, "num_mesa": 1, "id_cliente": 0, "cliente": "NINGUNO",
+                 "id_empleado": 6120, "empleado": "JUAN DIEGO DUQUE", "estado": "PENDIENTE", "hora": "13:42",
+                 "tipo_pedido": "MESA", "cantidad_clientes": 2, "lineas": 3, "total": 39500 } ] }
+```
 
 ### 6.4 `POST /pedidos/{id}/items` — agregar a un pedido existente
 
@@ -445,6 +456,10 @@ Listado resumido (sin ítems). Fecha por defecto: hoy.
 * Solo se permite en pedidos `PENDIENTE` o `SALIENDO` (`422` en otro estado, incluido `DISPONIBLE`).
 * Respuesta: `200` con el pedido completo actualizado (mismo formato de §6.2).
 
+> **Implementado en la fase 4** con `sp_Movil_Agregar_items` (todo o nada). `clave_maestra` en el cuerpo se
+> ignora: agregar no pide PIN (D5). Errores: `400` forma, `404` pedido o producto inexistente, `422` producto
+> inactivo, reglas de ingredientes o estado no editable.
+
 ### 6.5 `DELETE /pedidos/{id}/items/{id_detalle_pedido}?clave_maestra=9708`
 
 * Quita **una unidad** de esa fila; si era la última, la fila se elimina. (`?cantidad=n` quita `n`, máximo la
@@ -453,6 +468,11 @@ Listado resumido (sin ítems). Fecha por defecto: hoy.
   filas del mismo producto.
 * Exige `clave_maestra` (paridad con `FrmPedido.RemoveProduct`).
 * Respuesta `200` con el pedido actualizado; `404` si la fila no existe o no pertenece a ese pedido.
+
+> **Implementado en la fase 4** con `sp_Movil_Quitar_item`. La clave se valida contra el PIN de **cualquier**
+> empleado (el escritorio deja elegir con `FrmComprobacion`), no solo el de la sesión; una clave que no existe
+> devuelve `403 CLAVE_INVALIDA` y **cuenta como fallo** del limitador. Si se quita la última unidad, se borran
+> también sus ingredientes. `?cantidad=` mayor que la línea → `422`.
 
 ### 6.6 `PATCH /pedidos/{id}/estado`
 
@@ -470,6 +490,10 @@ SALIENDO  → CANCELADO   (usar /cancelar)
 
 Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIENDO`.
 
+> **Implementado en la fase 4.** Se llama a `sp_Cambiar_estado_pedido` pasándole la mesa **actual** del pedido
+> (ese SP reescribe `Id_mesa`; con 0 movería el pedido a la mesa 0). Repetir `SALIENDO` sobre un pedido que ya
+> está `SALIENDO` devuelve `422`, no `200`.
+
 > **`DISPONIBLE` (pedido facturado) y facturar quedan fuera de la v1:** lo escribe el escritorio al cobrar
 > (38.455 de 38.462 pedidos `DISPONIBLE` tienen venta). No existe estado `TERMINADO` para pedidos: la versión
 > anterior de este contrato lo proponía por error. Nota: `sp_Cambiar_estado_pedido` también reescribe `Id_mesa`;
@@ -483,6 +507,10 @@ Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIEN
 
 `observaciones` obligatorio (1–200). Deja `Estado_pedido = 'CANCELADO'` (SP `sp_Cancelar_pedido`).
 
+> **Implementado en la fase 4.** Ojo: `sp_Cancelar_pedido` **reemplaza** `Observaciones_pedido` por el motivo; la
+> nota original del pedido se pierde (es el comportamiento del escritorio). Solo se cancela un pedido
+> `PENDIENTE` o `SALIENDO`; si ya está `CANCELADO` o `DISPONIBLE` → `422`.
+
 ### 6.8 `POST /pedidos/{id}/imprimir`
 
 ```json
@@ -491,6 +519,10 @@ Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIEN
 
 `tipo` ∈ `PLATOS` | `BEBIDAS` | `TODO`. Responde `202 Accepted` y ejecuta la impresión en el hilo de UI.
 `409` si ya hay una impresión en curso.
+
+> **Implementado en la fase 4** (1 a 5 copias). No se probó con impresora real: la prueba de la fase 4 usa
+> `ApiImpresionSimulada=true` en el `.exe.config`, que solo deja constancia en el log. `503 SIN_UI` si el
+> escritorio no tiene hilo de interfaz al que encolar.
 
 ---
 

@@ -159,6 +159,22 @@ producción (D6), que necesita aprobación y una copia de seguridad previa.
 **Criterio de salida:** el ciclo completo (crear → agregar → quitar → precuenta → cancelar) funciona desde el móvil
 y se refleja en el escritorio.
 
+### Estado de la fase 4 (2026-10-26): API implementada y probada; app pendiente
+
+| # | Estado | Dónde |
+|---|---|---|
+| 4.1 `GET /pedidos` (filtros) y `GET /pedidos/{id}` | ✅ fecha (por defecto hoy), `estado` y `mesa`; resumen sin ítems con total y número de líneas | `Api/ApiPedidosAcciones.cs`, `CapaDatos/DApiMovil.cs` |
+| 4.2 `POST /pedidos/{id}/items` | ✅ cada ítem crea una fila nueva; precio de catálogo; solo `PENDIENTE`/`SALIENDO`; SP transaccional nuevo | `db/03_sp_Movil_Agregar_items.sql`, `Api/ApiPedidosAcciones.cs` |
+| 4.3 `DELETE /pedidos/{id}/items/{id_detalle_pedido}` | ✅ por `Id_detalle_pedido`, `clave_maestra` de cualquier empleado (como `FrmComprobacion`), `?cantidad=`; al borrar la línea se borran sus ingredientes | `db/04_sp_Movil_Quitar_item.sql` |
+| 4.4 `PATCH /pedidos/{id}/estado` | ✅ solo `PENDIENTE → SALIENDO`; se pasa la mesa actual porque el SP la reescribe | `ApiPedidosAcciones.CambiarEstado` |
+| 4.5 `POST /pedidos/{id}/cancelar` | ✅ `observaciones` 1–200; el SP reemplaza las observaciones del pedido (queda el motivo) | `ApiPedidosAcciones.Cancelar` |
+| 4.6 `POST /pedidos/{id}/imprimir` | ✅ `PLATOS`/`BEBIDAS`/`TODO`, 1–5 copias, `202`; `409` si ya hay una en curso. **Sin probar con impresora real**: la prueba usa `ApiImpresionSimulada` | `Api/ApiImpresion.cs` |
+| 4.7 Pruebas | ✅ `scripts/Test-ApiFase4.ps1`: **51/51**, con limpieza verificada | `scripts/` |
+
+**Pendiente de la fase 4:** la app móvil todavía no tiene pantallas para editar el pedido, pasar a `SALIENDO`,
+cancelar ni imprimir (hoy solo crea pedidos y los lista en la bandeja). `GET /mesas/{id}/pedido` sigue sin existir:
+el móvil consulta el detalle con `GET /pedidos/{id}`, que ya devuelve lo necesario.
+
 ---
 
 ## 7. Fase 5 — Endurecimiento y entrega

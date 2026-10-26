@@ -114,6 +114,16 @@ namespace CapaNegocio
             return Datos.InsertarPedidoMovil(idMesa, idEmpleado, idCliente, tipoPedido, observaciones, cantidadClientes, itemsJson);
         }
 
+        // Operaciones sobre pedidos existentes (fase 4)
+        public static DataTable Pedidos(DateTime fecha, string estado, int? numMesa) { return Datos.Pedidos(fecha, estado, numMesa); }
+        public static DataTable EstadoPedido(int idPedido) { return Datos.EstadoPedido(idPedido); }
+        public static DataTable DetalleDePedido(int idPedido, int idDetalle) { return Datos.DetalleDePedido(idPedido, idDetalle); }
+        public static int AgregarItemsMovil(int idPedido, string itemsJson) { return Datos.AgregarItemsMovil(idPedido, itemsJson); }
+        public static int QuitarItemMovil(int idPedido, int idDetalle, int cantidad) { return Datos.QuitarItemMovil(idPedido, idDetalle, cantidad); }
+        public static void CambiarEstadoPedido(int idPedido, string estado, int idMesa) { Datos.CambiarEstadoPedido(idPedido, estado, idMesa); }
+        public static void CancelarPedido(int idPedido, string observaciones) { Datos.CancelarPedido(idPedido, observaciones); }
+        public static bool ExistePin(int pin) { return Datos.ExistePin(pin); }
+
         /// <summary>Último turno o null si la tabla está vacía.</summary>
         public static TurnoMovil UltimoTurno()
         {

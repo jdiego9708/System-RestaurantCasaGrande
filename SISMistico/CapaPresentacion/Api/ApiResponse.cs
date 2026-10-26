@@ -38,6 +38,12 @@ namespace CapaPresentacion.Api
             return new ApiResponse { Status = 201, Cuerpo = cuerpo };
         }
 
+        /// <summary>202 Accepted: la orden se encoló (p. ej. la impresión) y se ejecuta después.</summary>
+        public static ApiResponse Aceptado(object cuerpo)
+        {
+            return new ApiResponse { Status = 202, Cuerpo = cuerpo };
+        }
+
         public static ApiResponse SinContenido()
         {
             return new ApiResponse { Status = 204 };

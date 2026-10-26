@@ -23,6 +23,9 @@ trabajar contra una copia local. Contexto y hallazgos en [`docs/02`](../docs/02-
 | `diagnostico-fase3.sql` | Cómo guarda el escritorio los ingredientes de los platos detallados (patrón por línea, sopa en carta, líneas sin ingredientes, cantidades) |
 | `02_unificar_empleados_duplicados.sql` | **Arreglo de datos**: deja una sola ficha con PIN por persona (reasigna la historia a la superviviente, desactiva las duplicadas sin borrarlas) y convierte el PIN `0` en `NULL`. Idempotente; respalda antes en `Empleados_respaldo_unificacion`. Ejecutado en la copia el 2026-10-26; **falta en producción** |
 | `02_unificar_empleados_duplicados.revert.sql` | Devuelve `Codigo_maestro` y `Estado` desde ese respaldo y lo elimina |
+| `03_sp_Movil_Agregar_items.sql` | **Fase 4.** Agrega líneas a un pedido existente en una transacción (precio de catálogo, ingredientes por línea, solo si está `PENDIENTE`/`SALIENDO`). Aditivo; **no desplegado en producción** |
+| `04_sp_Movil_Quitar_item.sql` | **Fase 4.** Quita unidades de una línea por `Id_detalle_pedido`; si desaparece, borra sus ingredientes en la misma transacción. Aditivo; **no desplegado en producción** |
+| `03_*.revert.sql`, `04_*.revert.sql` | `DROP PROCEDURE` de los dos anteriores |
 
 Los respaldos originales **no** están en el repositorio (el completo tiene 280 MB de datos reales: empleados,
 claves, ventas). Viven en `D:\Usuario_JUAN_DIEGO\Escritorio\Casa Grande\`.
@@ -42,6 +45,9 @@ cd D:\Repositorios\System-RestaurantCasaGrande\db
 
 .\Invoke-Sql.ps1 -File .\02_unificar_empleados_duplicados.sql     # unifica fichas y limpia PIN 0
 .\Invoke-Sql.ps1 -File .\02_unificar_empleados_duplicados.revert.sql   # solo si hay que deshacerlo
+
+.\Invoke-Sql.ps1 -File .\03_sp_Movil_Agregar_items.sql            # fase 4: agregar líneas
+.\Invoke-Sql.ps1 -File .\04_sp_Movil_Quitar_item.sql              # fase 4: quitar unidades
 ```
 
 La API y la app de escritorio contra esta copia: `SISMistico\run-local.ps1` (ver [`scripts/`](../scripts) para las
