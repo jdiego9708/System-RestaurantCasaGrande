@@ -127,10 +127,7 @@ namespace CapaPresentacion.Api
                 bool encolada = false;
                 ApiImpresion.RefrescarMapaDeMesas(idPedido, numMesa);
                 if (imprimir)
-                {
-                    bool ocupado;
-                    encolada = ApiImpresion.ImprimirComandas(idPedido, "TODO", s.CopiasComandas, out ocupado);
-                }
+                    encolada = ApiImpresion.EncolarComandas(idPedido, "TODO", s.CopiasComandas, null);
                 pedido["impreso"] = encolada;
 
                 ApiResponse ok = ApiResponse.Creado(pedido);

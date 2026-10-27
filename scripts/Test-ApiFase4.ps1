@@ -1,4 +1,4 @@
-<#
+﻿<#
     Prueba de extremo a extremo de la fase 4 de la API movil (listado y operaciones sobre un pedido):
     arranca el SISMistico.exe REAL de la compilacion local contra CasaGrandeBD_prod, crea un pedido de verdad
     y lo opera (agregar, quitar, SALIENDO, cancelar, imprimir). Al terminar BORRA todo lo que creo y verifica
@@ -16,7 +16,8 @@
 #>
 param(
     [string]$Database = "CasaGrandeBD_prod",
-    [string]$Base = "http://localhost:8099/api/v1"
+    [string]$Base = "http://localhost:8099/api/v1",
+    [int]$Puerto = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -89,9 +90,22 @@ $documentos = [Environment]::GetFolderPath('MyDocuments')
 $carpetaPdf = Join-Path $documentos "Casa Grande\Comandas"
 $impresora = (Get-CimInstance Win32_Printer -ErrorAction SilentlyContinue | Where-Object { $_.Default } | Select-Object -First 1).Name
 $esPdf = (-not $impresora) -or ($impresora -match 'PDF')
+# Solo cuentan y se borran los PDF creados durante esta prueba (puede haber comandas reales con el mismo numero).
+$inicio = (Get-Date).AddSeconds(-2)
 Write-Host ("Impresora predeterminada: {0} ({1})" -f $(if ($impresora) { $impresora } else { 'ninguna' }), $(if ($esPdf) { 'se guardara el PDF en Documentos' } else { 'se imprimira de verdad' }))
 
-Get-Process SISMistico -ErrorAction SilentlyContinue | ForEach-Object { throw "Ya hay un SISMistico abierto (PID $($_.Id)); cierralo antes." }
+# Solo molesta una instancia de LA COMPILACION LOCAL (una instalada, con otra ruta, no).
+Get-Process SISMistico -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe } | ForEach-Object { throw "Ya hay un SISMistico de la compilacion local abierto (PID $($_.Id)); cierralo antes." }
+# Con -Puerto la prueba usa otro puerto (por ejemplo si hay una instancia instalada escuchando en el 8099);
+# el .exe.config de la compilacion local se cambia solo durante la prueba y se restaura al terminar.
+$configOriginal = $null
+if ($Puerto -gt 0) {
+    $Base = "http://localhost:$Puerto/api/v1"
+    $configOriginal = [IO.File]::ReadAllText($exeConfig)
+    [xml]$cfgTmp = $configOriginal
+    ($cfgTmp.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiPrefijo' }).value = "http://localhost:$Puerto/api/v1/"
+    $cfgTmp.Save($exeConfig)
+}
 $logDir = Join-Path $buildDir "logs"
 if (Test-Path $logDir) { Get-ChildItem $logDir -Filter "api-*.log" | Remove-Item -Force }
 $proc = $null
@@ -203,7 +217,7 @@ try {
         $archivo = $null
         for ($i = 0; $i -lt 20 -and -not $archivo; $i++) {
             Start-Sleep -Milliseconds 500
-            $archivo = Get-ChildItem $carpetaPdf -Filter "comanda-$id-*.pdf" -ErrorAction SilentlyContinue | Select-Object -First 1
+            $archivo = Get-ChildItem $carpetaPdf -Filter "comanda-$id-*.pdf" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $inicio } | Select-Object -First 1
         }
         Add-Result "imprimir: guarda el PDF en Documentos sin dialogo" "True" ([bool]$archivo)
         if ($archivo) {
@@ -211,7 +225,8 @@ try {
             $cabecera = [Text.Encoding]::ASCII.GetString($bytes, 0, 4)
             Add-Result "el archivo guardado es un PDF" "%PDF" $cabecera
             Add-Result "el PDF no esta vacio" "True" ($bytes.Length -gt 1000)
-            Remove-Item $archivo.FullName -Force
+            Start-Sleep -Milliseconds 1500   # el otro grupo (platos/bebidas) termina justo despues
+            Get-ChildItem $carpetaPdf -Filter "comanda-$id-*.pdf" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $inicio } | Remove-Item -Force
         }
     } else {
         Add-Result "impresora fisica: no se genera PDF" "False" (Test-Path $carpetaPdf)
@@ -219,6 +234,7 @@ try {
 }
 finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+    if ($configOriginal) { Start-Sleep -Milliseconds 300; [IO.File]::WriteAllText($exeConfig, $configOriginal) }
     Start-Sleep -Milliseconds 300
     try {
         Sql-Exec "DELETE FROM Detalle_ingredientes_pedido WHERE Id_pedido > $maxAntes; DELETE FROM Detalle_pedido WHERE Id_pedido > $maxAntes; DELETE FROM Pedidos WHERE Id_pedido > $maxAntes;"

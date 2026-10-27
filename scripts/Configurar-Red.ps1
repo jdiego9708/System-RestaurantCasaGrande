@@ -43,8 +43,13 @@ function Aviso($t) { Write-Host "    !!  $t" -ForegroundColor Yellow }
 
 # ---------- 0. Datos del prefijo ----------
 # Si no se indico -Prefijo pero hay config, se respeta el ApiPrefijo que ya tiene (puerto elegido en el instalador).
-if ($RutaConfig -and -not $PSBoundParameters.ContainsKey('Prefijo') -and (Test-Path $RutaConfig)) {
-    [xml]$cfgPrevio = Get-Content -LiteralPath $RutaConfig -Raw
+$origenCfg = $RutaConfig
+if (-not $origenCfg) {
+    $instalada = Join-Path $env:ProgramFiles 'SISRestaurante\SISMistico.exe.config'
+    if (Test-Path $instalada) { $origenCfg = $instalada }
+}
+if ($origenCfg -and -not $PSBoundParameters.ContainsKey('Prefijo') -and (Test-Path $origenCfg)) {
+    [xml]$cfgPrevio = Get-Content -LiteralPath $origenCfg -Raw
     $prefijoConfig = ($cfgPrevio.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiPrefijo' }).value
     if ($prefijoConfig) { $Prefijo = $prefijoConfig }
 }
@@ -58,7 +63,23 @@ $RutaBase = $Matches['ruta'].TrimEnd('/')
 $esAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
            ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $SoloInformar -and -not $esAdmin) {
-    throw 'Hay que ejecutarlo como administrador (clic derecho en PowerShell > Ejecutar como administrador), o usar -SoloInformar.'
+    # Se vuelve a lanzar a si mismo como administrador (Windows pide confirmacion) con los mismos parametros.
+    Write-Host 'Se necesitan permisos de administrador: acepte el aviso de Windows (UAC)...' -ForegroundColor Yellow
+    $relanzar = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-NoExit', '-File', "`"$PSCommandPath`"")
+    foreach ($p in $PSBoundParameters.GetEnumerator()) {
+        if ($p.Value -is [System.Management.Automation.SwitchParameter]) { if ($p.Value) { $relanzar += "-$($p.Key)" } }
+        else { $relanzar += "-$($p.Key)"; $relanzar += "`"$($p.Value)`"" }
+    }
+    try { Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $relanzar }
+    catch { throw 'No se obtuvo permiso de administrador. Ejecute PowerShell como administrador, o use -SoloInformar.' }
+    exit 0
+}
+
+# Config del sistema ya instalado (solo se LEE para mostrar la clave; no se modifica sin -RutaConfig).
+$configAuto = $null
+if (-not $RutaConfig) {
+    $candidato = Join-Path $env:ProgramFiles 'SISRestaurante\SISMistico.exe.config'
+    if (Test-Path $candidato) { $configAuto = $candidato }
 }
 
 # ---------- 1. Red: adaptador y IP que usaran los celulares ----------
@@ -126,8 +147,9 @@ if ($esDhcp) {
         if ($dns) { Set-DnsClientServerAddress -InterfaceIndex $ifIndex -ServerAddresses $dns }
         Ok "IP fija $IpPc. Si el router entrega esa misma IP a otro equipo habra conflicto: lo ideal es ademas reservarla en el router."
     } else {
-        Aviso "La IP $IpPc es DINAMICA (DHCP): puede cambiar y los celulares dejarian de encontrar el PC."
-        Aviso 'Lo mejor es una reserva DHCP en el router (con la MAC de este PC); si no, repita con -FijarIp.'
+        Aviso "La IP $IpPc es DINAMICA (DHCP): puede cambiar al reiniciar el PC o el router."
+        Aviso 'La app del celular vuelve a buscar el PC sola en la red (por su nombre), pero una IP fija evita esperas.'
+        Aviso 'Lo ideal es una reserva DHCP en el router (con la MAC de este PC); si no hay acceso, -FijarIp o dejarlo asi.'
         Aviso "MAC de este adaptador: $($cfg.NetAdapter.MacAddress)"
     }
 } else {
@@ -171,6 +193,17 @@ if ($RutaConfig) {
         $xml.Save($RutaConfig)
         Ok "ApiHabilitada=true, ApiPrefijo y ApiKey escritos (copia en $RutaConfig.bak). Reinicie SISMistico."
     }
+} elseif ($configAuto) {
+    Paso "Leyendo la configuracion instalada ($configAuto)"
+    [xml]$instalado = Get-Content -LiteralPath $configAuto -Raw
+    function Instalado($k) { ($instalado.configuration.appSettings.add | Where-Object { $_.key -eq $k }).value }
+    $claveInstalada = Instalado 'ApiKey'
+    if (-not $claveFinal -and $claveInstalada -and $claveInstalada -ne $ClavePlaceholder) { $claveFinal = $claveInstalada }
+    if ((Instalado 'ApiHabilitada') -ne 'true') {
+        Aviso 'ApiHabilitada=false en el sistema instalado: la API esta apagada. Vuelva a ejecutar el instalador marcando "Activar la API movil".'
+    } else {
+        Ok 'La API esta habilitada en el sistema instalado'
+    }
 } elseif (-not $claveFinal) {
     Aviso 'No se indico -ApiKey ni -RutaConfig: use la ApiKey que ya tenga el App.config del restaurante.'
 }
@@ -207,6 +240,6 @@ Write-Host '      Debe mostrar un JSON con la version; si no abre, revise firewa
 Write-Host '   3. Apague "DNS privado"/VPN en el celular si la prueba falla solo en el celular.'
 Write-Host '   4. En esta pantalla de Mesas del escritorio aparecera "N DISPOSITIVOS" cuando se conecten.'
 if ($esDhcp -and -not $FijarIp) {
-    Write-Host "   *  Recuerde reservar $IpPc en el router, o la IP podria cambiar." -ForegroundColor Yellow
+    Write-Host '   *  La IP puede cambiar; no es grave: en el celular, "Buscar servidor en la red" lo encuentra por su nombre.' -ForegroundColor Yellow
 }
 Write-Host $linea -ForegroundColor Green

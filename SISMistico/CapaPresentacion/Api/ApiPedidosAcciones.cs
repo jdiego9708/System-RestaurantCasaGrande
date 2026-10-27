@@ -106,6 +106,19 @@ namespace CapaPresentacion.Api
             if (lista == null)
                 return ApiResponse.Error(400, "VALIDACION", motivo);
 
+            // Impresión de la adición (opcionales; mismos nombres que en POST /pedidos).
+            bool? imprimirPedido = null;
+            if (datos.ContainsKey("imprimir_comandas") && datos["imprimir_comandas"] != null)
+            {
+                if (!(datos["imprimir_comandas"] is bool))
+                    return ApiResponse.Error(400, "VALIDACION", "imprimir_comandas debe ser true o false.");
+                imprimirPedido = (bool)datos["imprimir_comandas"];
+            }
+            int copias = 1;
+            if (datos.ContainsKey("copias_comandas") && datos["copias_comandas"] != null &&
+                (!ApiJson.TryEntero(datos, "copias_comandas", out copias) || copias < 1 || copias > 5))
+                return ApiResponse.Error(400, "VALIDACION", "copias_comandas debe ser un entero entre 1 y 5.");
+
             DataRow pedido = Pedido(id);
             if (pedido == null)
                 return ApiResponse.Error(404, "NO_ENCONTRADO", "No existe el pedido " + id + ".");
@@ -115,22 +128,51 @@ namespace CapaPresentacion.Api
             ApiResponse invalido = ApiPedidosHandlers.ValidarProductos(lista);
             if (invalido != null) return invalido;
 
+            // Las líneas nuevas se identifican por diferencia: Id_detalle_pedido del pedido antes y después de
+            // agregar (el SP no devuelve los ids y no se toca la base). El candado evita que dos adiciones al
+            // mismo pedido a la vez se mezclen y una comanda salga con lo de la otra.
             int filas;
-            try
+            HashSet<int> nuevas;
+            lock (CandadoAdiciones)
             {
-                filas = NApiMovil.AgregarItemsMovil(id, ApiPedidosHandlers.ArmarItemsSp(lista));
-            }
-            catch (SqlException ex) when (ex.Number >= 50004 && ex.Number <= 50012)
-            {
-                return DeSpAError(ex, id);
+                HashSet<int> previas = IdsDeLineas(id);
+                try
+                {
+                    filas = NApiMovil.AgregarItemsMovil(id, ApiPedidosHandlers.ArmarItemsSp(lista));
+                }
+                catch (SqlException ex) when (ex.Number >= 50004 && ex.Number <= 50012)
+                {
+                    return DeSpAError(ex, id);
+                }
+                nuevas = IdsDeLineas(id);
+                nuevas.ExceptWith(previas);
             }
 
             ApiImpresion.RefrescarMapa();
 
+            // Solo se imprime LO QUE SE ACABA DE AGREGAR, nunca el pedido completo.
+            bool imprimir = imprimirPedido ?? ApiConfig.ImprimirComandas;
+            bool encolada = false;
+            if (imprimir && nuevas.Count > 0)
+                encolada = ApiImpresion.EncolarComandas(id, "TODO", copias, nuevas);
+
             Dictionary<string, object> actualizado = ApiPedidosHandlers.ObtenerPedido(id);
+            actualizado["impreso"] = encolada;
             ApiResponse ok = ApiResponse.Ok(actualizado);
-            ok.LogExtra = "id_pedido=" + id + " filas=" + filas;
+            ok.LogExtra = "id_pedido=" + id + " filas=" + filas + " nuevas=" + nuevas.Count + " impreso=" + encolada;
             return ok;
+        }
+
+        private static readonly object CandadoAdiciones = new object();
+
+        /// <summary>Id_detalle_pedido de todas las líneas del pedido.</summary>
+        private static HashSet<int> IdsDeLineas(int idPedido)
+        {
+            HashSet<int> ids = new HashSet<int>();
+            DataSet ds = NApiMovil.PedidoCompleto(idPedido);
+            foreach (DataRow l in ds.Tables[1].Rows)
+                ids.Add(Convert.ToInt32(l["Id_detalle_pedido"]));
+            return ids;
         }
 
         // =========================================================================================
@@ -216,6 +258,15 @@ namespace CapaPresentacion.Api
             if (!string.Equals(estado, "SALIENDO", StringComparison.OrdinalIgnoreCase))
                 return ApiResponse.Error(422, "REGLA_NEGOCIO", "Desde el móvil solo se puede pasar a SALIENDO.");
 
+            // Opcional: imprimir la precuenta (como el botón Precuenta del escritorio). Se valida antes de tocar nada.
+            bool imprimirPrecuenta = false;
+            if (datos.ContainsKey("imprimir_precuenta") && datos["imprimir_precuenta"] != null)
+            {
+                if (!(datos["imprimir_precuenta"] is bool))
+                    return ApiResponse.Error(400, "VALIDACION", "imprimir_precuenta debe ser true o false.");
+                imprimirPrecuenta = (bool)datos["imprimir_precuenta"];
+            }
+
             DataRow pedido = Pedido(id);
             if (pedido == null)
                 return ApiResponse.Error(404, "NO_ENCONTRADO", "No existe el pedido " + id + ".");
@@ -228,9 +279,13 @@ namespace CapaPresentacion.Api
             NApiMovil.CambiarEstadoPedido(id, "SALIENDO", Convert.ToInt32(pedido["Id_mesa"]));
             ApiImpresion.RefrescarMapa();
 
+            // La precuenta se imprime DESPUES de cambiar el estado (como en el escritorio) y sin retrasar la respuesta.
+            bool encolada = imprimirPrecuenta && ApiImpresion.EncolarPrecuenta(id);
+
             Dictionary<string, object> actualizado = ApiPedidosHandlers.ObtenerPedido(id);
+            actualizado["impreso"] = encolada;
             ApiResponse ok = ApiResponse.Ok(actualizado);
-            ok.LogExtra = "id_pedido=" + id + " estado=SALIENDO";
+            ok.LogExtra = "id_pedido=" + id + " estado=SALIENDO precuenta=" + encolada;
             return ok;
         }
 

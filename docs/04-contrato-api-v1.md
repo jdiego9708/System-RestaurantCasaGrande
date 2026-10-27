@@ -399,7 +399,8 @@ Reglas de servidor (en orden):
 **Impresión.** `imprimir_comandas` encola, en el hilo de UI del escritorio, el mismo `FrmComandas` que usa `FrmPedido`
 (`copias_comandas` copias de bebidas y otras tantas de platos, con los ingredientes bajo cada plato; 1 si no se indica).
 Si el request no trae `imprimir_comandas`, rige `ApiImprimirComandas` (por defecto **apagada**); la app del mesero lo
-envía siempre en `true` con 2 copias por defecto. **No está probada con una impresora real**: si falla, `FrmComandas` muestra su aviso
+envía siempre en `true` con 2 copias por defecto. Si ya hay otra impresión en curso (varios meseros enviando a la vez),
+la comanda **espera su turno** (hasta 90 s) en lugar de descartarse; `impreso: true` significa «aceptada para imprimir». **No está probada con una impresora real**: si falla, `FrmComandas` muestra su aviso
 modal en el escritorio, como cuando falla una impresión hecha desde allí.
 
 ### 6.2 `GET /pedidos/{id}`
@@ -457,7 +458,21 @@ modal en el escritorio, como cuando falla una impresión hecha desde allí.
   **resta** 1; [02 §3.2](02-base-de-datos-y-hallazgos.md)).
 * El precio se toma del catálogo, igual que en el alta.
 * Solo se permite en pedidos `PENDIENTE` o `SALIENDO` (`422` en otro estado, incluido `DISPONIBLE`).
-* Respuesta: `200` con el pedido completo actualizado (mismo formato de §6.2).
+* Respuesta: `200` con el pedido completo actualizado (mismo formato de §6.2) más `impreso` (ver abajo).
+
+**Impresión de la adición.** Campos opcionales del cuerpo, con los mismos nombres que en el alta:
+
+| Campo | Tipo | Requerido | Notas |
+|---|---|---|---|
+| `imprimir_comandas` | bool | no (`ApiImprimirComandas`, por defecto `false`) | imprime las comandas de **lo que se acaba de agregar** |
+| `copias_comandas` | int | no (por defecto `1`) | 1 a 5. Fuera de rango o tipo incorrecto → `400` y **no se agrega nada** |
+
+Se imprime **solo la adición, nunca el pedido completo**: el servidor compara los `id_detalle_pedido` del pedido antes
+y después de agregar y manda a imprimir únicamente las líneas nuevas. Los títulos salen como
+`Casa Grande | Platos (ADICION)` / `Casa Grande | Bebidas (ADICION)`; si solo se agregaron bebidas no sale comanda de
+platos (y al revés). Con impresora PDF los archivos son
+`comanda-{id_pedido}-{aaaaMMdd-HHmmss}-{platos|bebidas}-adicion-{copia}.pdf`. La respuesta trae `"impreso": true` si
+quedó aceptada para imprimir. Dos adiciones simultáneas (a la misma o a distintas mesas) no se mezclan ni se pierden.
 
 > **Implementado en la fase 4** con `sp_Movil_Agregar_items` (todo o nada). `clave_maestra` en el cuerpo se
 > ignora: agregar no pide PIN (D5). Errores: `400` forma, `404` pedido o producto inexistente, `422` producto
@@ -480,8 +495,13 @@ modal en el escritorio, como cuando falla una impresión hecha desde allí.
 ### 6.6 `PATCH /pedidos/{id}/estado`
 
 ```json
-{ "estado": "SALIENDO" }
+{ "estado": "SALIENDO", "imprimir_precuenta": true }
 ```
+
+`imprimir_precuenta` (bool, opcional, por defecto `false`): además de pasar a `SALIENDO`, imprime la **precuenta** del
+pedido en el escritorio. Un valor que no sea `true`/`false` → `400` y el pedido **no** cambia de estado. La respuesta
+trae `"impreso": true` si la precuenta quedó aceptada para imprimir (se imprime **después** de cambiar el estado y sin
+retrasar la respuesta).
 
 Transiciones permitidas desde el móvil:
 
@@ -492,6 +512,12 @@ SALIENDO  → CANCELADO   (usar /cancelar)
 ```
 
 Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIENDO`.
+
+> **Precuenta impresa.** Es la misma del botón «Precuenta» del escritorio: el reporte `Precuenta.rdlc` con los valores
+> que el escritorio deja por defecto al abrirla sin tocar nada (propina sugerida 0, descuento 0 %, sin cupón,
+> desechables ni domicilio, observaciones vacías; total = suma de las líneas) y la hora del momento de imprimir. Si la
+> impresora predeterminada es de PDF, se guarda en `Documentos\Casa Grande\Comandas` como
+> `precuenta-{id_pedido}-{aaaaMMdd-HHmmss}.pdf`. Comparte la cola de impresión con las comandas.
 
 > **Implementado en la fase 4.** Se llama a `sp_Cambiar_estado_pedido` pasándole la mesa **actual** del pedido
 > (ese SP reescribe `Id_mesa`; con 0 movería el pedido a la mesa 0). Repetir `SALIENDO` sobre un pedido que ya

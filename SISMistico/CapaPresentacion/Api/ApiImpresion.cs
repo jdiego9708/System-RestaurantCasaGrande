@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using CapaNegocio;
@@ -55,16 +57,10 @@ namespace CapaPresentacion.Api
             });
         }
 
-        /// <summary>Imprime las comandas de bebidas y de platos como lo hace FrmPedido (una copia de cada una).</summary>
-        public static bool ImprimirComandas(int idPedido)
-        {
-            bool ocupado;
-            return ImprimirComandas(idPedido, "TODO", 1, out ocupado);
-        }
-
         /// <summary>
         /// Encola la impresión de PLATOS, BEBIDAS o TODO. Devuelve false si ya había una en curso
-        /// (<paramref name="ocupado"/> = true) o si no hay hilo de UI al que encolarla.
+        /// (<paramref name="ocupado"/> = true) o si no hay hilo de UI al que encolarla. Es la que usa
+        /// POST /pedidos/{id}/imprimir, que responde 409 en vez de esperar.
         /// </summary>
         public static bool ImprimirComandas(int idPedido, string tipo, int copias, out bool ocupado)
         {
@@ -77,7 +73,7 @@ namespace CapaPresentacion.Api
 
             bool encolada = ApiUi.Ejecutar("imprimir comandas", () =>
             {
-                try { Imprimir(idPedido, tipo, copias); }
+                try { Imprimir(idPedido, tipo, copias, null); }
                 finally { Volatile.Write(ref _imprimiendo, 0); }
             });
             if (!encolada)
@@ -85,14 +81,123 @@ namespace CapaPresentacion.Api
             return encolada;
         }
 
-        private static void Imprimir(int idPedido, string tipo, int copias)
+        /// <summary>
+        /// Impresión automática al crear un pedido o al agregarle productos. A diferencia de la manual, si ya hay
+        /// una impresión en curso ESPERA su turno (hasta 90 s) en vez de descartar la comanda: con varios meseros
+        /// enviando a la vez, una comanda perdida es un plato que no sale. Devuelve true si quedó aceptada.
+        /// </summary>
+        /// <param name="soloDetalles">
+        /// Si no es null, solo se imprimen las líneas con esos Id_detalle_pedido (una adición); null = todo el pedido.
+        /// </param>
+        public static bool EncolarComandas(int idPedido, string tipo, int copias, ICollection<int> soloDetalles)
         {
+            return EncolarTrabajo("imprimir comandas", idPedido,
+                () => Imprimir(idPedido, tipo, copias, soloDetalles));
+        }
+
+        /// <summary>
+        /// Imprime la PRECUENTA del pedido tal como la saca el escritorio (reporte Precuenta.rdlc con los valores por
+        /// defecto: sin propina, descuento ni cargos extra). Usa la misma cola que las comandas: espera su turno.
+        /// </summary>
+        public static bool EncolarPrecuenta(int idPedido)
+        {
+            return EncolarTrabajo("imprimir precuenta", idPedido, () => ImprimirPrecuenta(idPedido));
+        }
+
+        /// <summary>Espera el turno de impresión (hasta 90 s) y ejecuta el trabajo en el hilo de UI.</summary>
+        private static bool EncolarTrabajo(string nombre, int idPedido, Action trabajo)
+        {
+            if (!ApiUi.Disponible)
+                return false;
+
+            Task.Run(() =>
+            {
+                DateTime limite = DateTime.UtcNow.AddSeconds(90);
+                while (Interlocked.CompareExchange(ref _imprimiendo, 1, 0) != 0)
+                {
+                    if (DateTime.UtcNow > limite)
+                    {
+                        ApiLog.Error("Trabajo descartado (" + nombre + "): la impresora siguió ocupada 90 s (id_pedido=" + idPedido + ")", null);
+                        return;
+                    }
+                    Thread.Sleep(250);
+                }
+
+                bool encolada = ApiUi.Ejecutar(nombre, () =>
+                {
+                    try { trabajo(); }
+                    finally { Volatile.Write(ref _imprimiendo, 0); }
+                });
+                if (!encolada)
+                    Volatile.Write(ref _imprimiendo, 0);
+            });
+            return true;
+        }
+
+        private static void ImprimirPrecuenta(int idPedido)
+        {
+            string rpta;
+            DataTable detalle;
+            DataTable detallePlatos;
+            DataTable principales = NPedido.BuscarPedidosYDetalle("ID PEDIDO Y DETALLE",
+                Convert.ToString(idPedido), out detalle, out detallePlatos, out rpta);
+            if (principales == null || detalle == null)
+            {
+                ApiLog.Error("Precuenta: no se pudo leer el pedido " + idPedido + " (" + rpta + ")", null);
+                return;
+            }
+
+            // Igual que FrmFacturarPedido.SumarPrecios: el total parcial es la suma de la columna Total.
+            int totalParcial = 0;
+            foreach (DataRow fila in detalle.Rows)
+                totalParcial += Convert.ToInt32(fila["Total"]);
+
+            // Los valores que deja el escritorio al abrir la precuenta sin tocar nada: propina sugerida 0, descuento 0 %,
+            // sin cupón, desechables ni domicilio, observaciones vacías (FrmFacturarPedido.Variables).
+            string total = Convert.ToString(totalParcial);
+            List<string> variables = new List<string>
+            {
+                Convert.ToString(idPedido), total, "0", total, "0", string.Empty, "0", "0", total, string.Empty
+            };
+
+            string impresora = ImpresoraPredeterminada();
+            bool aPdf = EsImpresoraPdf(impresora);
+            string carpeta = CarpetaComandas();
+
+            using (FrmFacturaFinal precuenta = new FrmFacturaFinal())
+            {
+                precuenta.Is_precuenta = true;
+                precuenta.Id_pedido = idPedido;
+                precuenta.AsignarReporte();
+                precuenta.AsignarTablasPrecuenta(variables);
+                if (aPdf)
+                    ApiLog.Info("Precuenta guardada en " + precuenta.GuardarPdf(carpeta,
+                        string.Format("precuenta-{0}-{1:yyyyMMdd-HHmmss}", idPedido, DateTime.Now)));
+                else
+                    precuenta.ImprimirFactura(1);
+            }
+
+            ApiLog.Info(aPdf
+                ? "Precuenta en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " total=" + total + " carpeta=" + carpeta
+                : "Precuenta enviada a la impresora '" + impresora + "': id_pedido=" + idPedido + " total=" + total);
+        }
+
+        private static void Imprimir(int idPedido, string tipo, int copias, ICollection<int> soloDetalles)
+        {
+            bool adicion = soloDetalles != null;
+            string sufijo = adicion ? " (ADICION)" : string.Empty;
+            string marcaPdf = adicion ? "-adicion" : string.Empty;
+
             DataSet ds = NApiMovil.PedidoCompleto(idPedido);
             DataTable platos = TablaComanda();
             DataTable bebidas = TablaComanda();
 
             foreach (DataRow l in ds.Tables[1].Rows)
             {
+                // En una adición solo se imprime lo que acaba de agregarse, no todo el pedido.
+                if (adicion && !soloDetalles.Contains(Convert.ToInt32(l["Id_detalle_pedido"])))
+                    continue;
+
                 string tipoLinea = Convert.ToString(l["Tipo"]);
                 string nombre = Convert.ToString(l["Nombre"]);
                 if (tipoLinea == "PLATO")
@@ -137,19 +242,19 @@ namespace CapaPresentacion.Api
                 {
                     if (bebidas.Rows.Count > 0 && tipo != "PLATOS")
                     {
-                        comandas.ObtenerReporte("Casa Grande | Bebidas");
+                        comandas.ObtenerReporte("Casa Grande | Bebidas" + sufijo);
                         comandas.AsignarTablas(bebidas);
                         if (aPdf)
-                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "bebidas", copia)));
+                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "bebidas" + marcaPdf, copia)));
                         else
                             comandas.ImprimirFactura(1);
                     }
                     if (platos.Rows.Count > 0 && tipo != "BEBIDAS")
                     {
-                        comandas.ObtenerReporte("Casa Grande | Platos");
+                        comandas.ObtenerReporte("Casa Grande | Platos" + sufijo);
                         comandas.AsignarTablas(platos);
                         if (aPdf)
-                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "platos", copia)));
+                            ApiLog.Info("Comanda guardada en " + comandas.GuardarPdf(carpeta, NombrePdf(idPedido, "platos" + marcaPdf, copia)));
                         else
                             comandas.ImprimirFactura(1);
                     }
@@ -157,8 +262,8 @@ namespace CapaPresentacion.Api
             }
 
             ApiLog.Info(aPdf
-                ? "Comandas en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias + " carpeta=" + carpeta
-                : "Comandas enviadas a la impresora '" + impresora + "': id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias);
+                ? "Comandas en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias + " carpeta=" + carpeta + (adicion ? " adicion=" + soloDetalles.Count + " lineas" : string.Empty)
+                : "Comandas enviadas a la impresora '" + impresora + "': id_pedido=" + idPedido + " tipo=" + tipo + " copias=" + copias + (adicion ? " adicion=" + soloDetalles.Count + " lineas" : string.Empty));
         }
 
         /// <summary>Impresora predeterminada de Windows; cadena vacía si no hay ninguna.</summary>

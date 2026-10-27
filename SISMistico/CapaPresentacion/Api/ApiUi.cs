@@ -25,6 +25,16 @@ namespace CapaPresentacion.Api
             }
         }
 
+        /// <summary>True si hay puente al hilo de UI (la API está activa y la interfaz creada).</summary>
+        public static bool Disponible
+        {
+            get
+            {
+                Control c = _invocador;
+                return c != null && !c.IsDisposed && c.IsHandleCreated;
+            }
+        }
+
         public static void Detener()
         {
             try { if (_invocador != null) _invocador.Dispose(); } catch { }

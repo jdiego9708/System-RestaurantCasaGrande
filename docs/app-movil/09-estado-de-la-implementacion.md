@@ -98,6 +98,63 @@ la API móvil (clave, puerto, `urlacl`, firewall), conserva el `.exe.config` al 
 Detalle, opciones evaluadas y advertencias en [`installer/README.md`](../../installer/README.md).
 **El instalador compila, pero no se ha ejecutado** (instalar, actualizar, desinstalar) en un PC real, y no está firmado.
 
+## Descubrimiento del servidor en la red (2026-10-26)
+
+El celular ya no depende de una IP fija: encuentra el PC por su **nombre** y se reconecta solo si la IP cambia.
+
+* **`casa_grande_api` → `ServerScanner` / `LocalNetwork`** (`dart:io`): sondea `GET /api/v1/ping` (público, sin clave)
+  en las 253 direcciones de la /24 de cada interfaz privada (se ignoran datos móviles, túneles y virtuales), 48 a la
+  vez y 1,5 s por intento. Un servidor es válido si responde `200` con `ok: true`, `version` y `servidor`. **No requiere
+  cambios en el escritorio** (el `/ping` ya devolvía el nombre del PC).
+* **`ServerConfig.serverName`** (persistido en `server.name`): nombre del PC guardado al probar/guardar la conexión; las
+  configuraciones antiguas lo completan solas la primera vez que el servidor responde.
+* **Pantalla «Conectar con el servidor»:** botón **«Buscar servidor en la red»** con progreso; con un resultado rellena
+  dirección y puerto (y prueba la conexión si ya hay clave); con varios, lista para elegir.
+* **`ServerRelocator`** (`core/network`): cuando el `/ping` periódico falla, busca de nuevo en la red y, **solo si**
+  hay exactamente un servidor con el mismo nombre **y acepta la clave de la API**, cambia la IP guardada. Con dudas no
+  cambia nada. Espera creciente tras cada fallo (45 s → 5 min) y se reinicia al volver la conexión.
+* **Verificado:** 15 pruebas del escáner (con un `HttpServer` real) y 13 del reubicador; y una prueba **contra el servidor
+  real** instalado en esta máquina: el barrido completo de la /24 tardó 9 s y lo encontró (`JUANDIEGO_PC`); simulando una
+  IP guardada vieja, el reubicador la corrigió en 1,5 s; con clave equivocada o con otro nombre de servidor **no** cambió
+  nada. **Sin probar en un teléfono** y solo en redes /24 (la habitual).
+* **Para llevarlo a los celulares** hay que regenerar el APK (`Preparar-USB.ps1 -Compilar`).
+
+## Adiciones que imprimen solo lo nuevo, precuenta, horas AM/PM e ícono (2026-10-26)
+
+**Problema:** al agregar productos a un pedido ya enviado no se imprimía nada (solo la creación imprimía).
+
+* **Servidor (`POST /pedidos/{id}/items`):** acepta `imprimir_comandas` y `copias_comandas` (1–5; inválido → `400` sin
+  agregar nada). Las líneas nuevas se detectan comparando los `id_detalle_pedido` del pedido antes y después de agregar
+  (bajo un candado, sin tocar la base) y **solo esas** salen en la comanda, rotulada «(ADICION)»; si solo se agregó una
+  bebida no sale comanda de platos. PDF: `comanda-<id>-<fecha>-<grupo>-adicion-<copia>.pdf`.
+* **La impresión automática ya no descarta trabajos:** si hay otra en curso espera su turno (hasta 90 s). Antes, dos
+  meseros enviando a la vez podían perder una comanda con `impreso: false`. La impresión manual sigue con `409`.
+* **App:** la hoja «Agregar productos» tiene el control de copias (2 por defecto) y siempre pide imprimir. El control
+  se extrajo a `ComandaCopiesRow`, compartido con la confirmación del pedido.
+* **Precuenta (`PATCH /pedidos/{id}/estado` con `imprimir_precuenta`):** el escritorio imprime la precuenta con el mismo
+  reporte `Precuenta.rdlc` y los mismos valores por defecto que su botón (propina 0, descuento 0 %, sin cupón/
+  desechables/domicilio, total = suma de las líneas). Con impresora PDF se guarda `precuenta-<id>-<fecha>.pdf`
+  (`FrmFacturaFinal.GuardarPdf`, sin diálogo). En la app, el diálogo de Precuenta trae la casilla **«Imprimir
+  precuenta»**, marcada por defecto; un valor inválido → `400` y el pedido **no** cambia de estado.
+* **Horas:** `formatTime12h` (`6:53 PM`) en el detalle del pedido y en los registros. `TalkerScreen` solo sabe de 24 h,
+  así que la pantalla de registros es propia. `time_format_guard_test.dart` falla si se arma `.hour`/`HH:mm` fuera del
+  formateador.
+* **Ícono:** cloche crema con destellos dorados sobre degradado terracota (el color de marca `0xFF8D3B2B`). Ícono
+  adaptable de Android + capa monocromática (íconos temáticos de Android 13+) + PNG clásicos para Android 7. Lo genera
+  `app/tool/generate_launcher_icon.py` (Pillow), que verifica que el dibujo quede dentro de la zona segura de los
+  íconos adaptables; el arte maestro está en `app/branding/ic_launcher_1024.png`. Comprobado con `aapt2` en el APK.
+* **Verificado:** `Test-ApiAdiciones.ps1` **38/38** (PDF reales: adición de 2 líneas con 2 copias → 2+2 PDF y el pedido
+  completo no se reimprime; bebida sola → sin comanda de platos; sin `imprimir_comandas` → ningún PDF; dos adiciones
+  simultáneas → ambas salen; precuenta → PDF válido y `SALIENDO`; valor inválido → `400` sin cambiar el estado), fases 3
+  y 4 sin regresiones (78/78 y 54/54), `flutter test` 26 (app) y 71 (paquete). **Sin probar en un teléfono** y sin
+  comparar la precuenta impresa en papel con la del escritorio.
+* **Incidente de las pruebas:** la limpieza de `Test-ApiAdiciones.ps1` buscaba los PDF por número de pedido, y la copia
+  de desarrollo y la base antigua (`CasaGrandeBD`) comparten numeración: borró PDF de un pedido real de esa base. Los datos
+  no se tocaron (solo los archivos, regenerables). Las pruebas de las fases 3, 4 y de adiciones ahora **solo cuentan y
+  borran los PDF creados durante la propia ejecución**.
+* **Hay que actualizar escritorio y celulares:** el arreglo de la impresión está en el `.exe` (reinstalar con el nuevo
+  `Setup.exe`) **y** en la app (APK nuevo). `Preparar-USB.ps1 -Compilar` los regenera a ambos.
+
 ## Prueba en teléfono real (S24 Ultra, 2026-10-26)
 
 Conexión por USB con `adb reverse tcp:8099 tcp:8099` y en la app servidor `localhost:8099` (no hace falta

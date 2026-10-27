@@ -14,12 +14,13 @@ restaurante (Windows) y en los celulares de los meseros. Está escrita para segu
 
 | Dónde | Qué se hace | Archivo que se ejecuta |
 |---|---|---|
-| Máquina de desarrollo | Preparar la carpeta que se lleva al restaurante | `installer\Publicar-Instalador.ps1` |
+| Máquina de desarrollo | Preparar la USB `Casa Grande Installers` | `scripts\Preparar-USB.ps1` |
 | PC del restaurante | Requisitos (.NET 4.8, LocalDB) | Windows Update / `SqlLocalDB.msi` |
-| PC del restaurante | Respaldar y preparar la base de datos | `db\Invoke-Sql.ps1` + scripts `.sql` |
-| PC del restaurante | Instalar el sistema y activar la API | **`SISRestaurante-Setup-1.0.0.exe`** |
+| PC del restaurante | Respaldar y preparar la base de datos | **`01-Base-de-Datos.ps1`** |
+| PC del restaurante | Instalar el sistema y activar la API | **`02-Setup-Casa-Grande.exe`** |
+| PC del restaurante | IP, firewall y datos para los celulares | **`03-Configurar-Red.ps1`** |
 | Router | Reservar la IP del PC | (panel del router) |
-| Cada celular Android | Instalar la app y conectarla | **`CasaGrandeMesero.apk`** |
+| Cada celular Android | Instalar la app y conectarla | **`04-APK-Casa-Grande.apk`** |
 
 Tiempo estimado: 1 a 2 horas la primera vez (más si hay que restaurar la base de datos), y unos 10 minutos por celular.
 
@@ -27,58 +28,69 @@ Tiempo estimado: 1 a 2 horas la primera vez (más si hay que restaurar la base d
 
 ## 1. Qué hay que llevar
 
-Todo cabe en una USB (o carpeta de red). Se prepara en la máquina de desarrollo (sección 2).
+Todo va en **una USB**, dentro de la carpeta **`Casa Grande Installers`**, con los archivos numerados en el orden en
+que se ejecutan. La crea automáticamente `scripts\Preparar-USB.ps1` (sección 2).
 
 ```
-SISRestaurante\
-├─ SISRestaurante-Setup-1.0.0.exe     ← instalador del sistema de escritorio (~10 MB)
-├─ SISRestaurante-Setup-1.0.0.exe.sha256
-├─ LEEME-INSTALACION.txt
-├─ CasaGrandeMesero.apk               ← app del mesero para Android
-└─ db\                                ← scripts de base de datos (solo estos, sin respaldos)
-   ├─ Invoke-Sql.ps1
-   ├─ Restore-ProdCopy.ps1            (solo si hay que restaurar la base en un PC nuevo)
-   ├─ verificar-despliegue.sql
-   ├─ 01_sp_Movil_Insertar_pedido.sql
-   ├─ 03_sp_Movil_Agregar_items.sql
-   ├─ 04_sp_Movil_Quitar_item.sql
-   └─ 02_unificar_empleados_duplicados.sql
+Casa Grande Installers\
+├─ 00-LEEME.txt                 ← el mismo orden, en corto, para llevarlo en la USB
+├─ 01-Base-de-Datos.ps1         ← PC del restaurante: respaldo + procedimientos de la API (+ empleados)
+├─ 02-Setup-Casa-Grande.exe     ← PC del restaurante: instalador del sistema (~10 MB)
+├─ 03-Configurar-Red.ps1        ← PC del restaurante: IP, firewall y datos para los celulares
+├─ 04-APK-Casa-Grande.apk       ← cada celular Android: app del mesero (~63 MB)
+├─ SHA256SUMS.txt               ← sumas de comprobación de los archivos
+└─ Soporte\db\                  ← scripts .sql y auxiliares que usa el 01 (no borrar)
 ```
+
+> El orden es **base de datos → instalador → red → celulares**. La red va *después* del instalador porque
+> `03-Configurar-Red.ps1` lee del sistema ya instalado la clave de la API y el puerto para mostrárselos.
 
 Además, **la copia de seguridad de la base de datos del restaurante** (`CasaGrandeBD`) si el PC es nuevo. Esa copia
 contiene datos personales y claves reales: llévela en un medio propio y no la suba a ningún sitio.
 
 ---
 
-## 2. En la máquina de desarrollo: preparar la carpeta
+## 2. En la máquina de desarrollo: preparar la USB
+
+Conecte la USB y ejecute (no necesita administrador):
 
 ```powershell
-cd D:\Repositorios\System-RestaurantCasaGrande\installer
-
-# 1) Compila el sistema, arma el instalador y lo copia a la USB (cambie E:\ por su unidad)
-.\Publicar-Instalador.ps1 -Version 1.0.0 -Destino E:\SISRestaurante
-
-# 2) Scripts de base de datos
-New-Item -ItemType Directory -Force E:\SISRestaurante\db | Out-Null
-cd ..\db
-Copy-Item Invoke-Sql.ps1, Restore-ProdCopy.ps1, verificar-despliegue.sql, 01_sp_Movil_Insertar_pedido.sql, `
-          03_sp_Movil_Agregar_items.sql, 04_sp_Movil_Quitar_item.sql, 02_unificar_empleados_duplicados.sql `
-          E:\SISRestaurante\db
-
-# 3) La app Android (ver la sección 6.1 si hay que generarla)
-Copy-Item D:\Repositorios\CasaGrandeMesero\app\build\app\outputs\flutter-apk\app-release.apk E:\SISRestaurante\CasaGrandeMesero.apk
+cd D:\Repositorios\System-RestaurantCasaGrande\scripts
+.\Preparar-USB.ps1
 ```
 
-☐ La carpeta `E:\SISRestaurante` tiene el instalador, el `.apk` y `db\`.
+El script **lista las unidades USB/extraíbles** conectadas (nunca la unidad de Windows ni los discos internos) y pregunta
+cuál preparar:
+
+```
+ [1]  K:  CHICOUSB               FAT32     29,6 GB  (27,8 GB libres)
+Escriba el numero de la USB a preparar (Enter para cancelar):
+```
+
+Muestra el destino (`K:\Casa Grande Installers`), el espacio que se necesita y pide confirmación. Luego copia los
+archivos, comprueba con SHA-256 que cada copia es idéntica al original y escribe `00-LEEME.txt` y `SHA256SUMS.txt`.
+Solo escribe dentro de esa carpeta: no formatea ni borra nada más de la USB.
+
+| Opción | Para qué |
+|---|---|
+| `-Compilar` | Recompila el instalador (Release) y el APK (con Flutter 3.47.8) antes de copiar. **Úsela siempre que haya cambios.** |
+| `-Version 1.1.0` | Versión del instalador que se copia |
+| `-Unidad K` | Salta la lista (debe ser una unidad USB conectada) |
+| `-CarpetaDestino X:\ruta` | No usa USB: arma el kit en esa carpeta (pruebas o carpeta de red) |
+| `-Si` | No pide la confirmación final |
+
+El script avisa si el instalador o el APK son **más viejos que el último cambio del código** (señal de que falta
+`-Compilar`). Si falta algún archivo de origen, se detiene con el motivo.
+
+☐ La USB tiene `Casa Grande Installers` con `01` a `04`, `00-LEEME.txt` y `Soporte\`. Expúlsela con seguridad.
 
 ---
-
 ## 3. En el PC del restaurante
 
 > Use **el mismo usuario de Windows** que va a abrir el sistema todos los días. SQL Server LocalDB crea la instancia
 > `MSSQLLocalDB` **por usuario**: si restaura la base con un usuario y abre el sistema con otro, la base "no existe".
 
-Copie `E:\SISRestaurante` al PC, por ejemplo a `C:\SISRestaurante-instalacion\`.
+Copie la carpeta `Casa Grande Installers` de la USB al PC, por ejemplo a `C:\Casa Grande Installers\` (o ejecute los archivos directamente desde la USB).
 
 ### 3.1 Requisitos del PC
 
@@ -104,11 +116,27 @@ sistema guarda un PDF en `Documentos\Casa Grande\Comandas` en lugar de imprimir.
 
 ### 3.2 Base de datos
 
-Abra **PowerShell** (no hace falta administrador) en `C:\SISRestaurante-instalacion\db`. Los scripts se ejecutan así,
+> **Atajo:** `01-Base-de-Datos.ps1` (clic derecho → *Ejecutar con PowerShell*) hace todo lo de 3.2 de forma guiada: comprueba\n> LocalDB y la base, ofrece restaurarla si no existe, muestra el estado, hace la copia de seguridad (se niega a seguir sin\n> ella), pide confirmación antes de crear los procedimientos (`01`, `03`, `04`) y, aparte, antes del arreglo de empleados\n> (`02`), y verifica al final. Con `-SoloVerificar` solo lee. Lo que sigue es el procedimiento manual equivalente.
+>
+> **Si la base elegida tiene el esquema ANTIGUO** (sin `Detalle_pedido.Id_detalle_pedido`), el script se detiene antes de
+> tocar nada, **lista las bases** de la instancia (tamaño y si tienen esquema de PRODUCCION o ANTIGUO) y ofrece:
+>
+> * **[R] Reemplazar** la base antigua por una nueva con el esquema de producción. Muestra numeradas, para elegir con un
+>   solo número, **las bases existentes que ya tienen el esquema de producción** (sin las de esquema antiguo; p. ej.
+>   `[1] CasaGrandeBD_prod`) y, aparte, `[F]` *respaldo `.sql` de producción (con datos)* y `[V]` *base vacía con el
+>   esquema* (sin mesas, platos ni empleados). Exige escribir `REEMPLAZAR`, y **antes hace una
+>   copia de seguridad de la base antigua** (`<base>_ESQUEMA_ANTIGUO_<fecha>.bak`, en la carpeta de respaldos). Requiere
+>   cerrar SISRestaurante. Si la copia falla, no reemplaza nada.
+> * **[U] Usar otra base** de la lista solo para este despliegue (no cambia ninguna base; el sistema de escritorio sigue
+>   usando la de su `App.config`).
+> * **[S] Salir** sin cambiar nada.
+>
+> Para volver atrás: restaure ese `.bak` (cierre el sistema antes) con
+> `RESTORE DATABASE <base> FROM DISK = N'…\<base>_ESQUEMA_ANTIGUO_<fecha>.bak' WITH REPLACE`.\n\nAbra **PowerShell** (no hace falta administrador) en `Soporte\db` (dentro de la carpeta copiada). Los scripts se ejecutan así,
 sin cambiar la política de PowerShell del equipo:
 
 ```powershell
-cd C:\SISRestaurante-instalacion\db
+cd "C:\Casa Grande Installers\Soporte\db"
 powershell -ExecutionPolicy Bypass -File .\Invoke-Sql.ps1 -File .\verificar-despliegue.sql -Database CasaGrandeBD
 ```
 
@@ -182,7 +210,7 @@ asigne un PIN en el sistema de escritorio.
 
 ### 3.3 Instalar el sistema de escritorio
 
-1. Doble clic en **`SISRestaurante-Setup-1.0.0.exe`**. Si Windows muestra *SmartScreen* ("Windows protegió su PC"),
+1. Doble clic en **`02-Setup-Casa-Grande.exe`**. Si Windows muestra *SmartScreen* ("Windows protegió su PC"),
    pulse **Más información → Ejecutar de todos modos**: el instalador no está firmado digitalmente.
 2. Acepte el aviso de administrador (UAC). El instalador lo necesita para reservar la URL de la API y abrir el firewall.
 3. Siga el asistente (Siguiente en la carpeta de destino) y en la página de **tareas** deje marcado:
@@ -213,7 +241,9 @@ asigne un PIN en el sistema de escritorio.
 
 ### 3.5 Red: IP del PC y datos para los celulares
 
-1. Menú Inicio → **SISRestaurante → Datos para conectar celulares**. Se abre una ventana azul que muestra:
+1. Ejecute **`03-Configurar-Red.ps1`** (clic derecho → *Ejecutar con PowerShell*; pide administrador). También se puede
+   ver sin cambiar nada desde Menú Inicio → **SISRestaurante → Datos para conectar celulares**. Se abre una ventana azul
+   que muestra:
 
    ```
    Servidor / IP : 192.168.1.XX      ← la IP del PC
@@ -223,10 +253,10 @@ asigne un PIN en el sistema de escritorio.
 
    También avisa si la red está como **Pública** (el firewall bloquearía a los celulares) o si la IP es **dinámica**.
 2. **Si la red es "Pública":** en Windows, Configuración → Red e Internet → (su WiFi o Ethernet) → Propiedades →
-   **Red privada**. O, como administrador, `Herramientas\Configurar-Red.ps1 -PerfilPrivado`.
+   **Red privada**. O, como administrador, `03-Configurar-Red.ps1 -PerfilPrivado` (o `Herramientas\Configurar-Red.ps1` dentro de la carpeta de instalación).
 3. **Fije la IP del PC en el router** (recomendado): entre al panel del router → *DHCP / reserva de direcciones* →
    asocie la **MAC del PC** (la ventana azul la muestra) a su IP actual. Si no puede, el mismo script lo hace en el
-   PC: `Herramientas\Configurar-Red.ps1 -FijarIp` (como administrador); la reserva en el router sigue siendo mejor.
+   PC: `03-Configurar-Red.ps1 -FijarIp` (pide administrador); la reserva en el router sigue siendo mejor.
 4. **Que el PC no se duerma** (si se duerme, la API deja de responder): Configuración → Sistema → Energía → *Suspender*
    → "Nunca" cuando está enchufado.
 
@@ -238,13 +268,13 @@ asigne un PIN en el sistema de escritorio.
 
 Requisitos: **Android 7.0 o superior** y estar en **el mismo WiFi que el PC** del restaurante.
 
-### 4.1 Instalar la app (`CasaGrandeMesero.apk`)
+### 4.1 Instalar la app (`04-APK-Casa-Grande.apk`)
 
 **Opción 1 — copiar el archivo (la más simple)**
 
-1. Pase `CasaGrandeMesero.apk` al celular: cable USB (copiar a la carpeta *Descargas*), Bluetooth, Drive, o por la
+1. Pase `04-APK-Casa-Grande.apk` al celular: cable USB (copiar a la carpeta *Descargas*), Bluetooth, Drive, o por la
    red local.
-2. En el celular abra **Mis archivos → Descargas → `CasaGrandeMesero.apk`**.
+2. En el celular abra **Mis archivos → Descargas → `04-APK-Casa-Grande.apk`**.
 3. Android pedirá permitir **"Instalar apps desconocidas"** para la aplicación desde la que lo abrió (Mis archivos,
    Chrome…): actívelo y vuelva atrás.
 4. Pulse **Instalar**. Si *Play Protect* avisa "app no verificada" o "bloqueada", elija **Instalar de todos modos**
@@ -255,16 +285,23 @@ Requisitos: **Android 7.0 o superior** y estar en **el mismo WiFi que el PC** de
 
 1. En el celular: Ajustes → Acerca del teléfono → pulse 7 veces *Número de compilación* → Ajustes → *Opciones de
    desarrollador* → **Depuración por USB**, y conecte el cable aceptando la huella RSA.
-2. En el PC: `adb install -r CasaGrandeMesero.apk` (se obtiene `adb` con *Android SDK Platform-Tools*).
+2. En el PC: `adb install -r 04-APK-Casa-Grande.apk` (se obtiene `adb` con *Android SDK Platform-Tools*).
 
 ### 4.2 Conectar la app al servidor (solo la primera vez)
 
-1. Al abrir la app aparece **Configurar servidor**. Escriba los datos de la sección 3.5:
-   * **IP o nombre:** `192.168.1.XX`
-   * **Puerto:** `8099`
-   * **Clave:** la clave de la API
-2. Pulse **Probar**. Debe confirmar que el servidor responde. Si no, vaya a [7](#7-problemas-frecuentes).
-3. Guarde y continúe: aparece el **teclado de PIN**.
+1. Al abrir la app aparece **Configurar servidor**. Pulse **«Buscar servidor en la red»**: la app recorre la red
+   WiFi (unos 2 a 9 segundos) y encuentra sola el PC con el sistema abierto, mostrando su nombre (p. ej.
+   `JUANDIEGO_PC`). Si hay uno solo, rellena la dirección y el puerto; si hay varios, toque el que corresponda.
+2. Escriba la **clave de la API** (la de la sección 3.5). Si ya la había escrito antes de buscar, la conexión se
+   prueba sola. Si prefiere no buscar, también se puede escribir a mano la **IP** (`192.168.1.XX`) y el **puerto**
+   (`8099`).
+3. Pulse **Probar conexión**. Debe confirmar que el servidor responde. Si no, vaya a [7](#7-problemas-frecuentes).
+4. Guarde y continúe: aparece el **teclado de PIN**.
+
+> **Si la IP del PC cambia** (se reinició el PC o el router y recibió otra), no hay que volver a configurar nada: cuando
+> el servidor deja de responder, la app lo **busca sola en la red**, lo reconoce **por el nombre del PC**, comprueba que
+> acepte la clave y actualiza la IP guardada. Si falla, reintenta cada vez más espaciado (45 s, 90 s… hasta 5 min).
+> Por eso la IP fija o la reserva en el router dejan de ser imprescindibles (siguen evitando la espera de unos segundos).
 
 ### 4.3 Uso diario del mesero
 
@@ -272,6 +309,11 @@ Requisitos: **Android 7.0 o superior** y estar en **el mismo WiFi que el PC** de
 * **Mesas** → elegir mesa → menú y carrito (los 4 ingredientes del plato son obligatorios) → **Revisar pedido**.
 * En **Revisar pedido**: comensales, nota general y **Copias de la comanda** (2 por defecto, de 1 a 5). La comanda
   **siempre se imprime** en la impresora del PC al enviar.
+* **Agregar productos** a un pedido ya enviado: botón «Agregar productos» en el detalle. En cocina se imprime **solo lo
+  que se agregó** (rotulado «ADICION»), con el número de copias que se elija (2 por defecto).
+* **Precuenta:** botón en el detalle → diálogo con la casilla **«Imprimir precuenta»** (marcada por defecto). La mesa pasa
+  a «Saliendo» y, si está marcada, el escritorio imprime la precuenta como su propio botón «Precuenta».
+* Todas las horas de la app se ven en **12 horas con AM/PM**.
 * Si se pierde el WiFi, el pedido queda en la **bandeja** y se reenvía solo al volver la conexión, sin duplicarse.
 
 ☐ En el celular se ve el mapa de mesas del restaurante.
@@ -359,6 +401,7 @@ desinstalar primero.
 | Síntoma | Causa probable | Qué hacer |
 |---|---|---|
 | El instalador dice que falta .NET 4.8 | Windows sin actualizar | Windows Update o el instalador de .NET Framework 4.8 de Microsoft; repetir |
+| `01-Base-de-Datos.ps1` dice «ALTO: esquema ANTIGUO» (o, en versiones previas, `Invalid column name 'Id_detalle_pedido'`) | Se apuntó a una base de **desarrollo** antigua, sin la columna `Detalle_pedido.Id_detalle_pedido` que sí tiene producción | No se cambió nada. El script lista las bases y ofrece **reemplazar la antigua** (con copia de seguridad previa), usar otra de la lista o salir. En el restaurante, también puede usar la base con los datos reales (`-Database NombreReal`) y el mismo usuario de Windows; en la máquina de desarrollo, la copia de producción es `-Database CasaGrandeBD_prod` |
 | El sistema abre y dice que no encuentra la base | LocalDB distinto usuario / base sin restaurar | Restaurar la base **con el mismo usuario de Windows** que abre el sistema (sección 3) |
 | No aparece "N DISPOSITIVOS" | API apagada o no pudo arrancar | Mire `…\logs\`: si dice *Acceso denegado*, falta la reserva de URL → ejecute `Herramientas\Configurar-Red.ps1` como administrador; si dice *ApiKey sigue con el valor de ejemplo*, repita el instalador marcando la API |
 | `ping` funciona en el PC pero no en el celular | Firewall o red "Pública" | Poner la red como **Privada** (3.5) y repetir `Configurar-Red.ps1` |
@@ -366,7 +409,8 @@ desinstalar primero.
 | La app dice "Clave inválida" (401) | `ApiKey` distinta a la del PC | Vuelva a leerla en *Datos para conectar celulares* y reescríbala |
 | "PIN incorrecto" para un mesero | No tiene PIN o es de menos de 4 dígitos | Asignarle un PIN en el sistema de escritorio (empleados) |
 | Muchos intentos de PIN: "espere" | Límite de 5 intentos por minuto por IP | Esperar un minuto |
-| Se pierde la IP del PC y los celulares no conectan | IP dinámica | Reservar la IP en el router (3.5) y corregir la IP en los celulares |
+| Cambió la IP del PC y el celular aparece sin conexión | IP dinámica | La app lo busca sola (espere hasta ~1 min). Si no lo encuentra: *Configurar servidor* → **Buscar servidor en la red**. No lo encuentra si el PC está apagado, el sistema cerrado, o el celular no está en el mismo WiFi |
+| «No se encontró ningún servidor de Casa Grande» | Celular fuera del WiFi del restaurante, sistema de escritorio cerrado, API apagada o red que no es /24 | Verifique el WiFi, que SISRestaurante esté abierto y `http://IP:8099/api/v1/ping` en el navegador del celular; si la red no es de tipo 192.168.x.x/24, escriba la IP a mano |
 | Los meseros "salen" de la sesión | Se reinició el sistema de escritorio (las sesiones están en memoria) | Volver a entrar con el PIN |
 | La comanda no sale | Impresora predeterminada incorrecta o apagada | Elegir la impresora correcta como predeterminada (3.1); un `409` indica que ya hay una impresión en curso |
 | El indicador cuenta "1 DISPOSITIVO" con el celular por USB | Con `adb reverse` el celular llega como `127.0.0.1` | Es normal: se cuenta por IP |

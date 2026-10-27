@@ -1,4 +1,4 @@
-<#
+﻿<#
     Prueba de extremo a extremo de la fase 3 de la API movil (POST /pedidos, GET /pedidos/{id}): arranca el
     SISMistico.exe REAL de la compilacion local contra CasaGrandeBD_prod, crea pedidos de verdad en la copia y
     contrasta cada resultado con consultas directas a la BD. Al terminar BORRA todo lo que creo (y restaura el
@@ -13,7 +13,8 @@
 #>
 param(
     [string]$Database = "CasaGrandeBD_prod",
-    [string]$Base = "http://localhost:8099/api/v1"
+    [string]$Base = "http://localhost:8099/api/v1",
+    [int]$Puerto = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -111,7 +112,18 @@ $maxAntes = [int](Sql-Scalar "SELECT MAX(Id_pedido) FROM Pedidos")
 $ingParaInactivar = Ing-Id "SOPA" "LIKE 'CREMA%'"
 $estadoIngOriginal = [string](Sql-Scalar "SELECT Estado_ingrediente FROM Ingredientes WHERE Id_ingrediente=$ingParaInactivar")
 
-Get-Process SISMistico -ErrorAction SilentlyContinue | ForEach-Object { throw "Ya hay un SISMistico abierto (PID $($_.Id)); cierralo antes." }
+# Solo molesta una instancia de LA COMPILACION LOCAL (una instalada, con otra ruta, no).
+Get-Process SISMistico -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe } | ForEach-Object { throw "Ya hay un SISMistico de la compilacion local abierto (PID $($_.Id)); cierralo antes." }
+# Con -Puerto la prueba usa otro puerto (por ejemplo si hay una instancia instalada escuchando en el 8099);
+# el .exe.config de la compilacion local se cambia solo durante la prueba y se restaura al terminar.
+$configOriginal = $null
+if ($Puerto -gt 0) {
+    $Base = "http://localhost:$Puerto/api/v1"
+    $configOriginal = [IO.File]::ReadAllText($exeConfig)
+    [xml]$cfgTmp = $configOriginal
+    ($cfgTmp.configuration.appSettings.add | Where-Object { $_.key -eq 'ApiPrefijo' }).value = "http://localhost:$Puerto/api/v1/"
+    $cfgTmp.Save($exeConfig)
+}
 $logDir = Join-Path $buildDir "logs"
 if (Test-Path $logDir) { Get-ChildItem $logDir -Filter "api-*.log" | Remove-Item -Force }
 $proc = $null
@@ -274,6 +286,7 @@ try {
 }
 finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+    if ($configOriginal) { Start-Sleep -Milliseconds 300; [IO.File]::WriteAllText($exeConfig, $configOriginal) }
     Start-Sleep -Milliseconds 300
     try { Sql-Exec "UPDATE Ingredientes SET Estado_ingrediente='$estadoIngOriginal' WHERE Id_ingrediente=$ingParaInactivar" } catch { Write-Host "No se pudo restaurar el ingrediente: $_" -ForegroundColor Red }
     try {

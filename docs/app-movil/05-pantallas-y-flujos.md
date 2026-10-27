@@ -39,7 +39,7 @@ Estados que **toda** pantalla con datos cubre: *cargando* (esqueletos, no ruedas
 
 | # | Pantalla | Módulo | Propósito | Datos | Acciones principales |
 |---|---|---|---|---|---|
-| P1 | **Emparejar** | server_setup | Indicar dónde está el servidor y probarlo | `ServerConfig`, `ServerInfo` | Probar conexión · Guardar · (QR después) |
+| P1 | **Emparejar** | server_setup | Indicar dónde está el servidor y probarlo | `ServerConfig`, `ServerInfo` | **Buscar servidor en la red** · Probar conexión · Guardar · (QR después) |
 | P2 | **Login** | auth | Identificarse | Empleados activos (B1) | Elegir empleado · PIN/contraseña · Entrar |
 | P3 | **Mesas** | tables | Ver el estado de las 36 mesas | `DiningTable[]` (sondeo) | Tocar mesa · Tirar para actualizar |
 | P4 | **Menú** | menu | Elegir productos para una mesa | `Menu` (caché) + borrador | Buscar · Filtrar por tipo · Agregar · Ir al carrito |
@@ -152,7 +152,7 @@ Estados que **toda** pantalla con datos cubre: *cargando* (esqueletos, no ruedas
 
 ### F1 — Primer uso
 
-1. Instalar → **Emparejar**: IP del PC del restaurante, puerto (8099 por defecto) y clave de la API → «Probar».
+1. Instalar → **Emparejar**: «Buscar servidor en la red» (o escribir la IP del PC a mano), puerto (8099 por defecto) y clave de la API → «Probar».
    `GET /ping`: debe responder `ok`, `db: true` y versión mayor `1`. Se muestra el **nombre del servidor** para que el
    usuario confirme que es el correcto.
 2. **Login**: elegir empleado de la lista y teclear PIN o contraseña.
@@ -189,15 +189,21 @@ mesero y total real.
 ### F7 — MVP-2: agregar y quitar (fase 4 de la API)
 
 * **Agregar:** desde el Detalle → Menú en modo "agregar a pedido #N" → Enviar → `POST /pedidos/{id}/items` (filas nuevas).
+  La hoja trae el control **«Copias de la comanda»** (2 por defecto, 1–5) y el aviso «Al agregar, en cocina se imprime
+  solo lo nuevo»: el escritorio imprime **únicamente las líneas agregadas** (rotuladas «ADICION»), nunca el pedido completo.
 * **Quitar:** deslizar una fila → pide **clave maestra** (PIN) → `DELETE /pedidos/{id}/items/{id_detalle_pedido}` (se
   direcciona por el id real de la fila).
-* **Precuenta:** botón → `PATCH …/estado` (`SALIENDO`); la mesa pasa a naranja.
+* **Precuenta:** botón → diálogo de confirmación con la casilla **«Imprimir precuenta»** (marcada por defecto) →
+  `PATCH …/estado` (`SALIENDO`, con `imprimir_precuenta` si la casilla está marcada); la mesa pasa a naranja y, si se
+  marcó, el escritorio imprime la precuenta **como lo hace su botón «Precuenta»**.
 * **Cancelar:** pide motivo (obligatorio) y PIN → `POST …/cancelar`.
 * Toda operación de edición es **en línea** (no pasa por la bandeja de salida): modificar un pedido sin saber el estado actual
   del servidor es más peligroso que pedirle al mesero que espere a tener conexión.
 
 ## 5. Microinteracciones y UX
 
+* **Horas siempre en 12 horas con AM/PM** (`6:53 PM`, `12:00 AM`), en todas las pantallas (detalle del pedido y
+  registros). Salen de `formatTime12h`; una prueba falla si alguien arma una hora de 24 h a mano.
 * **Háptica** suave al agregar/quitar; **SnackBar** con «Deshacer» al quitar una línea.
 * Diálogos de confirmación solo para lo destructivo (descartar un envío, cancelar un pedido, cambiar de servidor).
 * Los teclados numéricos para PIN, cantidades y comensales; el PIN se oculta y no sugiere ni autocompleta.

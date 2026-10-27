@@ -6,6 +6,7 @@ using Microsoft.ReportingServices.ReportProcessing.OnDemandReportObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Windows.Forms;
 
 namespace CapaPresentacion
@@ -179,6 +180,35 @@ namespace CapaPresentacion
             {
                 Mensajes.MensajeErrorForm(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Renderiza la PRECUENTA a PDF y la guarda en <paramref name="carpeta"/> (la crea si no existe). Es lo mismo
+        /// que ImprimirFactura hace con la precuenta (mismo reporte, mismos parámetros y datos) pero sin mandarla a la
+        /// impresora: la API móvil lo usa cuando la impresora predeterminada es de PDF, para que no aparezca el diálogo
+        /// de "Guardar como". Hay que llamar antes a AsignarReporte y AsignarTablasPrecuenta. Devuelve la ruta.
+        /// </summary>
+        public string GuardarPdf(string carpeta, string nombreArchivo)
+        {
+            if (!this.Is_precuenta)
+                throw new InvalidOperationException("GuardarPdf solo se usa con la precuenta.");
+
+            this.Controls.Add(this.reportViewer1);
+            this.reportViewer1.LocalReport.SetParameters(this.reportParameters);
+            this.reportViewer1.LocalReport.DataSources.Clear();
+            this.reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DatosPrincipales", this.TablaDatosPrincipales));
+            this.reportViewer1.LocalReport.DataSources.Add(new ReportDataSource("DetallePedido", this.TablaDetallePedido));
+
+            string mimeType, encoding, extension;
+            string[] streams;
+            Warning[] warnings;
+            byte[] bytes = this.reportViewer1.LocalReport.Render("PDF", null,
+                out mimeType, out encoding, out extension, out streams, out warnings);
+
+            Directory.CreateDirectory(carpeta);
+            string ruta = Path.Combine(carpeta, nombreArchivo + ".pdf");
+            File.WriteAllBytes(ruta, bytes);
+            return ruta;
         }
 
         #region VARIABLES
