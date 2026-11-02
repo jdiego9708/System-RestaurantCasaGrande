@@ -73,14 +73,15 @@ Solo escribe dentro de esa carpeta: no formatea ni borra nada más de la USB.
 
 | Opción | Para qué |
 |---|---|
-| `-Compilar` | Recompila el instalador (Release) y el APK (con Flutter 3.47.8) antes de copiar. **Úsela siempre que haya cambios.** |
+| *(por defecto)* | **Siempre recompila** el instalador (Release) y el APK (con Flutter 3.47.8) antes de copiar. Ya no hace falta `-Compilar` (se acepta y no hace nada). |
+| `-SinCompilar` | Copia lo que ya esté construido, sin recompilar (puede llevar una versión vieja) |
 | `-Version 1.1.0` | Versión del instalador que se copia |
 | `-Unidad K` | Salta la lista (debe ser una unidad USB conectada) |
 | `-CarpetaDestino X:\ruta` | No usa USB: arma el kit en esa carpeta (pruebas o carpeta de red) |
 | `-Si` | No pide la confirmación final |
 
 El script avisa si el instalador o el APK son **más viejos que el último cambio del código** (señal de que falta
-`-Compilar`). Si falta algún archivo de origen, se detiene con el motivo.
+`-SinCompilar`). Si falta algún archivo de origen, se detiene con el motivo.
 
 ☐ La USB tiene `Casa Grande Installers` con `01` a `04`, `00-LEEME.txt` y `Soporte\`. Expúlsela con seguridad.
 

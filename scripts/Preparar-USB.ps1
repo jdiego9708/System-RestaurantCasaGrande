@@ -15,7 +15,8 @@
     Uso (en la maquina de desarrollo, no requiere administrador):
         .\Preparar-USB.ps1                      # lista las USB y pregunta cual preparar
         .\Preparar-USB.ps1 -Unidad K            # salta la lista (K debe ser una unidad USB/extraible)
-        .\Preparar-USB.ps1 -Compilar            # recompila instalador y APK antes de copiar
+        (siempre recompila el instalador .exe y el APK antes de copiar, sin necesidad de -Compilar)
+        .\Preparar-USB.ps1 -SinCompilar         # NO recompila: copia lo que ya esta construido (puede ser una version vieja)
         .\Preparar-USB.ps1 -Version 1.1.0       # version del instalador a copiar
         .\Preparar-USB.ps1 -CarpetaDestino D:\Temp\kit   # NO USB: usa esa carpeta como raiz (pruebas, carpeta de red)
         .\Preparar-USB.ps1 -Si                  # no pide la confirmacion final
@@ -27,7 +28,10 @@ param(
     [string]$Unidad,
     [string]$CarpetaDestino,
     [string]$Version = '1.0.0',
+    # Ya no hace falta: compilar es el comportamiento por defecto. Se acepta para no romper comandos viejos.
     [switch]$Compilar,
+    # Copia lo que ya esté construido, sin recompilar el instalador ni el APK (pruebas del propio script).
+    [switch]$SinCompilar,
     [switch]$Si,
     [string]$ApkRuta,
     [string]$FlutterBin = 'D:\DevTools\flutter-3.47.8\bin'
@@ -107,14 +111,19 @@ if (-not $ApkRuta) { $ApkRuta = Join-Path $mesero 'app\build\app\outputs\flutter
 
 Paso '1/5  Comprobando los archivos de origen'
 
-if ($Compilar -or -not (Test-Path $setupOrigen)) {
-    if (-not $Compilar) { Aviso "No existe ${setupNombre}: se compila ahora." }
+# Por defecto SIEMPRE se recompilan el instalador y el APK: la USB nunca debe llevar una version vieja.
+# Solo -SinCompilar lo evita (y aun asi compila el instalador si no existe).
+$compilarTodo = -not $SinCompilar
+$apkPropio = $PSBoundParameters.ContainsKey('ApkRuta')   # con -ApkRuta se usa ese APK tal cual
+
+if ($compilarTodo -or -not (Test-Path $setupOrigen)) {
+    if (-not $compilarTodo) { Aviso "No existe ${setupNombre}: se compila ahora." }
     & (Join-Path $repo 'installer\Publicar-Instalador.ps1') -Version $Version
     if ($LASTEXITCODE -ne 0) { Falla 'No se pudo generar el instalador.' }
 }
 if (-not (Test-Path $setupOrigen)) { Falla "No existe el instalador $setupOrigen" }
 
-if ($Compilar) {
+if ($compilarTodo -and -not $apkPropio) {
     $flutter = Join-Path $FlutterBin 'flutter.bat'
     if (-not (Test-Path $flutter)) { Falla "No encuentro Flutter 3.47.8 en $FlutterBin (use -FlutterBin). El flutter del PATH suele ser el 3.11.5 y no sirve." }
     Push-Location (Join-Path $mesero 'app')
@@ -124,15 +133,16 @@ if ($Compilar) {
         if ($LASTEXITCODE -ne 0) { Falla 'flutter build apk fallo.' }
     } finally { Pop-Location }
 }
-if (-not (Test-Path $ApkRuta)) { Falla "No existe el APK $ApkRuta. Repita con -Compilar (usa Flutter 3.47.8)." }
+if (-not (Test-Path $ApkRuta)) { Falla "No existe el APK $ApkRuta. Repita sin -SinCompilar (compila con Flutter 3.47.8)." }
 
 # Archivos de soporte del paso 01 (base de datos)
 $dbDir = Join-Path $repo 'db'
 $soporteDb = @('Invoke-Sql.ps1', 'Restore-ProdCopy.ps1', 'verificar-despliegue.sql', 'produccion-schema.sql',
                '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql',
-               '02_unificar_empleados_duplicados.sql',
+               '02_unificar_empleados_duplicados.sql', '05_activar_empleados.sql',
                '01_sp_Movil_Insertar_pedido.revert.sql', '03_sp_Movil_Agregar_items.revert.sql',
-               '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql')
+               '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql',
+               '05_activar_empleados.revert.sql')
 
 # Plan de copia: origen -> nombre numerado en la USB
 $plan = @(
@@ -155,8 +165,8 @@ $cSetup = Ultimo-Commit $repo @('SISMistico', 'installer', 'scripts/Configurar-R
 $cApk = Ultimo-Commit $mesero @('app', 'packages')
 $fSetup = (Get-Item $setupOrigen).LastWriteTime
 $fApk = (Get-Item $ApkRuta).LastWriteTime
-if ($cSetup -and $fSetup -lt $cSetup) { Aviso "El instalador ($fSetup) es MAS VIEJO que el ultimo cambio del codigo ($cSetup). Use -Compilar." }
-if ($cApk -and $fApk -lt $cApk) { Aviso "El APK ($fApk) es MAS VIEJO que el ultimo cambio de la app ($cApk). Use -Compilar." }
+if ($cSetup -and $fSetup -lt $cSetup) { Aviso "El instalador ($fSetup) es MAS VIEJO que el ultimo cambio del codigo ($cSetup). Repita sin -SinCompilar." }
+if ($cApk -and $fApk -lt $cApk) { Aviso "El APK ($fApk) es MAS VIEJO que el ultimo cambio de la app ($cApk). Repita sin -SinCompilar." }
 Ok ("Instalador {0}  ({1:N1} MB, {2:yyyy-MM-dd HH:mm})" -f $setupNombre, ((Get-Item $setupOrigen).Length / 1MB), $fSetup)
 Ok ("APK         {0}  ({1:N1} MB, {2:yyyy-MM-dd HH:mm})" -f (Split-Path $ApkRuta -Leaf), ((Get-Item $ApkRuta).Length / 1MB), $fApk)
 

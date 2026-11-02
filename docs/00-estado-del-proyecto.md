@@ -340,7 +340,7 @@ cd D:\Repositorios\CasaGrandeMesero\app ; flutter test ; flutter build apk --rel
 
 # 5. Instalador y kit para la USB
 cd D:\Repositorios\System-RestaurantCasaGrande\scripts
-.\Preparar-USB.ps1 -Compilar      # recompila instalador y APK y los copia, numerados, a la USB que elija
+.\Preparar-USB.ps1               # recompila siempre instalador y APK y los copia, numerados, a la USB que elija
 ```
 
 ---
