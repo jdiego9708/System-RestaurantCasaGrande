@@ -48,14 +48,34 @@ namespace CapaDatos
             SqlConnection SqlCon = new SqlConnection();
             SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
             SqlCon.FireInfoMessageEventOnUserErrors = true;
+            // La venta y sus pagos van en una sola transacción: antes, si fallaba el insert de los pagos, la
+            // venta ya quedaba guardada sin pagos y cada reintento creaba otra (el informe la duplicaba).
+            SqlTransaction transaction = null;
             //Capturador de errores
             try
             {
                 SqlCon.ConnectionString = Conexion.Cn;
                 SqlCon.Open();
+                transaction = SqlCon.BeginTransaction();
+
+                // Un pedido que ya tiene una venta ACTIVA con sus pagos no se factura otra vez (doble clic o
+                // reintento). Las ventas huérfanas, sin pagos, no cuentan: no bloquean la nueva factura.
+                using (SqlCommand check = new SqlCommand(
+                    "SELECT COUNT(*) FROM Ventas v WHERE v.Id_pedido = @Id_pedido AND v.Estado = 'ACTIVO' " +
+                    "AND EXISTS (SELECT 1 FROM Detalle_venta d WHERE d.Id_venta = v.Id_venta)", SqlCon, transaction))
+                {
+                    check.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = Convert.ToInt32(Variables[0]);
+                    if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                    {
+                        transaction.Rollback();
+                        return "El pedido " + Variables[0] + " ya fue facturado.";
+                    }
+                }
+
                 SqlCommand SqlCmd = new SqlCommand
                 {
                     Connection = SqlCon,
+                    Transaction = transaction,
                     CommandText = consulta,
                     CommandType = CommandType.Text
                 };
@@ -195,26 +215,36 @@ namespace CapaDatos
                 {
                     if (detalle_pago != null)
                     {
-                        StringBuilder query = new StringBuilder();
+                        int inserted = 0;
                         foreach (DataRow row in detalle_pago.Rows)
                         {
-                            string pago = Convert.ToString(row["Pago"]);
-                            decimal valor_pago = Convert.ToDecimal(row["Valor_pago"]);
-                            string vaucher = Convert.ToString(row["Vaucher"]);
-                            string observaciones = Convert.ToString(row["Observaciones"]);
-
-                            query.Append("INSERT INTO Detalle_venta VALUES(" + id_venta + ",'" + pago + "'," +
-                                valor_pago + ",'" + vaucher + "','" + observaciones + "'); ");
-                           
+                            // Con parámetros: antes el valor se concatenaba con la cultura del equipo (es-CO da
+                            // "123200,00" con coma) y un descuento que dejaba decimales rompía el INSERT.
+                            // Valor_pago es int en la tabla, así que se redondea igual que Total_final.
+                            using (SqlCommand pay = new SqlCommand(
+                                "INSERT INTO Detalle_venta VALUES (@Id_venta, @Metodo_pago, @Valor_pago, @Vaucher, @Observaciones)",
+                                SqlCon, transaction))
+                            {
+                                pay.Parameters.Add("@Id_venta", SqlDbType.Int).Value = id_venta;
+                                pay.Parameters.Add("@Metodo_pago", SqlDbType.VarChar, 50).Value = Convert.ToString(row["Pago"]);
+                                pay.Parameters.Add("@Valor_pago", SqlDbType.Int).Value =
+                                    Convert.ToInt32(Math.Round(Convert.ToDecimal(row["Valor_pago"])));
+                                pay.Parameters.Add("@Vaucher", SqlDbType.VarChar, 50).Value = Convert.ToString(row["Vaucher"]);
+                                pay.Parameters.Add("@Observaciones", SqlDbType.VarChar, 150).Value = Convert.ToString(row["Observaciones"]);
+                                inserted += pay.ExecuteNonQuery();
+                            }
                         }
+                        rpta = inserted >= 1 ? "OK" : "ERROR";
+                    }
 
-                        SqlCmd = new SqlCommand
-                        {
-                            Connection = SqlCon,
-                            CommandText = query.ToString(),
-                            CommandType = CommandType.Text
-                        };
-                        rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "ERROR";
+                    if (rpta.Equals("OK"))
+                    {
+                        transaction.Commit();
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                        id_venta = 0;
                     }
                 }
                 else
@@ -229,10 +259,14 @@ namespace CapaDatos
             catch (SqlException ex)
             {
                 rpta = ex.Message;
+                id_venta = 0;
+                try { transaction?.Rollback(); } catch (Exception) { }
             }
             catch (Exception ex)
             {
                 rpta = ex.Message;
+                id_venta = 0;
+                try { transaction?.Rollback(); } catch (Exception) { }
             }
             finally
             {
