@@ -602,6 +602,8 @@
     <Compile Include="Api\ApiServer.cs" />
     <Compile Include="Api\ApiUi.cs" />
     <Compile Include="Servicios\ControladorImpresion.cs" />
+    <Compile Include="Servicios\TableCardText.cs" />
+    <Compile Include="Servicios\FormCloseTracer.cs" />
     <Compile Include="Servicios\EnviarEmailErrores2.cs" />
     <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.cs">
       <SubType>Form</SubType>

@@ -20,6 +20,10 @@ namespace SISMistico
             Application.SetCompatibleTextRenderingDefault(false);
             // API móvil: apagada por defecto (ApiHabilitada); si falla al arrancar, el sistema abre igual.
             CapaPresentacion.Api.ApiServer.Iniciar();
+#if DEBUG
+            // Solo en depuración: deja en logs\form-close-trace.log quién cierra cada ventana.
+            CapaPresentacion.FormCloseTracer.Iniciar();
+#endif
             Application.Run(new FrmIniciarSesion());
             CapaPresentacion.Api.ApiServer.Detener();
         }

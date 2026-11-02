@@ -119,6 +119,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     if (btn.Id_mesa == id_mesa)
                     {
                         btn.ObtenerEstado("DISPONIBLE", btn.Id_pedido, false);
+                        btn.RefreshDetails();
                         break;
                     }
                 }
@@ -134,6 +135,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     if (btn.Id_mesa == id_mesa)
                     {
                         btn.ObtenerEstado("SALIENDO", id_pedido, true);
+                        btn.RefreshDetails();
                         break;
                     }
                 }
@@ -159,6 +161,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     if (Convert.ToInt32(btn.Tag) == numero_mesa)
                     {
                         btn.ObtenerEstado(estado, id_pedido, true);
+                        btn.RefreshDetails();
                         break;
                     }
                 }
@@ -217,6 +220,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 DataTable TablaMesas =
                     NPedido.BuscarPedidos("MESAS COMPLETAS", "");
                 this.Numero_mesas = TablaMesas.Rows.Count - 2;
+                // Total, hora y mesero salen de la misma consulta que alimenta al móvil, para que ambos muestren
+                // lo mismo; si falla, las tarjetas quedan solo con el estado.
+                DataTable tablesDetails = null;
+                try { tablesDetails = NApiMovil.Mesas(DateTime.Today); }
+                catch (Exception) { }
                 int positionX = 0;
                 int positionY = 0;
                 int contador = 1;
@@ -249,8 +257,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         }
                     }
 
+                    // Solo se usa la fila del móvil si habla del mismo pedido que el mapa.
+                    DataRow detailRow = null;
+                    if (tablesDetails != null && id_pedido != 0)
+                    {
+                        DataRow[] found = tablesDetails.Select("Num_mesa = " + contador);
+                        if (found.Length != 0 && Convert.ToInt32(found[0]["Id_pedido"]) == id_pedido)
+                            detailRow = found[0];
+                    }
+
                     CustomButtonMesa ButtonMesa = new CustomButtonMesa
                     {
+                        Details = TableCardText.Detail(estado, detailRow),
                         Estado_mesa = estado,
                         Texto = "Mesa " + (contador),
                         Tag = contador,
@@ -382,6 +400,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                 if (btn.Estado_mesa.Equals("DISPONIBLE"))
                                 {
                                     btn.ObtenerEstado(frm.Estado_mesa_origen, frm.Id_pedido_origen, true);
+                                    btn.RefreshDetails();
                                 }
                                 else
                                 {

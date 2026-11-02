@@ -148,9 +148,35 @@ namespace CapaPresentacion.Formularios
             }
         }
 
+        /// <summary>
+        /// Vuelve a armar las líneas de la tarjeta (estado, total, hora, mesero) según el estado actual de la mesa.
+        /// Hay que llamarla después de ObtenerEstado cuando la mesa cambia con el mapa ya dibujado (facturar, precuenta,
+        /// pedido nuevo, cambio de mesa): ObtenerEstado solo cambia el color, y sin esto el texto se queda con los datos
+        /// del pedido anterior. Una mesa libre queda en "Libre", sin total ni mesero.
+        /// </summary>
+        public void RefreshDetails()
+        {
+            DataRow row = null;
+            if (!string.Equals(this.Estado_mesa, "DISPONIBLE", StringComparison.OrdinalIgnoreCase) && this.Id_pedido != 0)
+            {
+                try
+                {
+                    DataRow[] found = NApiMovil.Mesas(DateTime.Today).Select("Num_mesa = " + this.Numero_mesa);
+                    if (found.Length != 0 && Convert.ToInt32(found[0]["Id_pedido"]) == this.Id_pedido)
+                        row = found[0];
+                }
+                catch (Exception) { }
+            }
+
+            this.Details = TableCardText.Detail(this.Estado_mesa, row);
+            this.btnMesa.Text = this.Texto + Environment.NewLine + this.Details;
+        }
+
         private void CustomButtonMesa_Load(object sender, EventArgs e)
         {
-            this.btnMesa.Text = this.Texto;
+            this.btnMesa.Text = string.IsNullOrEmpty(this.Details)
+                ? this.Texto
+                : this.Texto + Environment.NewLine + this.Details;
             if (this.Estado_mesa.Equals("DISPONIBLE"))
             {
                 this.btnMesa.BackColor = Color.LightGreen;
@@ -186,6 +212,9 @@ namespace CapaPresentacion.Formularios
         private int id_pedido;
         private int numero_mesa;
         private int id_mesa;
+
+        // Líneas bajo el número de mesa (estado, total, hora, mesero); las arma TableCardText.
+        public string Details { get; set; }
 
         public string Texto { get => texto; set => texto = value; }
         public string Estado_mesa { get => estado_mesa; set => estado_mesa = value; }
