@@ -254,6 +254,7 @@ try {
     Add-Result "registro: la adicion imprimio 2 lineas" "True" ([bool]($log -match 'adicion=2 lineas'))
     Add-Result "registro: la adicion de la bebida sola imprimio 1 linea" "True" ([bool]($log -match 'adicion=1 lineas'))
     Add-Result "registro: la precuenta se guardo con el total del pedido" "True" ([bool]($log -match 'Precuenta en PDF .*id_pedido=\d+ total=\d+'))
+    Add-Result "registro: la hora de la precuenta es de 12 horas con AM/PM" "True" ([bool]($log -match 'Precuenta en PDF .* hora=\d{1,2}:\d{2} (AM|PM) '))
 }
 finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }

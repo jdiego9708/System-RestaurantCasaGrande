@@ -178,8 +178,8 @@ namespace CapaPresentacion.Api
             }
 
             ApiLog.Info(aPdf
-                ? "Precuenta en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " total=" + total + " carpeta=" + carpeta
-                : "Precuenta enviada a la impresora '" + impresora + "': id_pedido=" + idPedido + " total=" + total);
+                ? "Precuenta en PDF (impresora '" + impresora + "'): id_pedido=" + idPedido + " total=" + total + " hora=" + FrmFacturaFinal.HoraPrecuenta(DateTime.Now) + " carpeta=" + carpeta
+                : "Precuenta enviada a la impresora '" + impresora + "': id_pedido=" + idPedido + " total=" + total + " hora=" + FrmFacturaFinal.HoraPrecuenta(DateTime.Now));
         }
 
         private static void Imprimir(int idPedido, string tipo, int copias, ICollection<int> soloDetalles)

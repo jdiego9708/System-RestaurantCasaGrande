@@ -6,6 +6,7 @@ using Microsoft.ReportingServices.ReportProcessing.OnDemandReportObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 
@@ -83,12 +84,21 @@ namespace CapaPresentacion
             }
         }
 
+        /// <summary>
+        /// Hora de la precuenta en 12 horas con AM/PM (por ejemplo "6:53 PM"), siempre igual y sin depender del
+        /// formato de hora de Windows (que en español de Colombia daría "p. m." o 24 horas según el equipo).
+        /// </summary>
+        public static string HoraPrecuenta(DateTime hora)
+        {
+            return hora.ToString("h:mm tt", CultureInfo.InvariantCulture);
+        }
+
         public void AsignarTablasPrecuenta(List<string> variables)
         {
             try
             {
                 this.reportParameters = new ReportParameter[variables.Count];
-                reportParameters[0] = new ReportParameter("Hora_pedido", DateTime.Now.ToShortTimeString());
+                reportParameters[0] = new ReportParameter("Hora_pedido", HoraPrecuenta(DateTime.Now));
                 reportParameters[1] = new ReportParameter("Total_parcial", variables[1]);
                 reportParameters[2] = new ReportParameter("Propina_pedido", variables[2]);
                 reportParameters[3] = new ReportParameter("Subtotal", variables[3]);
