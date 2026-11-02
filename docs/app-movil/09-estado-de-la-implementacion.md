@@ -143,7 +143,7 @@ El celular ya no depende de una IP fija: encuentra el PC por su **nombre** y se 
   adaptable de Android + capa monocromática (íconos temáticos de Android 13+) + PNG clásicos para Android 7. Lo genera
   `app/tool/generate_launcher_icon.py` (Pillow), que verifica que el dibujo quede dentro de la zona segura de los
   íconos adaptables; el arte maestro está en `app/branding/ic_launcher_1024.png`. Comprobado con `aapt2` en el APK.
-* **Verificado:** `Test-ApiAdiciones.ps1` **38/38** (PDF reales: adición de 2 líneas con 2 copias → 2+2 PDF y el pedido
+* **Verificado:** `Test-ApiAdiciones.ps1` **39/39** (PDF reales: adición de 2 líneas con 2 copias → 2+2 PDF y el pedido
   completo no se reimprime; bebida sola → sin comanda de platos; sin `imprimir_comandas` → ningún PDF; dos adiciones
   simultáneas → ambas salen; precuenta → PDF válido y `SALIENDO`; valor inválido → `400` sin cambiar el estado), fases 3
   y 4 sin regresiones (78/78 y 54/54), `flutter test` 26 (app) y 71 (paquete). **Sin probar en un teléfono** y sin

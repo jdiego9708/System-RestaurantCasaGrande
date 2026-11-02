@@ -217,13 +217,20 @@ asigne un PIN en el sistema de escritorio.
    * ☑ **Crear un acceso directo en el escritorio** (opcional).
    * ☑ **Activar la API móvil y abrir el firewall** — marque esta si los meseros van a usar celular.
 4. Aparece la página **API móvil**:
-   * **Clave de la API:** el instalador propone una aleatoria de 24 caracteres. Puede dejarla o escribir otra
-     (mínimo 12, sin espacios). **Anótela:** es lo que se escribe en cada celular.
+   * **Clave de la API:** la clave se escribe **una vez en cada celular**. El instalador propone una **aleatoria fácil de
+     teclear** (12 caracteres en minúscula, sin `0/o` ni `1/l/i`, p. ej. `k7m29qxp4wtd`); el botón **«Generar otra clave
+     aleatoria»** propone otra. También puede **escribir la suya**: mínimo 8 caracteres, sin espacios. Con varios celulares
+     conviene una clave **corta y fácil de recordar** (p. ej. `casagrande26`). **Anótela.**
    * **Puerto:** `8099` (déjelo así salvo que esté ocupado).
 5. Pulse **Instalar**. Al terminar, la última página repite el **puerto** y la **clave**. Deje marcado **Abrir
    SISRestaurante**.
 
 ☐ La clave de la API está anotada en un lugar seguro (no en un papel pegado a la pantalla del restaurante).
+
+> **¿Por qué la clave se define en el instalador y no al compilarlo?** Si estuviera en el script que genera el `.exe`
+> quedaría incrustada en el `Setup.exe` y en la USB: una misma clave para todos los restaurantes, y cambiarla exigiría
+> recompilar. En el instalador cada restaurante elige la suya en el momento. Si hace falta cambiarla después, no hay que
+> reinstalar: ver 3.6.
 
 > El instalador no pregunta por la base de datos: la aplicación usa `conexionLocalBD` →
 > `(localdb)\MSSQLLocalDB`, base **`CasaGrandeBD`**. Si en este PC tuviera otro nombre o servidor, cámbielo desde
@@ -261,6 +268,19 @@ asigne un PIN en el sistema de escritorio.
    → "Nunca" cuando está enchufado.
 
 ☐ Anotó **IP**, **puerto** y **clave**: `IP ____________  Puerto 8099  Clave ______________________`
+
+### 3.6 Cambiar la clave de la API después (sin reinstalar)
+
+Menú Inicio → **SISRestaurante → Cambiar clave de la API** (o `Herramientas\Cambiar-Clave-API.ps1`). Pregunta la clave
+nueva: escriba la suya (mínimo 8 caracteres, sin espacios) o pulse **Enter** para una aleatoria fácil de teclear. Guarda
+una copia del `SISMistico.exe.config` (`.bak`), cambia **solo** `ApiKey` y muestra la clave nueva; pide el permiso de
+administrador de Windows solo si hace falta. Después:
+
+1. **Cierre y vuelva a abrir SISRestaurante** (lee la clave al arrancar; las sesiones de los celulares se cierran).
+2. En **cada celular**: *Configurar servidor* → *Clave de la API* → escribir la clave nueva. Hasta entonces verán
+   «La clave de la API no es correcta».
+
+Sin preguntas: `Cambiar-Clave-API.ps1 -Clave MiClave2026` o `-Aleatoria`.
 
 ---
 
@@ -406,7 +426,7 @@ desinstalar primero.
 | No aparece "N DISPOSITIVOS" | API apagada o no pudo arrancar | Mire `…\logs\`: si dice *Acceso denegado*, falta la reserva de URL → ejecute `Herramientas\Configurar-Red.ps1` como administrador; si dice *ApiKey sigue con el valor de ejemplo*, repita el instalador marcando la API |
 | `ping` funciona en el PC pero no en el celular | Firewall o red "Pública" | Poner la red como **Privada** (3.5) y repetir `Configurar-Red.ps1` |
 | `ping` funciona en el navegador del celular pero la app no conecta | IP/puerto/clave mal escritos, o tráfico por datos móviles | Revise los tres datos; aplique 4.4 |
-| La app dice "Clave inválida" (401) | `ApiKey` distinta a la del PC | Vuelva a leerla en *Datos para conectar celulares* y reescríbala |
+| La app dice "Clave inválida" (401) | `ApiKey` distinta a la del PC (o se cambió la clave y falta actualizar ese celular) | Vuelva a leerla en *Datos para conectar celulares* y reescríbala; si hay que cambiarla, *Cambiar clave de la API* (3.6) |
 | "PIN incorrecto" para un mesero | No tiene PIN o es de menos de 4 dígitos | Asignarle un PIN en el sistema de escritorio (empleados) |
 | Muchos intentos de PIN: "espere" | Límite de 5 intentos por minuto por IP | Esperar un minuto |
 | Cambió la IP del PC y el celular aparece sin conexión | IP dinámica | La app lo busca sola (espere hasta ~1 min). Si no lo encuentra: *Configurar servidor* → **Buscar servidor en la red**. No lo encuentra si el PC está apagado, el sistema cerrado, o el celular no está en el mismo WiFi |
@@ -422,6 +442,8 @@ desinstalar primero.
 
 * La API **no usa TLS** y está pensada solo para la **red local**: no abra el puerto 8099 en el router hacia Internet.
 * El firewall solo admite la **subred local** y redes Privadas; el servidor además rechaza IP que no sean privadas.
-* La clave de la API y los PIN son la única defensa: use una clave larga, no la comparta por chats públicos y cámbiela
-  si se pierde un celular (edite `ApiKey` en `SISMistico.exe.config`, reinicie el sistema y actualice los celulares).
+* La clave de la API y los PIN son la única defensa. Una clave personalizada corta (mínimo 8 caracteres) es cómoda con
+  varios celulares y aceptable en una red local protegida, porque además cada operación exige el **PIN** del mesero y el
+  servidor limita los intentos de login; no la comparta por chats públicos y **cámbiela si se pierde un celular** con
+  *Cambiar clave de la API* (3.6) y actualice los demás celulares.
 * Cualquier PIN válido permite quitar líneas o cancelar un pedido: es la misma regla del escritorio.

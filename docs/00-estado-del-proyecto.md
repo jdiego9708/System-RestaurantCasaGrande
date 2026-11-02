@@ -12,6 +12,9 @@ El detalle de cada tema vive en los documentos enlazados; aquí está el mapa.
 > [§6](#6-base-de-datos-qué-hay-en-la-copia-y-qué-falta-en-producción) y [§10](#10-pendientes-en-orden-de-prioridad).
 >
 > **Para instalarlo en el restaurante:** [08 — Instalación desde cero](08-instalacion-desde-cero.md).
+>
+> **Para retomar el trabajo:** [09 — Cierre de sesión](09-cierre-de-sesion-2026-10-26.md) (qué se hizo, hallazgos,
+> pendientes, preguntas por confirmar y checklist de pruebas). Se trabaja desde `main`.
 
 ---
 
@@ -25,7 +28,7 @@ El detalle de cada tema vive en los documentos enlazados; aquí está el mapa.
 | Fase 2 — catálogo, mesas, imágenes | ✅ Probada (65/65) | `scripts/Test-ApiFase2.ps1` |
 | Fase 3 — alta de pedido atómica | ✅ Probada (78/78) | `scripts/Test-ApiFase3.ps1` |
 | Fase 4 — listar/agregar/quitar/estado/cancelar/imprimir | ✅ Probada (54/54) | `scripts/Test-ApiFase4.ps1` |
-| **Impresión de adiciones** (solo lo nuevo) y **precuenta** | ✅ Probada (38/38, PDF reales) | `scripts/Test-ApiAdiciones.ps1` |
+| **Impresión de adiciones** (solo lo nuevo) y **precuenta** | ✅ Probada (39/39, PDF reales) | `scripts/Test-ApiAdiciones.ps1` |
 | App móvil (Android) | ✅ Escrita; fases 1–4 probadas en un S24 Ultra | [`app-movil/09`](app-movil/09-estado-de-la-implementacion.md) |
 | App: buscar servidor en la red y reconexión automática | ✅ Probada contra el servidor real (sin teléfono) | `ServerScanner`, `ServerRelocator` |
 | App: casilla «Imprimir precuenta», horas AM/PM, ícono nuevo | ✅ Compila y prueba la parte de servidor; **sin ver en teléfono** | [`app-movil/09`](app-movil/09-estado-de-la-implementacion.md) |
@@ -45,7 +48,7 @@ El detalle de cada tema vive en los documentos enlazados; aquí está el mapa.
 | Repositorio | Ramas | Estado |
 |---|---|---|
 | `D:\Repositorios\System-RestaurantCasaGrande` (GitHub `jdiego9708/System-RestaurantCasaGrande`) | `main` y `feature/api-movil` en `1055700`, **publicadas** | Hay trabajo posterior **sin confirmar** (ver abajo) |
-| `D:\Repositorios\CasaGrandeMesero` | `main` en `c87aa20` | **Sin remoto configurado** (no se ha podido subir a ningún sitio) y con trabajo posterior sin confirmar |
+| `D:\Repositorios\CasaGrandeMesero` (GitHub `jdiego9708/CasaGrandeMesero`, **privado**) | `main` en `0612f4e`, **publicada** | Limpio |
 
 Commits de esta etapa del escritorio (del más viejo al más nuevo): `a1a0331` diseño y contrato · `3304af2` esquema
 y herramientas de BD · `654267e` pruebas fases 1–3 · `8ebf25b` API embebida (fases 1–3) · `22fb271` login solo por PIN
@@ -169,8 +172,12 @@ precuenta, horas AM/PM, pantalla de registros e ícono.
 | Kit USB | `scripts\Preparar-USB.ps1` → `Casa Grande Installers\` (numerado en orden de ejecución) |
 | APK de la app | `app\build\app\outputs\flutter-apk\app-release.apk` (~63 MB) |
 
-**Dos bases en esta máquina:** `CasaGrandeBD` es la base **antigua de desarrollo** (esquema sin
-`Detalle_pedido.Id_detalle_pedido`) y la que usa la app instalada aquí; `CasaGrandeBD_prod` es la copia de producción.
+**Dos bases en esta máquina** (estado al cierre del 2026-10-26): `CasaGrandeBD` es la que usa la app **instalada** aquí y
+`CasaGrandeBD_prod` es la copia de producción que usan las pruebas (`run-local.ps1`). `CasaGrandeBD` era una base
+**antigua de desarrollo** (sin `Detalle_pedido.Id_detalle_pedido` ni los SP móviles); a las 18:20 se **reemplazó por una
+copia de `CasaGrandeBD_prod`** con `Desplegar-Base-de-Datos.ps1` (la antigua quedó respaldada en
+`C:\Respaldos\CasaGrandeBD_ESQUEMA_ANTIGUO_*.bak`), y desde entonces tiene el esquema de producción y los 3 SP. Por eso
+la app instalada pudo crear desde el teléfono el pedido de prueba 14551460 (mesa 5070, 18:53), que solo existe en esa base.
 `Desplegar-Base-de-Datos.ps1` detecta el esquema antiguo, lista las bases y ofrece reemplazarlo con respaldo previo.
 
 **Prueba por USB:** `adb reverse tcp:8099 tcp:8099` y en la app servidor `localhost:8099`. Por WiFi: ver
@@ -206,7 +213,7 @@ Orden y detalle en [`db/README.md`](../db/README.md).
 | `Test-ApiFase2.ps1` | 65 | ✅ 65/65 | catálogo, mesas, imágenes y *path traversal*; cada dato contrastado con la BD |
 | `Test-ApiFase3.ps1` | 78 | ✅ 78/78 | alta, precios de catálogo, ingredientes, idempotencia, concurrencia, 37 peticiones inválidas |
 | `Test-ApiFase4.ps1` | 54 | ✅ 54/54 | listado, agregar/quitar con PIN, `SALIENDO`, cancelar, imprimir (PDF comprobado y borrado) |
-| `Test-ApiAdiciones.ps1` | 38 | ✅ 38/38 | adiciones (solo lo nuevo, copias, bebida sola, sin imprimir, validaciones, simultáneas), precuenta (PDF real, estado, 400 sin cambiar estado), registro y limpieza |
+| `Test-ApiAdiciones.ps1` | 39 | ✅ 39/39 | adiciones (solo lo nuevo, copias, bebida sola, sin imprimir, validaciones, simultáneas), precuenta (PDF real, estado, 400 sin cambiar estado), registro y limpieza |
 | `flutter test` (app) | 26 | ✅ | dinero, borradores, errores, reubicador del servidor (13), formato de hora (6) y su guardiana |
 | `flutter test` (paquete api) | 71 | ✅ | DTOs, cliente (incluye adiciones y precuenta), reintentos, escáner de red (15, con un servidor HTTP real) |
 | Prueba contra el servidor **real** instalado | — | ✅ | barrido de la /24 en 9 s; IP vieja corregida en 1,5 s; con clave o nombre erróneos no cambia nada |
@@ -238,10 +245,12 @@ crean** (una limpieza anterior borraba por número de pedido y pudo llevarse PDF
 | D12 | Empleados `INACTIVO` pueden entrar (paridad con el escritorio), con log |
 | D13 | Catálogo = solo `Estado = 'ACTIVO'` |
 | D14 | Platos detallados exigen los 4 tipos de ingrediente, también en carta |
-| D15 | **Adiciones:** al agregar productos se imprime **solo lo nuevo**, nunca el pedido completo |
-| D16 | **Precuenta:** la imprime el escritorio con los valores por defecto de su botón; la casilla del móvil va marcada |
+| D15 | **Adiciones:** al agregar productos se imprime **solo lo nuevo**, nunca el pedido completo; **2 copias por defecto** (confirmado) |
+| D16 | **Precuenta:** la imprime el escritorio con los valores por defecto de su botón; la casilla del móvil va **marcada por defecto** (confirmado) |
 | D17 | **El móvil encuentra al servidor por su nombre** (barrido de la /24), no por una IP fija: no hace falta acceso al router |
 | D18 | Horas del móvil siempre en 12 h con AM/PM |
+| D19 | **Clave de la API: la define el restaurante en el instalador** (aleatoria fácil de teclear o personalizada, mínimo 8 caracteres), nunca incrustada al compilar; se puede cambiar después sin reinstalar (`Cambiar-Clave-API.ps1`) |
+| D20 | **Hora de la precuenta impresa por el escritorio: 12 h con AM/PM** (`6:53 PM`, siempre igual, sin depender del formato de Windows); vale para el botón «Precuenta» del escritorio y para la que pide el móvil. Las horas de las comandas y de la factura siguen con el formato de Windows |
 
 ### Abiertas
 
@@ -272,7 +281,7 @@ crean** (una limpieza anterior borraba por número de pedido y pudo llevarse PDF
 * **`sp_Cambiar_estado_pedido` reescribe `Id_mesa`**: la API le pasa siempre la mesa actual.
 * La copia local contiene **datos personales y ventas reales**: no se versiona ni se comparte.
 * La carpeta `Documentos\Casa Grande\Comandas` puede mezclar PDF de pruebas con reales (los nombres usan el número de
-  pedido, que se repite entre la copia y la base antigua de desarrollo).
+  pedido, que se repite entre `CasaGrandeBD` y `CasaGrandeBD_prod`, que parten de la misma numeración).
 
 ---
 
@@ -280,12 +289,15 @@ crean** (una limpieza anterior borraba por número de pedido y pudo llevarse PDF
 
 ### P0 — para que el restaurante lo pueda usar
 
-1. **Probar el instalador en un PC real** (instalar, actualizar, desinstalar) y la USB `Casa Grande Installers`.
+1. **Probar el instalador en un PC real** (asistente con la clave personalizable, instalar, actualizar, desinstalar,
+   `Cambiar-Clave-API.ps1`) y refrescar la USB `Casa Grande Installers` (su kit es de una versión anterior).
 2. **Despliegue en producción:** `01-Base-de-Datos.ps1` (respaldo, `01`, `03`, `04`, `02`) y activar la API desde el
    instalador. *Criterio de terminado:* un teléfono en el WiFi del restaurante crea un pedido, le agrega productos,
    pide la precuenta y el escritorio lo muestra y lo imprime.
 3. **Probar el APK de release en un teléfono** (lo nuevo de hoy) y decidir si se firma con *keystore* propio.
-4. **Confirmar los cambios** de ambos repositorios y dar de alta un remoto para `CasaGrandeMesero`.
+4. **Confirmar y subir** lo pendiente de `System-RestaurantCasaGrande` (clave personalizable, hora de la precuenta en
+   12 h y documentación). Luego **reinstalar el escritorio y la app en esta PC/teléfono**: lo instalado es
+   la versión anterior (sin adiciones ni precuenta impresas).
 
 ### P1 — calidad y cierre con el cliente
 
@@ -342,5 +354,7 @@ cd D:\Repositorios\System-RestaurantCasaGrande\scripts
 | 2026-10-26 (tarde) | Corrección de los tres hallazgos; arreglo de empleados en la BD; **fase 4** de la API (54/54) y sus pantallas en la app; impresión real con PDF en Documentos; `$` al inicio en todos los precios |
 | 2026-10-26 (tarde-noche) | Comanda siempre activa con copias; indicador de dispositivos; **instalador real**, kit USB numerado, scripts de red y de base de datos (con reemplazo de la base antigua); guía de instalación; la app **encuentra el servidor por su nombre** y se reconecta sola; publicación de las ramas |
 | 2026-10-26 (noche) | **Adiciones imprimen solo lo nuevo** y la impresión automática ya no descarta trabajos; **precuenta** impresa desde el móvil con casilla; horas en 12 h con AM/PM; pantalla de registros propia; **ícono nuevo**; corrección de las pruebas para que no borren PDF ajenos; documentación consolidada |
+| 2026-10-26 (clave) | **La clave de la API es personalizable**: el instalador propone una aleatoria fácil de teclear (con «Generar otra») o acepta una propia (≥ 8 caracteres); `Cambiar-Clave-API.ps1` la cambia después sin reinstalar. Compila; el asistente no se ha ejecutado en un PC real |
+
 
 Los documentos se actualizan cuando cambie el estado; este es el punto de entrada para saber **cómo está hoy**.
