@@ -351,6 +351,15 @@ try {
         Ok 'Arreglo de empleados aplicado'
     } else { Aviso 'Omitido. Con PIN compartidos el celular mostrara un selector de persona.' }
 
+    # El login del escritorio solo muestra empleados ACTIVO: estas dos personas deben estarlo para poder entrar.
+    Write-Host ''
+    Write-Host '    Login del escritorio: solo se listan empleados ACTIVO. Este paso deja ACTIVO a JUAN DIEGO DUQUE y a'
+    Write-Host '    ANDRES DAVID HOYOS GARCIA (05). Solo cambia su Estado, no su PIN; se puede repetir y se revierte con el .revert.'
+    if (Pregunta '    Activar a esos dos empleados ahora?') {
+        Correr-Sql (Join-Path $db '05_activar_empleados.sql') $Database
+        Ok 'Empleados activados'
+    } else { Aviso 'Omitido. Si siguen INACTIVO no aparecen en el login del escritorio.' }
+
     # ---------- 6. Verificacion final ----------
     Paso '6/6  Verificacion final (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database

@@ -178,7 +178,10 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 NEmpleados.BuscarEmpleados("COMPLETO", "", out rpta);
             if (tablaEmpleados != null)
             {
-                this.ListaEmpleados.DataSource = tablaEmpleados;
+                // Solo empleados ACTIVO. El Id 0 ("NINGUNO", inactivo) se conserva: es la entrada fija del
+                // administrador y de la configuración avanzada (ver Login), y sin ella no se podría entrar.
+                tablaEmpleados.DefaultView.RowFilter = "Estado = 'ACTIVO' OR Id_empleado = 0";
+                this.ListaEmpleados.DataSource = tablaEmpleados.DefaultView;
                 this.ListaEmpleados.ValueMember = "Id_empleado";
                 this.ListaEmpleados.DisplayMember = "Nombre_empleado";
 
