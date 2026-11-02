@@ -55,10 +55,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "SISMistico.exe.config"; F
 ; El config solo se instala la primera vez: una actualizacion no pisa los cambios del restaurante.
 Source: "{#SourceDir}\SISMistico.exe.config"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "..\scripts\Configurar-Red.ps1"; DestDir: "{app}\Herramientas"; Flags: ignoreversion
+Source: "..\scripts\Cambiar-Clave-API.ps1"; DestDir: "{app}\Herramientas"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\SISRestaurante"; Filename: "{app}\{#AppExe}"
 Name: "{group}\Datos para conectar celulares"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -NoExit -File ""{app}\Herramientas\Configurar-Red.ps1"" -SoloInformar -RutaConfig ""{app}\SISMistico.exe.config"""; Comment: "Muestra la IP, el puerto y la clave que se escriben en cada celular"
+Name: "{group}\Cambiar clave de la API"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -NoExit -File ""{app}\Herramientas\Cambiar-Clave-API.ps1"" -RutaConfig ""{app}\SISMistico.exe.config"""; Comment: "Cambia la clave que escriben los celulares (personalizada o aleatoria) sin reinstalar"
 Name: "{group}\Desinstalar SISRestaurante"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\SISRestaurante"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
@@ -72,7 +74,7 @@ Type: filesandordirs; Name: "{app}\logs"
 const
   ClavePlaceholder = 'cambiar-esta-clave';
   NombreRegla = 'SISRestaurante API';
-  Alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  AlfabetoClave = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 var
   ApiPage: TInputQueryWizardPage;
@@ -124,30 +126,43 @@ begin
   Nodo.setAttribute('value', Valor);
 end;
 
+// Clave aleatoria FACIL DE TECLEAR en el celular: 12 caracteres en minuscula, sin 0/o ni 1/l/i (se confunden).
 function NuevaClave: String;
 var
-  I: Integer;
+  I, V: Integer;
   TipoLib: Variant;
   Texto: String;
 begin
   Result := '';
-  // Fuente buena: un GUID de Windows (CoCreateGuid, 122 bits aleatorios) -> 24 caracteres hexadecimales.
+  // Fuente buena: un GUID de Windows (CoCreateGuid, 122 bits aleatorios). Cada par de digitos hexadecimales
+  // (0..255) elige un simbolo del alfabeto de 31.
   try
     TipoLib := CreateOleObject('Scriptlet.TypeLib');
     Texto := TipoLib.Guid;
     StringChangeEx(Texto, '{', '', True);
     StringChangeEx(Texto, '}', '', True);
     StringChangeEx(Texto, '-', '', True);
-    Result := Lowercase(Copy(Texto, 1, 24));
+    Texto := Lowercase(Texto);
+    for I := 0 to 11 do
+    begin
+      V := StrToInt('$' + Copy(Texto, I * 2 + 1, 2));
+      Result := Result + AlfabetoClave[(V mod Length(AlfabetoClave)) + 1];
+    end;
   except
     Result := '';
   end;
-  if Length(Result) = 24 then Exit;
+  if Length(Result) = 12 then Exit;
   // Respaldo (menos fuerte): Random sin semilla repetiria la clave, asi que se avanza segun la hora.
   for I := 1 to StrToIntDef(GetDateTimeString('nnss', #0, #0), 1) + 1 do Random(10);
   Result := '';
-  for I := 1 to 24 do
-    Result := Result + Alfabeto[Random(Length(Alfabeto)) + 1];
+  for I := 1 to 12 do
+    Result := Result + AlfabetoClave[Random(Length(AlfabetoClave)) + 1];
+end;
+
+// Una clave propia puede ser corta y facil de recordar: minimo 8 caracteres, sin espacios, y no la de ejemplo.
+function ClaveValida(const Clave: String): Boolean;
+begin
+  Result := (Length(Clave) >= 8) and (Pos(' ', Clave) = 0) and (Clave <> ClavePlaceholder);
 end;
 
 function PuertoDe(const Prefijo: String): String;
@@ -184,8 +199,18 @@ end;
 function InitializeSetup: Boolean;
 var
   Release: Cardinal;
+  ClaveParam: String;
 begin
   Result := True;
+  // Instalacion silenciosa: una /ApiKey=... invalida se rechaza de entrada (en el asistente se valida en su pagina).
+  ClaveParam := ExpandConstant('{param:ApiKey|}');
+  if (ClaveParam <> '') and not ClaveValida(ClaveParam) then
+  begin
+    SuppressibleMsgBox('La clave indicada en /ApiKey debe tener al menos 8 caracteres, sin espacios, y no puede ser ' +
+                       'la de ejemplo.', mbError, MB_OK, IDOK);
+    Result := False;
+    Exit;
+  end;
   // .NET Framework 4.8 = Release 528040 o mayor (Windows 10 1903+ y Windows 11 ya lo traen).
   if not RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', Release)
      or (Release < 528040) then
@@ -202,14 +227,33 @@ begin
            '(Administracion avanzada). El instalador continuara.', mbInformation, MB_OK);
 end;
 
+procedure GenerarClaveClick(Sender: TObject);
+begin
+  ApiPage.Values[0] := NuevaClave;
+end;
+
 procedure InitializeWizard;
+var
+  Boton: TNewButton;
 begin
   ApiPage := CreateInputQueryPage(wpSelectTasks, 'API movil',
-    'Datos con los que se conectaran los celulares de los meseros',
-    'La clave es la que cada celular escribe en "Configurar servidor". Se puede cambiar despues en el ' +
-    'archivo SISMistico.exe.config (claves ApiKey y ApiPrefijo).');
-  ApiPage.Add('Clave de la API (minimo 12 caracteres, sin espacios):', False);
+    'Clave y puerto con los que se conectaran los celulares de los meseros',
+    'La clave se escribe una vez en cada celular ("Configurar servidor"). Deje la clave aleatoria que se propone ' +
+    '(facil de teclear: sin letras ni numeros que se confundan) o escriba la suya: una clave corta y facil de ' +
+    'recordar ahorra trabajo cuando hay varios celulares. Se puede cambiar despues con "Cambiar clave de la API" ' +
+    'del menu Inicio.');
+  ApiPage.Add('Clave de la API (minimo 8 caracteres, sin espacios):', False);
   ApiPage.Add('Puerto:', False);
+
+  Boton := TNewButton.Create(ApiPage);
+  Boton.Parent := ApiPage.Surface;
+  Boton.Caption := 'Generar otra clave aleatoria';
+  Boton.Width := ScaleX(200);
+  Boton.Height := ScaleY(25);
+  Boton.Left := 0;
+  Boton.Top := ApiPage.Edits[1].Top + ApiPage.Edits[1].Height + ScaleY(14);
+  Boton.OnClick := @GenerarClaveClick;
+
   ApiPageLista := False;
 end;
 
@@ -265,9 +309,9 @@ begin
   if CurPageID <> ApiPage.ID then Exit;
   Clave := Trim(ApiPage.Values[0]);
   Puerto := StrToIntDef(Trim(ApiPage.Values[1]), 0);
-  if (Length(Clave) < 12) or (Pos(' ', Clave) > 0) or (Clave = ClavePlaceholder) then
+  if not ClaveValida(Clave) then
   begin
-    MsgBox('La clave debe tener al menos 12 caracteres, sin espacios, y no puede ser la de ejemplo.', mbError, MB_OK);
+    MsgBox('La clave debe tener al menos 8 caracteres, sin espacios, y no puede ser la de ejemplo.', mbError, MB_OK);
     Result := False;
   end
   else if (Puerto < 1024) or (Puerto > 65535) then

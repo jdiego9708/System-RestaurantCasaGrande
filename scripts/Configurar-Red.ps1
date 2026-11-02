@@ -178,8 +178,13 @@ if ($RutaConfig) {
         Aviso 'La ApiKey del config sigue con el valor de ejemplo (la API movil no se ha activado).'
         $claveFinal = $null
     } elseif (-not $claveFinal -or $claveFinal -eq $ClavePlaceholder) {
-        $claveFinal = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 24 | ForEach-Object { [char]$_ })
-        Aviso 'La ApiKey seguia con el valor de ejemplo: generé una nueva.'
+        # 12 caracteres en minuscula, sin 0/o ni 1/l/i: faciles de teclear en el celular
+        $alfabeto = 'abcdefghjkmnpqrstuvwxyz23456789'
+        $bytes = New-Object byte[] 12
+        $rng = [Security.Cryptography.RNGCryptoServiceProvider]::new()
+        try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+        $claveFinal = -join ($bytes | ForEach-Object { $alfabeto[$_ % $alfabeto.Length] })
+        Aviso 'La ApiKey seguia con el valor de ejemplo: se genero una aleatoria facil de teclear.'
     }
     if (-not $SoloInformar) {
         Copy-Item -LiteralPath $RutaConfig -Destination "$RutaConfig.bak" -Force

@@ -37,14 +37,19 @@ Developer Pack. `installer\build\` y `installer\Output\` no se versionan.
 * Da permiso de escritura a los usuarios en la carpeta de la app: el sistema reescribe su propio
   `SISMistico.exe.config` (ruta de imágenes, conexión, correo, licencias) y escribe `logs\`. Con ClickOnce esto vivía
   en el perfil del usuario.
-* Tarea **«Activar la API móvil y abrir el firewall»**: pregunta la clave (propone una aleatoria de 24 caracteres) y el
-  puerto (8099), escribe `ApiHabilitada`, `ApiPrefijo` y `ApiKey` en el `.exe.config`, reserva la URL por SID
+* Tarea **«Activar la API móvil y abrir el firewall»**: pregunta la clave y el puerto (8099). La clave **la define el
+  restaurante en este asistente** (no se incrusta al compilar, para que no sea la misma en todos los restaurantes): se
+  propone una **aleatoria fácil de teclear** (12 caracteres en minúscula sin `0/o/1/l/i`, con botón «Generar otra»), o se
+  escribe una **personalizada** de 8 caracteres o más, sin espacios. Escribe `ApiHabilitada`, `ApiPrefijo` y `ApiKey` en el `.exe.config`, reserva la URL por SID
   (válido en Windows en español) y abre el firewall solo para redes Privadas/Dominio y la subred local.
   Al terminar muestra puerto y clave; la IP sale en **Inicio > SISRestaurante > Datos para conectar celulares**.
 * **Actualizar** = ejecutar el instalador nuevo encima: cierra la app si está abierta y **conserva** el
   `.exe.config` del restaurante (clave, imágenes, conexión). Si se vuelve a marcar la API se propone la clave actual.
+* **Cambiar la clave después:** Inicio > SISRestaurante > **Cambiar clave de la API** (`Herramientas\Cambiar-Clave-API.ps1`):
+  clave propia o aleatoria, con copia `.bak` del `.exe.config`, sin reinstalar.
 * **Desinstalar** quita los archivos, la reserva de URL y la regla de firewall.
-* Instalación silenciosa: `Setup.exe /VERYSILENT /TASKS="api" /ApiKey=ClaveLarga123 /ApiPort=8099`.
+* Instalación silenciosa: `Setup.exe /VERYSILENT /TASKS="api" /ApiKey=MiClave2026 /ApiPort=8099` (una `/ApiKey` de menos
+  de 8 caracteres, con espacios o igual a la de ejemplo se rechaza de entrada).
 
 ## Pendientes y advertencias
 
