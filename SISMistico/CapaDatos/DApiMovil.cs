@@ -141,16 +141,17 @@ namespace CapaDatos
             const string sql =
                 "WITH m AS (SELECT Id_mesa, Num_mesa, Descripcion_mesa, " +
                 "  ROW_NUMBER() OVER (PARTITION BY Num_mesa ORDER BY Id_mesa) AS rn FROM Mesas WHERE Id_mesa > 0), " +
-                "ab AS (SELECT mm.Num_mesa, p.Id_pedido, p.Estado_pedido, p.Hora_pedido, p.CantidadClientes, " +
+                "ab AS (SELECT mm.Num_mesa, p.Id_pedido, p.Id_empleado, p.Estado_pedido, p.Hora_pedido, p.CantidadClientes, " +
                 "  ROW_NUMBER() OVER (PARTITION BY mm.Num_mesa ORDER BY p.Id_pedido DESC) AS rn " +
                 "  FROM Pedidos p INNER JOIN Mesas mm ON mm.Id_mesa = p.Id_mesa " +
                 "  WHERE p.Fecha_pedido = @Fecha AND p.Estado_pedido IN ('PENDIENTE', 'SALIENDO') " +
                 "  AND ISNULL(p.Tipo_pedido, '') <> 'DOMICILIO') " +
                 "SELECT m.Id_mesa, m.Num_mesa, m.Descripcion_mesa, " +
                 "  ISNULL(ab.Estado_pedido, 'DISPONIBLE') AS Estado, ISNULL(ab.Id_pedido, 0) AS Id_pedido, " +
-                "  ab.Hora_pedido, ISNULL(ab.CantidadClientes, 0) AS CantidadClientes, " +
+                "  ab.Hora_pedido, ISNULL(ab.CantidadClientes, 0) AS CantidadClientes, e.Nombre_empleado, ab.Id_empleado, " +
                 "  ISNULL((SELECT SUM(d.Precio * d.Cantidad) FROM Detalle_pedido d WHERE d.Id_pedido = ab.Id_pedido), 0) AS Total " +
                 "FROM m LEFT JOIN ab ON ab.Num_mesa = m.Num_mesa AND ab.rn = 1 " +
+                "LEFT JOIN Empleados e ON e.Id_empleado = ab.Id_empleado " +
                 "WHERE m.rn = 1 ORDER BY m.Num_mesa";
             return Consultar(sql, cmd =>
                 cmd.Parameters.Add("@Fecha", SqlDbType.Date).Value = fecha.Date);

@@ -163,6 +163,18 @@ Devuelve el empleado y turno asociados al token.
 
 Invalida el token actual. `204 No Content`.
 
+### `POST /auth/verificar-pin`
+
+Exige token. Comprueba el PIN de un empleado concreto **sin abrir otra sesión**; la app lo usa para entrar a la mesa
+de otro mesero.
+
+```json
+{ "id_empleado": 6060, "codigo_maestra": 1234 }
+```
+
+`200` con `{ "valido": true }`. PIN que no corresponde a ese empleado → `403 CLAVE_INVALIDA`; los fallos cuentan en
+el mismo bloqueo por IP del login (`429 DEMASIADOS_INTENTOS`). Falta un campo o no es un entero positivo → `400`.
+
 ---
 
 ## 4. Mesas
@@ -176,12 +188,17 @@ Invalida el token actual. `204 No Content`.
   { "id_mesa": 1, "num_mesa": 1, "descripcion": "", "estado": "DISPONIBLE",
     "id_pedido": 0, "hora": null, "cantidad_clientes": 0, "total": 0 },
   { "id_mesa": 2, "num_mesa": 2, "descripcion": "", "estado": "PENDIENTE",
-    "id_pedido": 1234, "hora": "13:42", "cantidad_clientes": 2, "total": 49500 }
+    "id_pedido": 1234, "hora": "13:42", "cantidad_clientes": 2, "total": 49500, "empleado": "Juan Diego Duque",
+    "id_empleado": 6060 }
 ]
 ```
 
 `estado` ∈ `DISPONIBLE` | `PENDIENTE` | `SALIENDO`. `fecha` mal formada → `400`. `hora` es `null` en mesas libres;
-`total` es la suma de `precio × cantidad` de todas las filas del pedido.
+`total` es la suma de `precio × cantidad` de todas las filas del pedido. `empleado` es el nombre completo
+(`Empleados.Nombre_empleado`) del mesero que abrió el pedido abierto de la mesa y `""` en las mesas libres: la tabla
+`Mesas` no guarda mesero, el vínculo es el `Id_empleado` del pedido. Recortarlo a primer nombre + primer apellido es
+cosa del cliente. `id_empleado` es su id (`null` en mesas libres): con él la app detecta que la mesa es de otro
+mesero y pide su PIN (`POST /auth/verificar-pin`).
 
 > **Implementado y probado en la fase 2** (65 comprobaciones contra la copia de producción). Reglas heredadas del
 > escritorio, que busca las mesas por **`Num_mesa`**:
@@ -515,7 +532,7 @@ Cualquier otra transición → `422 REGLA_NEGOCIO`. `estado` solo acepta `SALIEN
 
 > **Precuenta impresa.** Es la misma del botón «Precuenta» del escritorio: el reporte `Precuenta.rdlc` con los valores
 > que el escritorio deja por defecto al abrirla sin tocar nada (propina sugerida 0, descuento 0 %, sin cupón,
-> desechables ni domicilio, observaciones vacías; total = suma de las líneas) y la hora del momento de imprimir. Si la
+> desechables ni domicilio, observaciones vacías; total = suma de las líneas) y la hora del momento de imprimir, siempre en **12 h con AM/PM** (`6:53 PM`). Si la
 > impresora predeterminada es de PDF, se guarda en `Documentos\Casa Grande\Comandas` como
 > `precuenta-{id_pedido}-{aaaaMMdd-HHmmss}.pdf`. Comparte la cola de impresión con las comandas.
 

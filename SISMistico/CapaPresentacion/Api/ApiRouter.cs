@@ -26,6 +26,7 @@ namespace CapaPresentacion.Api
             Nueva("POST", "/auth/login",  false, false, ApiHandlers.Login),
             Nueva("GET",  "/auth/me",     false, true,  ApiHandlers.Me),
             Nueva("POST", "/auth/logout", false, true,  ApiHandlers.Logout),
+            Nueva("POST", "/auth/verificar-pin", false, true, ApiHandlers.VerificarPin),
 
             // Fase 2: catálogo, mesas e imágenes (solo lectura; todas exigen clave y token)
             Nueva("GET",  "/mesas",                       false, true, ApiMesasHandlers.Listar),

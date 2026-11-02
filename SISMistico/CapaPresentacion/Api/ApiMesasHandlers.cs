@@ -34,7 +34,9 @@ namespace CapaPresentacion.Api
                     { "id_pedido", Convert.ToInt32(r["Id_pedido"]) },
                     { "hora", hora is TimeSpan ? ((TimeSpan)hora).ToString(@"hh\:mm") : null },
                     { "cantidad_clientes", Convert.ToInt32(r["CantidadClientes"]) },
-                    { "total", ApiJson.Dinero(r["Total"]) }
+                    { "total", ApiJson.Dinero(r["Total"]) },
+                    { "empleado", ApiJson.Celda(r, "Nombre_empleado") },
+                    { "id_empleado", r["Id_empleado"] == DBNull.Value ? null : (object)Convert.ToInt32(r["Id_empleado"]) }
                 });
             }
             return ApiResponse.Ok(lista);

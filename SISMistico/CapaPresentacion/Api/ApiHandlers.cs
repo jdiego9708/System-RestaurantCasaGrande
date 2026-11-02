@@ -105,6 +105,41 @@ namespace CapaPresentacion.Api
             return ApiResponse.Ok(respuesta);
         }
 
+        /// <summary>
+        /// POST /auth/verificar-pin { id_empleado, codigo_maestra }. Comprueba el PIN de un empleado concreto sin abrir
+        /// otra sesión (la app lo usa para entrar a la mesa de otro mesero). Comparte el bloqueo por intentos del login.
+        /// </summary>
+        public static ApiResponse VerificarPin(ApiRequest req)
+        {
+            string cuerpo, error;
+            if (!req.LeerCuerpo(out cuerpo, out error))
+                return ApiResponse.Error(400, "VALIDACION", error);
+
+            Dictionary<string, object> datos = ApiJson.LeerObjeto(cuerpo, out error);
+            if (datos == null)
+                return ApiResponse.Error(400, "VALIDACION", error);
+
+            int idEmpleado, pin;
+            if (!ApiJson.TryEntero(datos, "id_empleado", out idEmpleado) || idEmpleado <= 0)
+                return ApiResponse.Error(400, "VALIDACION", "id_empleado debe ser un entero positivo.");
+            if (!ApiJson.TryEntero(datos, "codigo_maestra", out pin) || pin <= 0)
+                return ApiResponse.Error(400, "VALIDACION", "codigo_maestra debe ser un entero mayor que 0.");
+
+            int espera;
+            if (ApiAuth.Bloqueada(req.Ip, out espera))
+                return ApiResponse.Error(429, "DEMASIADOS_INTENTOS",
+                    "Demasiados intentos fallidos. Espera " + espera + " s.");
+
+            if (NApiMovil.ValidarEmpleado(idEmpleado, null, pin, true) == null)
+            {
+                ApiAuth.RegistrarFallo(req.Ip);
+                return ApiResponse.Error(403, "CLAVE_INVALIDA", "Credenciales inválidas.");
+            }
+
+            ApiAuth.LimpiarFallos(req.Ip);
+            return ApiResponse.Ok(new Dictionary<string, object> { { "valido", true } });
+        }
+
         public static ApiResponse Me(ApiRequest req)
         {
             Dictionary<string, object> respuesta = new Dictionary<string, object>
