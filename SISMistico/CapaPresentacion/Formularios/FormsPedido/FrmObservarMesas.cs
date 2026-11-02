@@ -276,14 +276,6 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     positionX = ButtonMesa.Location.X + ButtonMesa.Width + 2;
 
                     contador += 1;
-                    if (contador == this.Numero_mesas)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        continue;
-                    }
                 }
                 this.panelMesas.Controls.AddRange(controles.ToArray());
                 this.panelMesas.Refresh();

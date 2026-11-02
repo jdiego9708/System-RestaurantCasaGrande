@@ -352,7 +352,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.numericComandas.TabIndex = 29;
             this.numericComandas.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericComandas.Value = new decimal(new int[] {
-            3,
+            1,
             0,
             0,
             0});
