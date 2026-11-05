@@ -11,6 +11,53 @@ namespace CapaDatos
 {
     public class DVenta
     {
+        // Consulta la venta exacta y sus pagos, sin mezclar otras ventas del mismo pedido.
+        public static DataSet GetSaleDetails(int saleId)
+        {
+            const string query = @"
+DECLARE @OrderId int = (SELECT Id_pedido FROM Ventas WHERE Id_venta = @SaleId);
+SELECT v.*, p.Tipo_pedido, p.Estado_pedido, p.Fecha_pedido, p.Hora_pedido,
+       p.Observaciones_pedido, p.CantidadClientes, p.Id_cliente, p.Id_empleado, p.Id_mesa,
+       m.Num_mesa, c.Nombre_cliente, c.Telefono_cliente, c.Correo_electronico,
+       e.Nombre_empleado, p.Id_direccion,
+       CASE WHEN a.Id_direccion IS NOT NULL THEN a.Direccion ELSE c.Direccion_cliente END AS Direccion_entrega,
+       CASE WHEN a.Id_direccion IS NOT NULL THEN a.Referencia ELSE c.Referencia_ubicacion END AS Referencia_entrega,
+       a.Alias AS Alias_direccion, a.Barrio,
+       COALESCE(NULLIF(a.Telefono_contacto, ''), c.Telefono_cliente) AS Telefono_entrega
+FROM Ventas v
+INNER JOIN Pedidos p ON p.Id_pedido = v.Id_pedido
+LEFT JOIN Clientes c ON c.Id_cliente = p.Id_cliente
+LEFT JOIN Empleados e ON e.Id_empleado = p.Id_empleado
+LEFT JOIN Mesas m ON m.Id_mesa = p.Id_mesa
+LEFT JOIN Domicilios a ON a.Id_direccion = p.Id_direccion
+WHERE v.Id_venta = @SaleId;
+SELECT d.Id_detalle_pedido, d.Tipo,
+       COALESCE(pl.Nombre_plato, b.Nombre_bebida, 'Producto sin nombre') AS Nombre,
+       d.Precio, d.Cantidad, d.Precio * d.Cantidad AS Total, d.Observaciones
+FROM Detalle_pedido d
+LEFT JOIN Platos pl ON d.Tipo = 'PLATO' AND pl.Id_plato = d.Id_tipo
+LEFT JOIN Bebidas b ON d.Tipo = 'BEBIDA' AND b.Id_bebida = d.Id_tipo
+WHERE d.Id_pedido = @OrderId ORDER BY d.Id_detalle_pedido;
+SELECT Metodo_pago, Valor_pago, Vaucher, Observaciones
+FROM Detalle_venta WHERE Id_venta = @SaleId;
+SELECT di.Id_detalle_pedido, di.Id_tipo, pl.Nombre_plato AS Plato, i.Nombre_ingrediente, di.Observaciones
+FROM Detalle_ingredientes_pedido di
+LEFT JOIN Ingredientes i ON i.Id_ingrediente = di.Id_ingrediente
+LEFT JOIN Platos pl ON pl.Id_plato = di.Id_tipo
+WHERE di.Id_pedido = @OrderId ORDER BY di.Id_detalle_pedido, di.Id_detalle_ingrediente_pedido;";
+            using (SqlConnection connection = new SqlConnection(Conexion.Cn))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+            {
+                command.Parameters.Add("@SaleId", SqlDbType.Int).Value = saleId;
+                DataSet result = new DataSet();
+                adapter.Fill(result);
+                string[] names = { "Sale", "Products", "Payments", "Ingredients" };
+                for (int i = 0; i < result.Tables.Count; i++) result.Tables[i].TableName = names[i];
+                return result;
+            }
+        }
+
         #region MENSAJE SQL
         private void SqlCon_InfoMessage(object sender, SqlInfoMessageEventArgs e)
         {
@@ -36,7 +83,7 @@ namespace CapaDatos
 
         #region METODO INSERTAR VENTA
         public string InsertarVenta(List<string> Variables, DataTable detalle_pago,
-            out int id_venta)
+            out int id_venta, string electronicRequestJson = null)
         {
             id_venta = 0;
             int contador = 0;
@@ -239,6 +286,16 @@ namespace CapaDatos
 
                     if (rpta.Equals("OK"))
                     {
+                        if (electronicRequestJson != null)
+                        {
+                            using (SqlCommand request = new SqlCommand(
+                                "INSERT dbo.AlegraInvoiceRequests (SaleId,CompanyKey,RequestJson) VALUES (@sale,'default',@json)", SqlCon, transaction))
+                            {
+                                request.Parameters.Add("@sale", SqlDbType.Int).Value = id_venta;
+                                request.Parameters.Add("@json", SqlDbType.NVarChar, -1).Value = electronicRequestJson;
+                                request.ExecuteNonQuery();
+                            }
+                        }
                         transaction.Commit();
                     }
                     else
@@ -556,6 +613,40 @@ namespace CapaDatos
 
                 SqlDataAdapter SqlData= new SqlDataAdapter(SqlCmd);
                 SqlData.Fill(DtResultado);
+
+                // Se agrega al final para conservar las columnas que consumen las pantallas existentes.
+                // Una sola consulta obtiene el tipo real de todos los pedidos de la lista.
+                if (DtResultado.Rows.Count > 0 && DtResultado.Columns.Contains("Id_pedido")
+                    && DtResultado.Columns.Contains("Num_mesa") && !DtResultado.Columns.Contains("Tipo_pedido"))
+                {
+                    using (SqlCommand typesCommand = SqlCon.CreateCommand())
+                    {
+                        List<string> parameters = new List<string>();
+                        HashSet<int> orderIds = new HashSet<int>();
+                        foreach (DataRow row in DtResultado.Rows)
+                            orderIds.Add(Convert.ToInt32(row["Id_pedido"]));
+                        foreach (int orderId in orderIds)
+                        {
+                            string parameter = "@order" + parameters.Count;
+                            parameters.Add(parameter);
+                            typesCommand.Parameters.Add(parameter, SqlDbType.Int).Value = orderId;
+                        }
+                        typesCommand.CommandText = "SELECT Id_pedido, Tipo_pedido FROM Pedidos WHERE Id_pedido IN ("
+                            + string.Join(",", parameters) + ")";
+                        DataTable orderTypes = new DataTable();
+                        using (SqlDataAdapter adapter = new SqlDataAdapter(typesCommand))
+                            adapter.Fill(orderTypes);
+                        Dictionary<int, string> types = new Dictionary<int, string>();
+                        foreach (DataRow row in orderTypes.Rows)
+                            types[Convert.ToInt32(row["Id_pedido"])] = Convert.ToString(row["Tipo_pedido"]);
+                        DtResultado.Columns.Add("Tipo_pedido", typeof(string));
+                        foreach (DataRow row in DtResultado.Rows)
+                        {
+                            if (types.TryGetValue(Convert.ToInt32(row["Id_pedido"]), out string orderType))
+                                row["Tipo_pedido"] = orderType;
+                        }
+                    }
+                }
 
                 if (DtResultado.Rows.Count < 1)
                 {

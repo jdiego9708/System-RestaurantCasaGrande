@@ -1,5 +1,6 @@
 ﻿using CapaNegocio;
 using CapaPresentacion.Formularios.FormsEmpleados;
+using CapaPresentacion.UI;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,10 +15,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         DatosUsuario datosUsuario;
         PoperContainer poperContainer2;
+        private Dictionary<string, string> electronicFiscalData;
         public FrmFacturarPedido()
         {
             InitializeComponent();
+            this.ApplyModernLayout();
             this.opcionesPedido = new DescuentosOpcionesPedido();
+            this.opcionesPedido.ElectronicInvoice.CheckedChanged += (s, e) =>
+            {
+                if (!this.opcionesPedido.ElectronicInvoice.Checked) { electronicFiscalData = null; return; }
+                using (var dialog = new CapaPresentacion.Formularios.FormsVentas.FrmElectronicInvoiceCustomer(this.Nombre_cliente, this.Correo_electronico))
+                {
+                    if (dialog.ShowDialog(this) == DialogResult.OK) electronicFiscalData = dialog.FiscalData;
+                    else this.opcionesPedido.ElectronicInvoice.Checked = false;
+                }
+            };
             this.poperContainer1 = new PoperContainer(opcionesPedido);
 
             this.datosUsuario = new DatosUsuario();
@@ -176,6 +188,17 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     }
                     else
                     {
+                        // Un descuento (en porcentaje o en valor) debe quedar justificado: las observaciones son
+                        // obligatorias cuando es distinto de 0. El texto va a Ventas.Observaciones.
+                        if (decimal.TryParse(variables[4], out decimal discountValue) && discountValue != 0
+                            && string.IsNullOrWhiteSpace(this.opcionesPedido.txtObservaciones.Text))
+                        {
+                            MensajeEspera.CloseForm();
+                            Mensajes.MensajeErrorForm("Si aplica un descuento debe escribir el motivo en el campo Observaciones");
+                            this.opcionesPedido.txtObservaciones.Focus();
+                            return;
+                        }
+
                         if (detalle_pago != null)
                         {
                             if (detalle_pago.Rows.Count > 0)
@@ -183,7 +206,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                 MensajeEspera.ShowWait("Facturando y terminando");
 
                                 rpta =
-                                    NVentas.InsertarVenta(variables, out id_venta, detalle_pago);
+                                    NVentas.InsertarVenta(variables, out id_venta, detalle_pago,
+                                        BuildElectronicRequest(variables, detalle_pago));
                                 if (rpta.Equals("OK"))
                                 {
                                     FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
@@ -280,6 +304,10 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             this.dgvPedido =
                 ConfiguracionDatagridview.ConfigurationGrid(this.dgvPedido);
+            // ConfigurationGrid reinicia el estilo y el Anchor (que anula el Dock): se vuelve a dejar el aspecto moderno.
+            this.dgvPedido.StyleModernGrid();
+            this.FormatOrderColumns();
+            this.UpdateModeBadges();
             this.panelSubTotal.Visible = false;
             this.rdImprimir.Checked = true;
             this.chkRecordarOpcion.Checked = true;
@@ -287,11 +315,41 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.frmFacturaFinal.AsignarReporte();
 
             this.btnTerminar.Enabled = true;
+            this.opcionesPedido.frmFacturarPedido = this;
+            this.opcionesPedido.ElectronicInvoice.Enabled = !this.IsPrecuenta;
             this.opcionesPedido.IsDomicilio = this.IsDomicilio;
             this.opcionesPedido.Total_parcial = this.Total_parcial;
             this.opcionesPedido.frmFacturarPedido = this;
             this.panelDescuentos.Controls.Add(this.opcionesPedido);
+            this.panelDescuentos.AutoScroll = true;
             this.Show();
+        }
+
+        private string BuildElectronicRequest(List<string> values, DataTable payments)
+        {
+            if (!this.opcionesPedido.ElectronicInvoice.Checked || this.IsPrecuenta) return null;
+            if (electronicFiscalData == null) throw new InvalidOperationException("Complete los datos fiscales de la factura electrónica.");
+            var snapshot = new Dictionary<string, object>
+            {
+                { "version", 1 }, { "orderId", this.Id_pedido }, { "customerId", this.Id_cliente },
+                { "fiscal", electronicFiscalData }, { "saleValues", values.ToArray() },
+                { "products", SnapshotRows(this.TablaDetalle) }, { "payments", SnapshotRows(payments) },
+                { "requestedAt", DateTime.UtcNow.ToString("o") }
+            };
+            return new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(snapshot);
+        }
+
+        private static List<Dictionary<string, object>> SnapshotRows(DataTable table)
+        {
+            var rows = new List<Dictionary<string, object>>();
+            if (table == null) return rows;
+            foreach (DataRow row in table.Rows)
+            {
+                var copy = new Dictionary<string, object>();
+                foreach (DataColumn column in table.Columns) copy.Add(column.ColumnName, row.IsNull(column) ? null : row[column]);
+                rows.Add(copy);
+            }
+            return rows;
         }
 
         private void BtnDescuentos_Click(object sender, EventArgs e)
@@ -383,6 +441,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                     };
                 this.dgvPedido =
                     DatagridString.ChangeHeaderTextAndVisible(this.dgvPedido, columnsHeaderText, columnsVisible);
+                this.FormatOrderColumns();
 
                 this.Id_pedido = Convert.ToInt32(TablaDatosPrincipales.Rows[0]["Id_pedido"]);
                 this.Fecha_pedido = Convert.ToDateTime(TablaDatosPrincipales.Rows[0]["Fecha_pedido"]);
@@ -409,6 +468,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.lblCliente.Text = this.Nombre_cliente;
                 this.lblMesero.Text = this.Nombre_empleado;
                 this.lblMesa.Text = this.Mesa;
+                this.UpdateModeBadges();
 
                 this.SumarPrecios();
             }

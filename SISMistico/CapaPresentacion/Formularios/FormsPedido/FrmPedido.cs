@@ -100,8 +100,16 @@
                 Hora_pedido = DateTime.Now.ToString("HH:mm"),
                 Tipo_pedido = tipo_pedido,
                 Observaciones_pedido = string.Empty,
-                CantidadClientes = (int)this.numericClientes.Value
+                CantidadClientes = (int)this.numericClientes.Value,
+                AddressId = this.IsDomicilio ? this.AddressId : null,
             };
+
+            if (this.IsDomicilio && !this.IsEditar && !this.AddressId.HasValue)
+            {
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeInformacion("Seleccione la dirección de entrega del domicilio");
+                return false;
+            }
 
             //Comprobar si hay productos seleccionados
             if (this.ProductsAddSelected == null && !this.IsEditar)
@@ -276,7 +284,9 @@
                         {
                             detalle.Id_pedido = id_pedido;                         
 
-                            rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "");
+                            int employeeId = this.IsDomicilio ? this.EmpleadoSelected.Id_empleado
+                                : datos.EmpleadoClaveMaestra.Id_empleado;
+                            rpta = NPedido.ActualizarDetallePedido(detalle, employeeId, "");
                             if (!rpta.Equals("OK"))
                             {
                                 throw new Exception(rpta);
@@ -327,16 +337,17 @@
 
                         if (this.chkPrintComandas.Checked)
                         {
+                            string kind = this.IsDomicilio ? "DOMICILIO " : string.Empty;
                             if (dtBebidas.Rows.Count > 0)
                             {
-                                this.frmComandas.ObtenerReporte("Casa Grande | Bebidas");
+                                this.frmComandas.ObtenerReporte("Casa Grande | " + kind + "Bebidas");
                                 this.frmComandas.AsignarTablas(dtBebidas);
                                 this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
                             }
 
                             if (dtPlatos.Rows.Count > 0)
                             {
-                                this.frmComandas.ObtenerReporte("Casa Grande | Platos");
+                                this.frmComandas.ObtenerReporte("Casa Grande | " + kind + "Platos");
                                 this.frmComandas.AsignarTablas(dtPlatos);
                                 this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
                             }
@@ -376,7 +387,7 @@
 
         private void FrmPedido_Load(object sender, EventArgs e)
         {
-            DialogResult dialog = this.Comprobacion();
+            DialogResult dialog = this.AuthorizeOrderEntry();
             if (dialog == DialogResult.OK)
             {
                 MensajeEspera.ShowWait("Cargando...");
@@ -391,6 +402,9 @@
 
                 this.frmComandas.ObtenerReporte("Casa grande comanda");
 
+                if (this.IsDomicilio && !this.IsEditar)
+                    this.ShowDeliveryHeader();
+
                 if (this.IsEditar)
                 {
                     this.LoadProductsSelected(this.ProductsSelected);
@@ -400,6 +414,30 @@
             }
             else
                 this.Close();
+        }
+
+        private DialogResult AuthorizeOrderEntry()
+        {
+            if (!this.IsDomicilio)
+                return this.Comprobacion();
+
+            // Domicilios usa al empleado de la sesion, sin pedir otra clave ni reutilizar una clave maestra anterior.
+            this.EmpleadoSelected = DatosInicioSesion.GetInstancia().EmpleadoLogin;
+            if (this.EmpleadoSelected != null)
+                return DialogResult.OK;
+
+            Mensajes.MensajeInformacion("No hay una sesión activa. Inicie sesión para realizar el domicilio.");
+            return DialogResult.Cancel;
+        }
+
+        // Un domicilio nuevo muestra el cliente y la direccion de entrega en lugar de la mesa, y no pregunta
+        // por el numero de clientes (es un solo pedido a una direccion).
+        private void ShowDeliveryHeader()
+        {
+            this.lblTitulo.Text = "Nuevo domicilio para " + this.ClienteSelected?.Nombre_cliente;
+            this.lblMesero.Text = "Entrega: " + this.AddressText;
+            this.numericClientes.Value = 1;
+            this.gbNumClientes.Visible = false;
         }
 
         private void BtnBebidas_Click(object sender, EventArgs e)
@@ -1181,6 +1219,12 @@
             }
         }
         public bool IsDomicilio { get; set; }
+
+        /// <summary>Direccion de entrega elegida (Domicilios.Id_direccion); solo en domicilios nuevos.</summary>
+        public int? AddressId { get; set; }
+
+        /// <summary>Texto de la direccion de entrega para mostrar en el encabezado.</summary>
+        public string AddressText { get; set; }
         public int Numero_mesa { get; set; }
         public string Tipo_servicio
         {

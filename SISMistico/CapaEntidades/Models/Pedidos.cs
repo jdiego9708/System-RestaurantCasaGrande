@@ -30,6 +30,9 @@ namespace CapaEntidades.Models
                 this.Tipo_pedido = Convert.ToString(row["Tipo_pedido"]);
                 this.Observaciones_pedido = Convert.ToString(row["Observaciones_pedido"]);
                 this.CantidadClientes = Convert.ToInt32(row["CantidadClientes"]);
+                // La columna solo viene en las consultas con SELECT *; en las demas se queda en null.
+                if (row.Table.Columns.Contains("Id_direccion") && row["Id_direccion"] != DBNull.Value)
+                    this.AddressId = Convert.ToInt32(row["Id_direccion"]);
             }
             catch (Exception)
             {
@@ -62,5 +65,8 @@ namespace CapaEntidades.Models
         public string Observaciones_pedido { get; set; }
 
         public int CantidadClientes { get; set; }
+
+        /// <summary>Direccion de entrega (Domicilios.Id_direccion). Null en pedidos de mesa.</summary>
+        public int? AddressId { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CapaPresentacion.Formularios.FormsBebidas;
 using CapaPresentacion.Formularios.FormsClientes;
 using CapaPresentacion.Formularios.FormsDetalles;
+using CapaPresentacion.Formularios.FormsDomicilios;
 using CapaPresentacion.Formularios.FormsEmpleados;
 using CapaPresentacion.Formularios.FormsInsumos;
 using CapaPresentacion.Formularios.FormsPedido;
@@ -30,10 +31,13 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         PoperContainer container;
         PoperContainer containerOpcionesUsuario;
         OpcionesUsuario opcionesUsuario;
+        private AlegraBackgroundWorker alegraWorker;
 
         public FrmPrincipal()
         {
             InitializeComponent();
+            this.Shown += (s,e) => alegraWorker = new AlegraBackgroundWorker();
+            this.FormClosed += (s,e) => alegraWorker?.Dispose();
 
             this.opcionesUsuario = new OpcionesUsuario();
             this.containerOpcionesUsuario = new PoperContainer(opcionesUsuario);
@@ -45,6 +49,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.btnBebidas.Click += BtnBebidas_Click;
             this.btnClientes.Click += BtnClientes_Click;
             this.btnMesasPedidos.Click += BtnMesasPedidos_Click;
+            this.CreateDeliveryButton();
             this.btnInsumos.Click += BtnInsumos_Click;
             this.btnUsuario.Click += BtnUsuario_Click;
             this.FormClosing += FrmPrincipal_FormClosing;
@@ -268,6 +273,84 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             {
                 Mensajes.MensajeErrorCompleto(this.Name, "ObservarMesas_Click",
                     "Hubo un error con el menu observar mesas y pedidos", ex.Message);
+            }
+        }
+
+        private Button btnDomicilios;
+
+        // El boton copia el aspecto de Mesas para no duplicar el diseno en el Designer; empieza oculto
+        // y FrmPrincipal_Load decide segun el cargo si se muestra y donde.
+        private void CreateDeliveryButton()
+        {
+            this.btnDomicilios = new Button
+            {
+                Name = "btnDomicilios",
+                Text = "Domicilios",
+                Cursor = Cursors.Hand,
+                FlatStyle = FlatStyle.Flat,
+                Font = this.btnMesasPedidos.Font,
+                ForeColor = this.btnMesasPedidos.ForeColor,
+                Image = this.btnMesasPedidos.Image,
+                ImageAlign = this.btnMesasPedidos.ImageAlign,
+                TextAlign = this.btnMesasPedidos.TextAlign,
+                Size = this.btnMesasPedidos.Size,
+                Location = this.btnMesasPedidos.Location,
+                UseVisualStyleBackColor = true,
+                Visible = false,
+            };
+            this.btnDomicilios.FlatAppearance.BorderSize = 0;
+            this.btnDomicilios.Click += BtnDomicilios_Click;
+            this.panelBotones.Controls.Add(this.btnDomicilios);
+        }
+
+        // DOMICILIARIO ve Domicilios en lugar de Mesas; ADMINISTRADOR ve las dos (Domicilios debajo de Mesas,
+        // y el resto del menu baja un lugar); los demas cargos siguen viendo solo Mesas.
+        private void ApplyDeliveryLayout(string cargo)
+        {
+            if (cargo.Equals("DOMICILIARIO"))
+            {
+                this.btnMesasPedidos.Visible = false;
+                this.btnDomicilios.Visible = true;
+                this.btnDomicilios.Enabled = true;
+            }
+            else if (cargo.Equals("ADMINISTRADOR"))
+            {
+                int step = this.btnMesasPedidos.Height + 2;
+                int below = this.btnMesasPedidos.Bottom;
+                foreach (Control control in this.panelBotones.Controls)
+                {
+                    if (control != this.btnDomicilios && control.Top >= below)
+                        control.Top += step;
+                }
+                this.btnDomicilios.Top = this.btnMesasPedidos.Bottom + 2;
+                this.btnDomicilios.Visible = true;
+                this.btnDomicilios.Enabled = true;
+            }
+        }
+
+        private void BtnDomicilios_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FrmDeliveries frm = FrmDeliveries.GetInstance();
+                frm.TopLevel = false;
+                frm.WindowState = FormWindowState.Maximized;
+                frm.MaximizeBox = false;
+                Form FormComprobado = this.ComprobarExistencia(frm);
+                if (FormComprobado == null)
+                {
+                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
+                    this.panel1.Controls.Add(frm);
+                    this.panel1.Tag = frm;
+                    frm.Show();
+                }
+                frm.BringToFront();
+                frm.Activate();
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "BtnDomicilios_Click",
+                    "Hubo un error al abrir los domicilios", ex.Message);
             }
         }
 
@@ -853,6 +936,17 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
+            else if (datos.Cargo_empleado.Equals("DOMICILIARIO"))
+            {
+                // Solo domicilios; Clientes queda activo para elegir cliente y gestionar sus direcciones.
+                this.btnEmpleados.Enabled = false;
+                this.btnClientes.Enabled = true;
+                this.btnPlatos.Enabled = false;
+                this.btnBebidas.Enabled = false;
+                this.btnMesasPedidos.Enabled = false;
+                this.btnInsumos.Enabled = false;
+                this.btnAdministracion.Enabled = false;
+            }
             else
             {
                 this.btnEmpleados.Enabled = false;
@@ -863,6 +957,8 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 this.btnInsumos.Enabled = false;
                 this.btnAdministracion.Enabled = false;
             }
+
+            this.ApplyDeliveryLayout(datos.Cargo_empleado);
 
             //Id de Juan Diego Administrador
             if (datos.Id_empleado == 6060)

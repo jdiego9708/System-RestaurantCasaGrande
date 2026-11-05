@@ -31,18 +31,18 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmFacturarPedido));
             this.label1 = new System.Windows.Forms.Label();
-            this.lblIdPedido = new System.Windows.Forms.Label();
+            this.lblIdPedido = new CapaPresentacion.UI.Badge();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.lblFecha = new System.Windows.Forms.Label();
+            this.lblFecha = new CapaPresentacion.UI.Badge();
             this.dgvPedido = new System.Windows.Forms.DataGridView();
             this.label6 = new System.Windows.Forms.Label();
             this.lblCliente = new System.Windows.Forms.Label();
             this.lblMesero = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnTerminar = new System.Windows.Forms.Button();
-            this.btnDescuentos = new System.Windows.Forms.Button();
+            this.btnTerminar = new CapaPresentacion.UI.ModernButton();
+            this.btnDescuentos = new CapaPresentacion.UI.ModernButton();
             this.panelTipoPedido = new System.Windows.Forms.Panel();
             this.rdNinguna = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
@@ -55,11 +55,11 @@
             this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.lblTotalParcial = new System.Windows.Forms.Label();
-            this.lblMesa = new System.Windows.Forms.Label();
+            this.lblMesa = new CapaPresentacion.UI.Badge();
             this.lblSubTotal = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.panelSubTotal = new System.Windows.Forms.Panel();
-            this.txtCantidadPedidosCliente = new System.Windows.Forms.TextBox();
+            this.txtCantidadPedidosCliente = new CapaPresentacion.UI.Badge();
             this.panelDescuentos = new System.Windows.Forms.Panel();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.numericCantidadFacturas = new System.Windows.Forms.NumericUpDown();
@@ -394,12 +394,9 @@
             // 
             // txtCantidadPedidosCliente
             // 
-            this.txtCantidadPedidosCliente.BackColor = System.Drawing.Color.White;
-            this.txtCantidadPedidosCliente.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtCantidadPedidosCliente.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtCantidadPedidosCliente.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.txtCantidadPedidosCliente.Location = new System.Drawing.Point(6, 623);
-            this.txtCantidadPedidosCliente.Multiline = true;
             this.txtCantidadPedidosCliente.Name = "txtCantidadPedidosCliente";
             this.txtCantidadPedidosCliente.Size = new System.Drawing.Size(545, 49);
             this.txtCantidadPedidosCliente.TabIndex = 24;
@@ -499,17 +496,17 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label lblIdPedido;
+        private CapaPresentacion.UI.Badge lblIdPedido;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label lblFecha;
+        private CapaPresentacion.UI.Badge lblFecha;
         private System.Windows.Forms.DataGridView dgvPedido;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label lblCliente;
         private System.Windows.Forms.Label lblMesero;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button btnTerminar;
+        private CapaPresentacion.UI.ModernButton btnTerminar;
         private System.Windows.Forms.Panel panelTipoPedido;
         private System.Windows.Forms.RadioButton rdCorreo;
         private System.Windows.Forms.RadioButton rdImprimir;
@@ -520,13 +517,13 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label lblTotalParcial;
-        private System.Windows.Forms.Button btnDescuentos;
-        private System.Windows.Forms.Label lblMesa;
+        private CapaPresentacion.UI.ModernButton btnDescuentos;
+        private CapaPresentacion.UI.Badge lblMesa;
         private System.Windows.Forms.Label lblSubTotal;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Panel panelSubTotal;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox txtCantidadPedidosCliente;
+        private CapaPresentacion.UI.Badge txtCantidadPedidosCliente;
         private System.Windows.Forms.RadioButton rdNinguna;
         private System.Windows.Forms.Panel panelDescuentos;
         private System.Windows.Forms.GroupBox groupBox6;

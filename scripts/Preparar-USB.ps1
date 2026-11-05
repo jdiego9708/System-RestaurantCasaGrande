@@ -5,11 +5,11 @@
     carpeta "Casa Grande Installers" con los archivos NUMERADOS en el orden en que se ejecutan:
 
         00-LEEME.txt                    instrucciones cortas con ese orden
-        01-Base-de-Datos.ps1            PC del restaurante: respalda la base y prepara los procedimientos de la API
+        01-Base-de-Datos.ps1            Autocontenido: respaldo, API movil, empleados y Domicilios
         02-Setup-Casa-Grande.exe        PC del restaurante: instalador del sistema (activa la API movil)
         03-Configurar-Red.ps1           PC del restaurante: IP, firewall y datos que se escriben en los celulares
         04-APK-Casa-Grande.apk          Cada celular Android: app del mesero
-        Soporte\                        scripts .sql y auxiliares que usa el paso 01 (no borrar)
+        Soporte\                        copia legible de scripts SQL, auxiliares y reversiones
         SHA256SUMS.txt                  sumas para comprobar que la copia no se daño
 
     Uso (en la maquina de desarrollo, no requiere administrador):
@@ -44,6 +44,21 @@ function Paso($t)  { Write-Host "`n==> $t" -ForegroundColor Cyan }
 function Ok($t)    { Write-Host "    OK  $t" -ForegroundColor Green }
 function Aviso($t) { Write-Host "    !!  $t" -ForegroundColor Yellow }
 function Falla($t) { Write-Host "`nERROR: $t" -ForegroundColor Red; exit 1 }
+
+function New-DatabaseDeploymentScript([string]$source, [string]$databaseDir, [string[]]$files, [string]$output) {
+    $content = [IO.File]::ReadAllText($source)
+    $marker = '$embeddedDatabaseFiles = @{} # USB_DATABASE_PAYLOAD'
+    if (-not $content.Contains($marker)) { throw 'No se encontro el marcador para embeber los scripts de base de datos.' }
+    $payload = New-Object System.Collections.Generic.List[string]
+    $payload.Add('$embeddedDatabaseFiles = @{')
+    foreach ($name in $files) {
+        if ([IO.Path]::GetFileName($name) -ne $name) { throw "Nombre de soporte no valido: $name" }
+        $base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $databaseDir $name)))
+        $payload.Add("    '$name' = '$base64'")
+    }
+    $payload.Add('} # USB_DATABASE_PAYLOAD')
+    [IO.File]::WriteAllText($output, $content.Replace($marker, ($payload -join "`r`n")), (New-Object Text.UTF8Encoding $true))
+}
 
 # ---------------------------------------------------------------------------
 # Unidades USB / extraibles
@@ -140,13 +155,19 @@ $dbDir = Join-Path $repo 'db'
 $soporteDb = @('Invoke-Sql.ps1', 'Restore-ProdCopy.ps1', 'verificar-despliegue.sql', 'produccion-schema.sql',
                '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql',
                '02_unificar_empleados_duplicados.sql', '05_activar_empleados.sql',
+               '06_domicilios_direcciones.sql', '07_alegra_integration.sql',
                '01_sp_Movil_Insertar_pedido.revert.sql', '03_sp_Movil_Agregar_items.revert.sql',
                '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql',
-               '05_activar_empleados.revert.sql')
+               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql')
+
+# El paso 01 es autocontenido; Soporte\db se conserva para consulta y ejecucion manual.
+foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
+$databaseScript = Join-Path $env:TEMP ('CasaGrande-01-' + [guid]::NewGuid().ToString('N') + '.ps1')
+New-DatabaseDeploymentScript (Join-Path $scriptsDir 'Desplegar-Base-de-Datos.ps1') $dbDir $soporteDb $databaseScript
 
 # Plan de copia: origen -> nombre numerado en la USB
 $plan = @(
-    @{ Origen = (Join-Path $scriptsDir 'Desplegar-Base-de-Datos.ps1'); Destino = '01-Base-de-Datos.ps1' },
+    @{ Origen = $databaseScript;                                       Destino = '01-Base-de-Datos.ps1' },
     @{ Origen = $setupOrigen;                                           Destino = '02-Setup-Casa-Grande.exe' },
     @{ Origen = (Join-Path $scriptsDir 'Configurar-Red.ps1');           Destino = '03-Configurar-Red.ps1' },
     @{ Origen = $ApkRuta;                                               Destino = '04-APK-Casa-Grande.apk' }
@@ -251,8 +272,10 @@ EJECUTE LOS ARCHIVOS EN ORDEN (el numero del nombre es el orden).
 EN EL PC DEL RESTAURANTE (Windows 10/11, con el mismo usuario que abre el sistema)
 --------------------------------------------------------------
  01-Base-de-Datos.ps1       Clic derecho > "Ejecutar con PowerShell".
-                            Hace copia de seguridad de la base, crea los procedimientos de la API movil y,
-                            si usted confirma, unifica empleados duplicados. Pide confirmacion en cada paso.
+                            Hace copia de seguridad, actualiza la API movil, empleados y el modulo Domicilios.
+                            Incluye tabla de direcciones y procedimientos de clientes/pedidos. Es repetible.
+                            Lleva los scripts embebidos: funciona incluso sin la carpeta Soporte.
+                            Pide confirmacion en cada paso; acepte Domicilios para usar la nueva version.
 
  02-Setup-Casa-Grande.exe   Doble clic (pide administrador; si Windows avisa "SmartScreen":
                             Mas informacion > Ejecutar de todos modos).
@@ -269,7 +292,7 @@ EN CADA CELULAR ANDROID (7.0 o superior, en el mismo WiFi que el PC)
 
 OTROS ARCHIVOS
 --------------------------------------------------------------
- Soporte\                   Scripts y .sql que usa el paso 01. No borrar.
+ Soporte\                   Copia legible de scripts SQL y reversiones para soporte tecnico.
  SHA256SUMS.txt             Sumas de comprobacion de los archivos.
 
 Guia completa con problemas frecuentes: docs\08-instalacion-desde-cero.md del repositorio.

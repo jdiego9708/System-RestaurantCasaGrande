@@ -123,17 +123,31 @@ namespace CapaPresentacion
             //int rows = this.TablaDetalleVenta.Rows.Count;
         }
 
-        public void AsignarTablasCuentaFinal()
+        public void AsignarTablasCuentaFinal(int? saleId = null)
         {
             this.Is_precuenta = false;
             this.TablaDatosPrincipales = NVentas.BuscarVentaFinal(Convert.ToString(this.Id_pedido),
                 out this.TablaDetallePedido, out this.TablaDetalleVenta);
+            if (saleId.HasValue)
+            {
+                // En la reimpresion del historial se usa solo la venta elegida, aunque el pedido tenga mas de una.
+                this.TablaDatosPrincipales = SelectSale(this.TablaDatosPrincipales, saleId.Value);
+                this.TablaDetalleVenta = SelectSale(this.TablaDetalleVenta, saleId.Value);
+                if (this.TablaDatosPrincipales.Rows.Count == 0)
+                    throw new InvalidOperationException("No se encontró la venta seleccionada para reimprimir.");
+            }
             int rows = this.TablaDetalleVenta.Rows.Count;
 
             this.Controls.Add(this.reportViewer1);
 
             this.reportParameters = new ReportParameter[2];
-            this.reportParameters[0] = new ReportParameter("Titulo", "Restaurante Casa Grande");
+            // En el reporte de la venta, Num_mesa trae "DOMICILIO" cuando el pedido es de domicilio.
+            bool isDelivery = this.TablaDatosPrincipales != null && this.TablaDatosPrincipales.Rows.Count > 0
+                && this.TablaDatosPrincipales.Columns.Contains("Num_mesa")
+                && "DOMICILIO".Equals(Convert.ToString(this.TablaDatosPrincipales.Rows[0]["Num_mesa"]),
+                    StringComparison.OrdinalIgnoreCase);
+            this.reportParameters[0] = new ReportParameter("Titulo",
+                isDelivery ? "Casa Grande - DOMICILIO" : "Restaurante Casa Grande");
             this.reportParameters[1] = new ReportParameter("NumFactura", this.ComprobacionNumFacturas().ToString());
 
             this.reportViewer1.LocalReport.SetParameters(this.reportParameters);
@@ -146,6 +160,15 @@ namespace CapaPresentacion
 
             ReportDataSource dsDetallePago = new ReportDataSource("DetallePago", this.TablaDetalleVenta);
             reportViewer1.LocalReport.DataSources.Add(dsDetallePago);
+        }
+
+        private static DataTable SelectSale(DataTable table, int saleId)
+        {
+            if (table == null || !table.Columns.Contains("Id_venta"))
+                throw new InvalidOperationException("No se pudieron consultar los datos de la venta seleccionada.");
+            DataTable filtered = table.Clone();
+            foreach (DataRow row in table.Select("Id_venta = " + saleId)) filtered.ImportRow(row);
+            return filtered;
         }
 
         public void ImprimirFactura(int Repetir)

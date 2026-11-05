@@ -34,6 +34,10 @@
     <Reference Include="AlphaBlendTextBox">
       <HintPath>..\libs\AlphaBlendTextBox.dll</HintPath>
     </Reference>
+    <Reference Include="FontAwesome.Sharp, Version=6.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FontAwesome.Sharp.6.6.0\lib\net48\FontAwesome.Sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MetroFramework, Version=1.4.0.0, Culture=neutral, PublicKeyToken=5f91a84759bf584a, processorArchitecture=MSIL">
       <HintPath>..\packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.dll</HintPath>
       <Private>True</Private>
@@ -352,6 +356,18 @@
     <Compile Include="Formularios\FormsPedido\DescuentosOpcionesPedido.Designer.cs">
       <DependentUpon>DescuentosOpcionesPedido.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\KpiCard.cs" />
+    <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Modern.cs">
+      <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Badge.cs" />
+    <Compile Include="UI\ModernButton.cs" />
+    <Compile Include="UI\ModernCard.cs" />
+    <Compile Include="UI\ModernTextBox.cs" />
+    <Compile Include="UI\Theme.cs" />
+    <Compile Include="UI\ThemeExtensions.cs" />
+    <Compile Include="Formularios\FormsDomicilios\FrmDeliveries.cs" />
+    <Compile Include="Formularios\FormsDomicilios\FrmDeliveryCustomer.cs" />
     <Compile Include="Formularios\FormsPedido\DomicilioSmall.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -641,6 +657,17 @@
     <Compile Include="Formularios\FormsVentas\FrmDetalleVenta.designer.cs">
       <DependentUpon>FrmDetalleVenta.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsVentas\FrmSaleDetails.cs" />
+    <Compile Include="Formularios\FormsVentas\FrmElectronicInvoiceCustomer.cs" />
+    <Compile Include="Formularios\FormsVentas\FrmAlegraSetup.cs" />
+    <Compile Include="Formularios\FormsVentas\FrmAlegraInvoices.cs" />
+    <Compile Include="Formularios\FormsVentas\FrmAlegraInvoiceDetails.cs" />
+    <Content Include="..\..\scripts\Render-AlegraFiscalRepresentation.py">
+      <Link>Alegra\Render-AlegraFiscalRepresentation.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Servicios\AlegraPdfService.cs" />
+    <Compile Include="Servicios\AlegraBackgroundWorker.cs" />
     <Compile Include="Formularios\FormsVentas\FrmObservarVentas.cs">
       <SubType>Form</SubType>
     </Compile>

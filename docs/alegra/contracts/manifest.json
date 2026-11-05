@@ -1,0 +1,153 @@
+{
+    "contracts":  [
+                      {
+                          "spec":  "Bancos (reference)",
+                          "path":  "/bank-accounts",
+                          "method":  "GET",
+                          "file":  "bancos-get-bank-accounts.json",
+                          "sha256":  "2C7EFF06561F8242FDFB05BF2A701E009B3BAF5C9DC60F9759242B279EF07422"
+                      },
+                      {
+                          "spec":  "Bancos (reference)",
+                          "path":  "/bank-accounts/{id}",
+                          "method":  "GET",
+                          "file":  "bancos-get-bank-accounts-id.json",
+                          "sha256":  "F3CDBAC109DBE35821BC81DE319F1B4A16D116F1E841AA5C0CD84346F49B06BC"
+                      },
+                      {
+                          "spec":  "Configuraciones (reference)",
+                          "path":  "/company",
+                          "method":  "GET",
+                          "file":  "configuraciones-get-company.json",
+                          "sha256":  "F3F54268E892E21C4C6F4B661A2324618D884E81EBA874737100CF4F84256A28"
+                      },
+                      {
+                          "spec":  "Configuraciones (reference)",
+                          "path":  "/taxes",
+                          "method":  "GET",
+                          "file":  "configuraciones-get-taxes.json",
+                          "sha256":  "F3FC3B4BA2B07BEB14FB4B05C65C4410C4EC095892C7CF4EB9DE6374B212446F"
+                      },
+                      {
+                          "spec":  "Configuraciones (reference)",
+                          "path":  "/taxes/{id}",
+                          "method":  "GET",
+                          "file":  "configuraciones-get-taxes-id.json",
+                          "sha256":  "7064B8EFCCC94720067835D5F20BF4FCAEC51F3E69441FBC0206CCB0DAC23293"
+                      },
+                      {
+                          "spec":  "Configuraciones (reference)",
+                          "path":  "/number-templates",
+                          "method":  "GET",
+                          "file":  "configuraciones-get-number-templates.json",
+                          "sha256":  "E72938204777E6BF9D6BDE6A4207735DA3F0E021308FDF0FA1C5966A432D23B1"
+                      },
+                      {
+                          "spec":  "Configuraciones (reference)",
+                          "path":  "/number-templates/{id}",
+                          "method":  "GET",
+                          "file":  "configuraciones-get-number-templates-id.json",
+                          "sha256":  "95A7A3BABE71979B8B53ADCF2CE186DD5FE1768322FD60AEC9F248FF49702843"
+                      },
+                      {
+                          "spec":  "Contactos (reference)",
+                          "path":  "/contacts",
+                          "method":  "GET",
+                          "file":  "contactos-get-contacts.json",
+                          "sha256":  "EB9BD08B8E839826BE56C3032720E22764395B50EF1BC67210EF325E9676181C"
+                      },
+                      {
+                          "spec":  "Contactos (reference)",
+                          "path":  "/contacts",
+                          "method":  "POST",
+                          "file":  "contactos-post-contacts.json",
+                          "sha256":  "EB9BD08B8E839826BE56C3032720E22764395B50EF1BC67210EF325E9676181C"
+                      },
+                      {
+                          "spec":  "Contactos (reference)",
+                          "path":  "/contacts/{id}",
+                          "method":  "GET",
+                          "file":  "contactos-get-contacts-id.json",
+                          "sha256":  "9AED0850848145BAF1ACFB9E896078EA4BC976D9D55584989F827C324AA13388"
+                      },
+                      {
+                          "spec":  "Contactos (reference)",
+                          "path":  "/contacts/{id}",
+                          "method":  "PUT",
+                          "file":  "contactos-put-contacts-id.json",
+                          "sha256":  "64B27332B95ADEBE1514FEFF04D8885E6F1C8DF50FF2C3DD2257E3E8D7DCC7DD"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices",
+                          "method":  "GET",
+                          "file":  "ingresos-get-invoices.json",
+                          "sha256":  "239C153A68687B5D066739EA333D414C9ECB9DC87CE5875B5228DD42C067BC22"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices",
+                          "method":  "POST",
+                          "file":  "ingresos-post-invoices.json",
+                          "sha256":  "27EFF05DAD647472F6F544B717908DCAFED3409913BD2954E4F2BA7B1855A5C8"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices/{id}",
+                          "method":  "GET",
+                          "file":  "ingresos-get-invoices-id.json",
+                          "sha256":  "5DB9C17B4A50F8EAE37D14004DD6F6B1B442F2E03D2D38BC498A5D2BC0367E92"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices/{id}",
+                          "method":  "PUT",
+                          "file":  "ingresos-put-invoices-id.json",
+                          "sha256":  "4585D04C0F494DDE5E9DAB4610697B05C25EFB28550BFEC328A553CC3D3F8B3C"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices/preview",
+                          "method":  "POST",
+                          "file":  "ingresos-post-invoices-preview.json",
+                          "sha256":  "4F79B8975117BDF07BC126E419F2AC96687535692E2329EF785C51817F35A69B"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/invoices/stamp",
+                          "method":  "POST",
+                          "file":  "ingresos-post-invoices-stamp.json",
+                          "sha256":  "F7753552752694CC8F1654C0FBD7C086B9D7E163AD6125A50883D135A217F129"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/payments",
+                          "method":  "GET",
+                          "file":  "ingresos-get-payments.json",
+                          "sha256":  "A51AD0A8B8E51A9A4F1F5B6EE167B6A4A43963B564B42584428FDA03B4E39FF4"
+                      },
+                      {
+                          "spec":  "Ingresos (reference)",
+                          "path":  "/payments",
+                          "method":  "POST",
+                          "file":  "ingresos-post-payments.json",
+                          "sha256":  "D89B1D9C2A09D81211F6E71BAF63D65091F8B118A6C84AA77E05AC8FAB0DA382"
+                      },
+                      {
+                          "spec":  "Inventario (reference)",
+                          "path":  "/items",
+                          "method":  "GET",
+                          "file":  "inventario-get-items.json",
+                          "sha256":  "4171A982AC59FC081B5D41E10F7BF0241AD979D42C300C3E5B45BC308845765F"
+                      },
+                      {
+                          "spec":  "Inventario (reference)",
+                          "path":  "/items/{id}",
+                          "method":  "GET",
+                          "file":  "inventario-get-items-id.json",
+                          "sha256":  "EC6A373730BDFE0713E8709FB3C599300F157A93F5249DA7935C0D9958DF4F5D"
+                      }
+                  ],
+    "source":  "https://developer.alegra.com/mcp",
+    "retrievedAt":  "2026-11-03T04:40:02.1721498Z"
+}

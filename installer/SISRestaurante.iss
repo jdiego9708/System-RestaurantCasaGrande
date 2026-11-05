@@ -32,6 +32,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 ; Admin: la reserva de URL (netsh) y la regla de firewall de la API movil lo exigen.
 PrivilegesRequired=admin
+ChangesEnvironment=yes
 ; Si SISMistico esta abierto durante una actualizacion, lo cierra (Restart Manager) y no lo reabre solo.
 CloseApplications=yes
 RestartApplications=no
@@ -42,6 +43,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; GroupDescription: "Accesos directos:"
 Name: "api"; Description: "Activar la API movil y abrir el firewall (para los celulares de los meseros)"; GroupDescription: "Meseros con celular:"
+Name: "alegra"; Description: "Configurar credenciales de Alegra en variables de entorno del sistema"; GroupDescription: "Facturacion electronica:"; Flags: unchecked
 
 [Dirs]
 ; La app reescribe su propio SISMistico.exe.config (ruta de imagenes, cadena de conexion, correo, licencias) y
@@ -78,6 +80,7 @@ const
 
 var
   ApiPage: TInputQueryWizardPage;
+  AlegraPage: TInputQueryWizardPage;
   ApiPageLista: Boolean;
   ClaveElegida: String;
   PuertoElegido: String;
@@ -255,11 +258,35 @@ begin
   Boton.OnClick := @GenerarClaveClick;
 
   ApiPageLista := False;
+  AlegraPage := CreateInputQueryPage(ApiPage.ID, 'Conexion con Alegra',
+    'Credenciales API de la cuenta del restaurante',
+    'Se guardan como ALEGRA_EMAIL y ALEGRA_API_KEY en el entorno del sistema. ' +
+    'Este paso no emite facturas ni verifica permisos. Si no selecciona esta tarea, conserva las credenciales existentes.');
+  AlegraPage.Add('Correo de la cuenta API:', False);
+  AlegraPage.Add('Token / API key:', True);
+  AlegraPage.Add('Autenticacion: Bearer (token recomendado) o Basic (anterior):', False);
+  AlegraPage.Values[2] := 'Bearer';
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := (PageID = ApiPage.ID) and not WizardIsTaskSelected('api');
+  if PageID = AlegraPage.ID then Result := not WizardIsTaskSelected('alegra');
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  if WizardIsTaskSelected('alegra') then
+  begin
+    if (Trim(AlegraPage.Values[0]) = '') or (Trim(AlegraPage.Values[1]) = '') then
+      Result := 'Para configurar Alegra, ingrese el correo y el token en el asistente interactivo.';
+    if Pos(':', AlegraPage.Values[0]) > 0 then
+      Result := 'El correo de Alegra no puede contener dos puntos.';
+    if (CompareText(Trim(AlegraPage.Values[2]), 'Bearer') <> 0) and
+       (CompareText(Trim(AlegraPage.Values[2]), 'Basic') <> 0) then
+      Result := 'La autenticacion de Alegra debe ser Bearer o Basic.';
+  end;
 end;
 
 // Clave por defecto: /ApiKey=... de la linea de comandos, la que ya tenia el restaurante o una nueva.
@@ -356,6 +383,19 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+  if (CurStep = ssPostInstall) and WizardIsTaskSelected('alegra') then
+  begin
+    // No registrar ni pasar el token por linea de comandos. No se borra al actualizar o desinstalar.
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_EMAIL', Trim(AlegraPage.Values[0])) then
+      RaiseException('No se pudo guardar ALEGRA_EMAIL en el entorno del sistema.');
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_API_KEY', Trim(AlegraPage.Values[1])) then
+      RaiseException('No se pudo guardar ALEGRA_API_KEY en el entorno del sistema.');
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_AUTH_SCHEME', Trim(AlegraPage.Values[2])) then
+      RaiseException('No se pudo guardar ALEGRA_AUTH_SCHEME en el entorno del sistema.');
+  end;
   if (CurStep = ssPostInstall) and WizardIsTaskSelected('api') then
   begin
     // Instalacion silenciosa (/VERYSILENT /TASKS=api): la pagina no se mostro, se usan los valores por defecto.

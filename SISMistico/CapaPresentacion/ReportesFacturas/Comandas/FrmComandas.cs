@@ -126,7 +126,11 @@ namespace CapaPresentacion
             reportParameters[0] = new ReportParameter("parameterObservaciones", this.ObservacionesGeneral);
             reportParameters[1] = new ReportParameter("parameterHora", DateTime.Now.ToShortTimeString());
             reportParameters[2] = new ReportParameter("NumeroComanda", num.ToString());
-            reportParameters[3] = new ReportParameter("Titulo", Titulo == string.Empty || Titulo == null ? "Casa Grande" : Titulo);
+            // Las comandas de domicilio llevan la etiqueta en el titulo para no confundirlas con las de mesa.
+            string title = string.IsNullOrEmpty(Titulo) ? "Casa Grande" : Titulo;
+            if (this.IsDelivery() && title.IndexOf("domicilio", StringComparison.OrdinalIgnoreCase) < 0)
+                title += " | DOMICILIO";
+            reportParameters[3] = new ReportParameter("Titulo", title);
             this.reportViewer1.LocalReport.SetParameters(reportParameters);
 
             this.reportViewer1.LocalReport.DataSources.Clear();
@@ -137,6 +141,22 @@ namespace CapaPresentacion
             reportViewer1.LocalReport.DataSources.Add(dsDetallePedido);
 
             this.reportViewer1.RefreshReport();
+        }
+
+        // Segun la consulta que llenó TablaDatosPedido, el pedido se identifica como domicilio por la columna
+        // Mesa ("DOMICILIO") o por Tipo_pedido.
+        private bool IsDelivery()
+        {
+            if (this.TablaDatosPedido == null || this.TablaDatosPedido.Rows.Count == 0)
+                return false;
+            DataRow row = this.TablaDatosPedido.Rows[0];
+            foreach (string column in new[] { "Mesa", "Tipo_pedido" })
+            {
+                if (this.TablaDatosPedido.Columns.Contains(column)
+                    && "DOMICILIO".Equals(Convert.ToString(row[column]), StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
 
         public void AsignarTablas()

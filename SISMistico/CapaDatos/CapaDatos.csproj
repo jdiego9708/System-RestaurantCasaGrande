@@ -47,7 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Conexion.cs" />
+    <Compile Include="DAlegra.cs" />
     <Compile Include="DBebidas.cs" />
+    <Compile Include="DAddresses.cs" />
     <Compile Include="DClientes.cs" />
     <Compile Include="DTurnos.cs" />
     <Compile Include="DIngresos.cs" />

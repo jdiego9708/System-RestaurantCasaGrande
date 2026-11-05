@@ -127,7 +127,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Restaurante Casa Grande - Precuenta</Value>
+                    <Value>=IIf(First(Fields!Mesa.Value, "DatosPrincipales") = "DOMICILIO", "Casa Grande - Precuenta - DOMICILIO", "Restaurante Casa Grande - Precuenta")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
                       <FontSize>12pt</FontSize>

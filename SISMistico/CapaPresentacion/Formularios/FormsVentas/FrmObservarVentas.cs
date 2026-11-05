@@ -4,6 +4,9 @@ using CapaPresentacion.Formularios.FormsEmpleados;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
+using System.Globalization;
+using CapaPresentacion.UI;
 using System.Windows.Forms;
 
 namespace CapaPresentacion.Formularios.FormsVentas
@@ -15,10 +18,16 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         PoperContainer containerResumen;
         ResumenVenta resumenVenta;
+        private readonly Label salesCount = new Label();
+        private readonly Label salesTotal = new Label();
+        private readonly Label salesAverage = new Label();
+        private readonly Label resultsHint = new Label();
+        private static readonly CultureInfo SalesCulture = CultureInfo.GetCultureInfo("es-CO");
 
         public FrmObservarVentas()
         {
             InitializeComponent();
+            this.BuildModernLayout();
             this.Load += FrmObservarVentas_Load;
             this.date1.ValueChanged += Date1_ValueChanged;
             this.btnFiltros.Click += BtnFiltros_Click;
@@ -29,6 +38,243 @@ namespace CapaPresentacion.Formularios.FormsVentas
             this.chkEliminarCuentas.Click += ChkEliminarCuentas_Click;
             this.dgvVentas.CellContentClick += DgvVentas_CellContentClick;
             this.btnEliminarCuentas.Click += BtnEliminarCuentas_Click;
+            this.dgvVentas.DataBindingComplete += (s, e) => { StyleSalesColumns(); UpdateSalesSummary(); };
+            this.dgvVentas.RowsRemoved += (s, e) => UpdateSalesSummary();
+            this.dgvVentas.CellFormatting += FormatSalesCell;
+        }
+
+        private void BuildModernLayout()
+        {
+            this.SuspendLayout();
+            this.ApplyTheme();
+            this.MinimumSize = new Size(820, 560);
+            this.ClientSize = new Size(1180, 720);
+            Panel root = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20, 16, 20, 16) };
+            Panel header = new Panel { Dock = DockStyle.Top, Height = 72 };
+            Label title = new Label { Text = "Historial de ventas", AutoSize = true };
+            title.StyleLabel(LabelKind.Title);
+            Label subtitle = new Label
+            {
+                Text = "Consulta tus ventas por fecha y abre cada factura con doble clic.",
+                AutoSize = true, Location = new Point(2, 38),
+            };
+            subtitle.StyleLabel(LabelKind.Muted);
+            header.Controls.Add(title);
+            header.Controls.Add(subtitle);
+
+            ModernCard filters = new ModernCard { Dock = DockStyle.Top, Height = 190 };
+            FlowLayoutPanel dates = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 64, WrapContents = false };
+            foreach (var entry in new[] { Tuple.Create("Desde", this.date1), Tuple.Create("Hasta", this.date2) })
+            {
+                Panel field = new Panel { Width = 272, Height = 58, Margin = new Padding(0, 0, 16, 0) };
+                Label caption = new Label { Text = entry.Item1, Dock = DockStyle.Top, Height = 22 };
+                caption.StyleLabel(LabelKind.Caption);
+                entry.Item2.Format = DateTimePickerFormat.Custom;
+                entry.Item2.CustomFormat = "dddd, dd MMM yyyy";
+                entry.Item2.Font = Theme.Body;
+                entry.Item2.Dock = DockStyle.Top;
+                field.Controls.Add(entry.Item2);
+                field.Controls.Add(caption);
+                dates.Controls.Add(field);
+            }
+            FlowLayoutPanel actions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = true };
+            foreach (Button button in new[] { this.btnBuscar, this.btnFiltros, this.btnOtrasOpciones })
+            {
+                button.Image = null;
+                button.Size = new Size(button == this.btnBuscar ? 120 : 160, 38);
+                button.TextAlign = ContentAlignment.MiddleCenter;
+                button.Margin = new Padding(0, 0, 10, 0);
+                button.StyleButton(button == this.btnBuscar ? ButtonKind.Primary : ButtonKind.Outline);
+                actions.Controls.Add(button);
+            }
+            this.btnFiltros.Text = "Filtros adicionales";
+            ModernButton alegra = new ModernButton { Text = "Configurar Alegra", Width = 175, Height = 38, Kind = ButtonKind.Outline };
+            alegra.Click += (s,e) => { try { using (var setup = new FrmAlegraSetup()) setup.ShowDialog(this); } catch (Exception) { Mensajes.MensajeInformacion("No se pudo abrir la configuración Alegra. Aplique la migración 07 de base de datos."); } };
+            actions.Controls.Add(alegra);
+            ModernButton invoices = new ModernButton { Text = "Facturas de Alegra", Width = 185, Height = 38, Kind = ButtonKind.Primary };
+            invoices.Click += (s,e) => { var window = new FrmAlegraInvoices(); window.Show(this); };
+            actions.Controls.Add(invoices);
+            this.btnOtrasOpciones.Text = "Otras opciones";
+            filters.Controls.Add(actions);
+            filters.Controls.Add(dates);
+
+            TableLayoutPanel summary = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top, Height = 84, ColumnCount = 3, RowCount = 1,
+            };
+            Label[] values = { salesCount, salesTotal, salesAverage };
+            for (int i = 0; i < values.Length; i++)
+            {
+                summary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 3));
+                ModernCard card = new ModernCard { Dock = DockStyle.Fill, Padding = new Padding(14, 10, 14, 8) };
+                values[i].Dock = DockStyle.Fill;
+                values[i].Font = Theme.Heading;
+                values[i].ForeColor = i == 1 ? Theme.Success : Theme.TextPrimary;
+                values[i].TextAlign = ContentAlignment.MiddleLeft;
+                card.Controls.Add(values[i]);
+                summary.Controls.Add(card, i, 0);
+            }
+
+            this.gbOpciones.Parent = root;
+            this.gbOpciones.Dock = DockStyle.Top;
+            this.gbOpciones.Height = 64;
+            this.gbOpciones.Font = Theme.Small;
+            this.gbOpciones.ForeColor = Theme.TextMuted;
+            this.btnEliminarCuentas.Image = null;
+            this.btnEliminarCuentas.StyleButton(ButtonKind.Danger);
+            this.btnEliminarCuentas.TextAlign = ContentAlignment.MiddleCenter;
+
+            ModernCard table = new ModernCard { Dock = DockStyle.Fill };
+            resultsHint.Dock = DockStyle.Top;
+            resultsHint.Height = 32;
+            resultsHint.StyleLabel(LabelKind.Caption);
+            this.dgvVentas.Parent = table;
+            this.dgvVentas.Dock = DockStyle.Fill;
+            table.Controls.Add(resultsHint);
+            this.StyleSalesGrid();
+            root.Controls.Add(table);
+            table.BringToFront();
+            root.Controls.Add(summary);
+            root.Controls.Add(filters);
+            root.Controls.Add(header);
+            this.Controls.Add(root);
+            // Los controles heredados de hora permanecen disponibles para las consultas existentes.
+            this.groupBox1.Visible = false;
+            this.btnResumen.Visible = false;
+            this.UpdateSalesSummary();
+            this.ResumeLayout(true);
+        }
+
+        private void StyleSalesGrid()
+        {
+            this.dgvVentas.StyleGrid();
+            this.dgvVentas.Dock = DockStyle.Fill;
+            this.dgvVentas.RowsDefaultCellStyle = new DataGridViewCellStyle();
+            this.dgvVentas.AllowUserToAddRows = false;
+            this.dgvVentas.AllowUserToDeleteRows = false;
+            this.dgvVentas.ReadOnly = true;
+            this.dgvVentas.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            this.dgvVentas.MultiSelect = false;
+            this.dgvVentas.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            this.dgvVentas.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+            this.dgvVentas.RowTemplate.Height = 40;
+            this.dgvVentas.DefaultCellStyle.Padding = new Padding(10, 4, 10, 4);
+            this.dgvVentas.DefaultCellStyle.NullValue = "—";
+            this.dgvVentas.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dgvVentas.ColumnHeadersHeight = 44;
+            this.dgvVentas.ColumnHeadersDefaultCellStyle.Padding = new Padding(10, 0, 10, 0);
+            this.dgvVentas.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+        }
+
+        private void StyleSalesColumns()
+        {
+            foreach (DataGridViewColumn column in this.dgvVentas.Columns)
+            {
+                column.MinimumWidth = 80;
+                column.Width = 124;
+                column.DefaultCellStyle.FormatProvider = SalesCulture;
+                string name = column.DataPropertyName.Length > 0 ? column.DataPropertyName : column.Name;
+                switch (name)
+                {
+                    case "Fecha_venta": column.HeaderText = "Fecha"; column.Width = 124; break;
+                    case "Hora_venta": column.HeaderText = "Hora"; column.Width = 110; break;
+                    case "Nombre_cliente":
+                        column.HeaderText = "Cliente"; column.MinimumWidth = 190; column.Width = 220; break;
+                    case "Nombre_empleado":
+                        column.HeaderText = "Atendido por"; column.MinimumWidth = 170; column.Width = 190; break;
+                    case "Num_mesa": column.HeaderText = "Mesa"; column.Width = 86;
+                        column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; break;
+                    case "Tipo_pedido":
+                        column.HeaderText = "Tipo";
+                        column.Visible = true;
+                        column.Width = 136;
+                        column.DefaultCellStyle.Font = Theme.BodyBold;
+                        break;
+                    case "Total_parcial": case "Propina": case "Subtotal": case "Total_final":
+                    case "Desechables": case "Domicilio":
+                        column.DefaultCellStyle.Format = "C0";
+                        column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                        column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                        column.Width = 140;
+                        if (name == "Total_parcial") column.HeaderText = "Total parcial";
+                        if (name == "Total_final")
+                        {
+                            column.HeaderText = "Total final";
+                            column.DefaultCellStyle.Font = Theme.BodyBold;
+                            column.DefaultCellStyle.ForeColor = Theme.Darken(Theme.Success, 0.25f);
+                            column.DefaultCellStyle.BackColor = Theme.Lighten(Theme.Success, 0.96f);
+                        }
+                        break;
+                    case "Descuento": column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                        column.HeaderCell.ToolTipText = "Descuento registrado en porcentaje o en valor, según la venta."; break;
+                }
+            }
+            int position = 0;
+            foreach (string name in new[] { "Fecha_venta", "Hora_venta", "Nombre_cliente", "Num_mesa",
+                "Tipo_pedido", "Total_final", "Nombre_empleado", "Total_parcial", "Propina", "Subtotal", "Descuento" })
+            {
+                if (this.dgvVentas.Columns.Contains(name))
+                    this.dgvVentas.Columns[name].DisplayIndex = position++;
+            }
+        }
+
+        private void FormatSalesCell(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.Value == null || e.Value == DBNull.Value || e.ColumnIndex < 0) return;
+            string name = this.dgvVentas.Columns[e.ColumnIndex].DataPropertyName;
+            if (name == "Tipo_pedido")
+            {
+                string type = Convert.ToString(e.Value).Trim().ToUpperInvariant();
+                Color accent = type == "DOMICILIO" ? Theme.Info : Theme.Neutral;
+                e.CellStyle.ForeColor = Theme.Darken(accent, 0.25f);
+                e.CellStyle.BackColor = Theme.Lighten(accent, 0.94f);
+            }
+            else if ((name == "Total_parcial" || name == "Propina" || name == "Subtotal" || name == "Total_final"
+                || name == "Desechables" || name == "Domicilio")
+                && decimal.TryParse(Convert.ToString(e.Value), out decimal amount))
+            {
+                e.Value = amount.ToString("C0", SalesCulture);
+                e.FormattingApplied = true;
+            }
+            else if (name == "Fecha_venta" && DateTime.TryParse(Convert.ToString(e.Value), out DateTime date))
+            {
+                e.Value = date.ToString("dd MMM yyyy", SalesCulture);
+                e.FormattingApplied = true;
+            }
+            else if (name == "Hora_venta")
+            {
+                if (TimeSpan.TryParse(Convert.ToString(e.Value), out TimeSpan time)
+                    && time >= TimeSpan.Zero && time < TimeSpan.FromDays(1))
+                {
+                    e.Value = DateTime.Today.Add(time).ToString("hh:mm tt", CultureInfo.InvariantCulture);
+                    e.FormattingApplied = true;
+                }
+                else if (DateTime.TryParse(Convert.ToString(e.Value), out DateTime hour))
+                {
+                    e.Value = hour.ToString("hh:mm tt", CultureInfo.InvariantCulture);
+                    e.FormattingApplied = true;
+                }
+            }
+        }
+
+        private void UpdateSalesSummary()
+        {
+            int count = 0;
+            decimal total = 0;
+            foreach (DataGridViewRow row in this.dgvVentas.Rows)
+            {
+                if (row.IsNewRow) continue;
+                count++;
+                if (this.dgvVentas.Columns.Contains("Total_final")
+                    && decimal.TryParse(Convert.ToString(row.Cells["Total_final"].Value), out decimal amount))
+                    total += amount;
+            }
+            salesCount.Text = "VENTAS EN LA CONSULTA\n" + count.ToString("N0", SalesCulture);
+            salesTotal.Text = "TOTAL VENDIDO\n" + total.ToString("C0", SalesCulture);
+            salesAverage.Text = "PROMEDIO POR VENTA\n" + (count == 0 ? 0 : total / count).ToString("C0", SalesCulture);
+            resultsHint.Text = this.dgvVentas.DataSource == null ? "Selecciona el período y pulsa Buscar."
+                : count == 0 ? "No hay ventas para los filtros seleccionados."
+                : count.ToString("N0", SalesCulture) + " ventas · Doble clic para ver la factura · Importes en COP";
         }
 
         private void BtnEliminarCuentas_Click(object sender, EventArgs e)
@@ -159,9 +405,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 DataGridViewRow row = this.dgvVentas.CurrentRow;
                 if (row != null)
                 {
-                    FrmDetalleVenta venta = new FrmDetalleVenta();
+                    FrmSaleDetails venta = new FrmSaleDetails();
                     venta.Id_venta = Convert.ToInt32(row.Cells["Id_venta"].Value);
-                    venta.Row_venta = row;
                     venta.StartPosition = FormStartPosition.CenterScreen;
                     venta.Show();
                 }
@@ -268,6 +513,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     };
                     this.dgvVentas =
                         DatagridString.ChangeHeaderTextAndVisible(this.dgvVentas, columns_header, columns_visible);
+                    this.StyleSalesColumns();
 
                     //this.dgvVentas.Columns["Hora_venta"].DefaultCellStyle.Format = "HH:mm";
 
@@ -355,6 +601,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
             this.containerFiltros = new PoperContainer(filtrosventa);
             this.dgvVentas =
                 ConfiguracionDatagridview.ConfigurationGrid(this.dgvVentas);
+            this.StyleSalesGrid();
             this.Horas();
         }
 

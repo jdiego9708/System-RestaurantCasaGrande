@@ -1,5 +1,5 @@
 ﻿<#
-    Prepara la base de datos del restaurante para la API movil, paso a paso y pidiendo confirmacion antes de escribir.
+    Prepara la base del restaurante para la API movil y Domicilios, con respaldo y confirmaciones.
     En la USB se llama "01-Base-de-Datos.ps1" (Preparar-USB.ps1 lo copia con ese nombre).
 
     EJECUTAR EN EL PC DEL RESTAURANTE, con el MISMO usuario de Windows que abre el sistema (LocalDB es por usuario):
@@ -15,7 +15,8 @@
       3. HACE UNA COPIA DE SEGURIDAD (.bak) de la base. Sin copia no continua.
       4. Con su confirmacion, crea/actualiza los 3 procedimientos nuevos (01, 03, 04). Son aditivos y repetibles.
       5. Con su confirmacion aparte, unifica empleados duplicados y PIN 0 (02). Deja respaldo dentro de la base.
-      6. Vuelve a verificar y resume.
+      6. Aplica Domicilios (06): tabla, direccion del pedido y ocho procedimientos.
+      7. Vuelve a verificar y resume (Domicilios incluido).
 #>
 [CmdletBinding()]
 param(
@@ -28,6 +29,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Preparar-USB reemplaza esta asignacion por los archivos de BD embebidos (Base64, sin datos de clientes).
+$embeddedDatabaseFiles = @{} # USB_DATABASE_PAYLOAD
 if ($Database -notmatch '^[A-Za-z0-9_]+$') { throw "Nombre de base no valido: $Database" }
 
 function Paso($t)  { Write-Host "`n==> $t" -ForegroundColor Cyan }
@@ -44,7 +47,17 @@ function Pregunta([string]$texto) {
 }
 
 # ---------- Donde estan los scripts de la base ----------
-$db = @((Join-Path $PSScriptRoot 'Soporte\db'), (Join-Path $PSScriptRoot '..\db')) |
+$embeddedDb = $null
+if ($embeddedDatabaseFiles.Count -gt 0) {
+    $embeddedDb = Join-Path $env:TEMP ('CasaGrande-db-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $embeddedDb -Force | Out-Null
+    foreach ($fileName in $embeddedDatabaseFiles.Keys) {
+        if ([IO.Path]::GetFileName($fileName) -ne $fileName) { throw "Nombre de archivo embebido no valido: $fileName" }
+        [IO.File]::WriteAllBytes((Join-Path $embeddedDb $fileName), [Convert]::FromBase64String($embeddedDatabaseFiles[$fileName]))
+    }
+}
+$db = @($embeddedDb, (Join-Path $PSScriptRoot 'Soporte\db'), (Join-Path $PSScriptRoot '..\db')) |
+    Where-Object { $_ } |
     Where-Object { Test-Path (Join-Path $_ 'Invoke-Sql.ps1') } | Select-Object -First 1
 if (-not $db) { Write-Host 'No encuentro la carpeta con Invoke-Sql.ps1 (Soporte\db o ..\db).' -ForegroundColor Red; Termina 1 }
 $db = (Resolve-Path $db).Path
@@ -279,7 +292,7 @@ try {
     Write-Host "Base de datos: $Database   Instancia: $Instance   Usuario de Windows: $env:USERNAME" -ForegroundColor White
 
     # ---------- 1. LocalDB y existencia de la base ----------
-    Paso '1/6  Comprobando SQL Server LocalDB'
+    Paso '1/7  Comprobando SQL Server LocalDB'
     if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
         Write-Host '    No se encontro LocalDB. Instale "SqlLocalDB.msi" (SQL Server Express, medios LocalDB) y repita.' -ForegroundColor Red
         Termina 1
@@ -315,12 +328,12 @@ try {
     }
 
     # ---------- 2. Estado actual ----------
-    Paso '2/6  Estado actual (solo lectura)'
+    Paso '2/7  Estado actual (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database
     if ($SoloVerificar) { Ok 'Verificacion terminada (no se cambio nada).'; Termina 0 }
 
     # ---------- 3. Copia de seguridad ----------
-    Paso '3/6  Copia de seguridad'
+    Paso '3/7  Copia de seguridad'
     if (-not (Test-Path $CarpetaRespaldo)) { New-Item -ItemType Directory -Path $CarpetaRespaldo -Force | Out-Null }
     $bak = Join-Path $CarpetaRespaldo ("{0}_antes_de_la_API_{1:yyyyMMdd_HHmm}.bak" -f $Database, (Get-Date))
     $sqlBak = Join-Path $env:TEMP "respaldo_$([guid]::NewGuid().ToString('N')).sql"
@@ -331,7 +344,7 @@ try {
     Aviso 'Guarde ademas una copia de ese archivo en otro lugar (USB o nube privada).'
 
     # ---------- 4. Procedimientos nuevos ----------
-    Paso '4/6  Procedimientos de la API movil (01, 03, 04)'
+    Paso '4/7  Procedimientos de la API movil (01, 03, 04)'
     Write-Host '    Crean 3 procedimientos NUEVOS; no cambian los existentes ni los datos. Se pueden repetir.'
     if (Pregunta '    Crear/actualizar los 3 procedimientos ahora?') {
         foreach ($n in '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql') {
@@ -342,7 +355,7 @@ try {
     } else { Aviso 'Omitido. La API movil no podra crear ni modificar pedidos hasta que se ejecuten.' }
 
     # ---------- 5. Empleados ----------
-    Paso '5/6  Empleados duplicados y PIN 0 (02)'
+    Paso '5/7  Empleados duplicados y PIN 0 (02)'
     Write-Host '    CAMBIA DATOS: deja una sola ficha con PIN por persona; las duplicadas quedan sin PIN e INACTIVAS (no se borran)'
     Write-Host '    y el PIN 0 pasa a "sin PIN". Es necesario porque el mesero entra solo con su PIN. Deja un respaldo en la'
     Write-Host '    tabla Empleados_respaldo_unificacion y se puede repetir sin riesgo. Confirmelo antes con el dueno.'
@@ -360,11 +373,29 @@ try {
         Ok 'Empleados activados'
     } else { Aviso 'Omitido. Si siguen INACTIVO no aparecen en el login del escritorio.' }
 
+    # Modulo de Domicilios: varias direcciones por cliente y direccion de entrega en cada pedido.
+    Paso '6/7  Domicilios, clientes y direcciones (06)'
+    Write-Host ''
+    Write-Host '    Domicilios (06): crea la tabla Domicilios (varias direcciones por cliente), pasa la direccion que ya tiene'
+    Write-Host '    cada cliente como su principal y agrega Pedidos.Id_direccion. Reemplaza sp_Insertar_pedido por una version'
+    Write-Host '    con el mismo comportamiento (la direccion es opcional). Se puede repetir; se revierte con el .revert.'
+    if (Pregunta '    Aplicar el esquema de Domicilios ahora?') {
+        Correr-Sql (Join-Path $db '06_domicilios_direcciones.sql') $Database
+        Ok 'Esquema de Domicilios aplicado'
+    } else { Aviso 'Omitido. El modulo de Domicilios del escritorio no funcionara hasta aplicarlo.' }
+
+    Write-Host ''
+    if (Pregunta '    Preparar las tablas de integracion con Alegra (07, no emite documentos)?') {
+        Correr-Sql (Join-Path $db '07_alegra_integration.sql') $Database
+        Ok 'Tablas de integracion Alegra preparadas'
+    }
+
     # ---------- 6. Verificacion final ----------
-    Paso '6/6  Verificacion final (solo lectura)'
+    Paso '7/7  Verificacion final (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database
     Write-Host ''
     Write-Host '    Deben decir OK los tres procedimientos; pines_compartidos_entre_activos y activos_con_pin_cero deben ser 0.' -ForegroundColor White
+    Write-Host '    Domicilios debe decir OK en tabla, columna, relaciones, mesa 0 y los ocho procedimientos.' -ForegroundColor White
     Write-Host "    Copia de seguridad: $bak" -ForegroundColor White
     Termina 0
 }

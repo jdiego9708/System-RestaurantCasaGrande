@@ -34,11 +34,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.txtInformacion = new System.Windows.Forms.TextBox();
-            this.btnNext = new System.Windows.Forms.Button();
-            this.btnPrint = new System.Windows.Forms.Button();
-            this.btnAddProductos = new System.Windows.Forms.Button();
+            this.btnNext = new CapaPresentacion.UI.ModernButton();
+            this.btnPrint = new CapaPresentacion.UI.ModernButton();
+            this.btnAddProductos = new CapaPresentacion.UI.ModernButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnCancelar = new System.Windows.Forms.Button();
+            this.btnCancelar = new CapaPresentacion.UI.ModernButton();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -175,10 +175,10 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.GroupBox groupBox1;
         public System.Windows.Forms.TextBox txtInformacion;
-        private System.Windows.Forms.Button btnNext;
-        private System.Windows.Forms.Button btnPrint;
-        private System.Windows.Forms.Button btnAddProductos;
+        private CapaPresentacion.UI.ModernButton btnNext;
+        private CapaPresentacion.UI.ModernButton btnPrint;
+        private CapaPresentacion.UI.ModernButton btnAddProductos;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button btnCancelar;
+        private CapaPresentacion.UI.ModernButton btnCancelar;
     }
 }

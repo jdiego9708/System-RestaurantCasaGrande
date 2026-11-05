@@ -185,6 +185,104 @@ namespace CapaDatos
         }
         #endregion
 
+        #region BUSQUEDA RAPIDA DE CLIENTES
+        /// <summary>
+        /// Clientes activos cuyo nombre o telefono contiene el texto (los 50 mas recientes si esta vacio). Nunca
+        /// devuelve null: sin resultados, la tabla queda vacia. No usa sp_Buscar_clientes porque ese falla al final.
+        /// </summary>
+        public static DataTable SearchQuick(string text)
+        {
+            DataTable table = new DataTable("Clientes");
+            using (SqlConnection con = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Clientes_buscar_rapido", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@Texto", SqlDbType.VarChar, 50).Value = (text ?? string.Empty).Trim().ToUpper();
+                new SqlDataAdapter(cmd).Fill(table);
+            }
+            return table;
+        }
+
+        /// <summary>Un cliente por Id, o null si no existe.</summary>
+        public static DataTable GetById(int customerId)
+        {
+            DataTable table = new DataTable("Clientes");
+            using (SqlConnection con = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand("sp_Cliente_obtener", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@Id_cliente", SqlDbType.Int).Value = customerId;
+                new SqlDataAdapter(cmd).Fill(table);
+            }
+            return table.Rows.Count == 0 ? null : table;
+        }
+        #endregion
+
+        #region METODO EDITAR CLIENTE BASICO
+        /// <summary>Cambia nombre, telefono y correo del cliente sin tocar el resto de sus datos. Devuelve "OK" o el error.</summary>
+        public static string UpdateCustomer(int customerId, string name, string phone, string email)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand("sp_Cliente_editar_basico", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@Id_cliente", SqlDbType.Int).Value = customerId;
+                    cmd.Parameters.Add("@Nombre_cliente", SqlDbType.VarChar, 500).Value = name.Trim().ToUpper();
+                    cmd.Parameters.Add("@Telefono_cliente", SqlDbType.VarChar, 50).Value = phone.Trim();
+                    cmd.Parameters.Add("@Correo_electronico", SqlDbType.VarChar, 500).Value =
+                        string.IsNullOrWhiteSpace(email) ? (object)DBNull.Value : email.Trim().ToUpper();
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+        #endregion
+
+        #region METODO INSERTAR CLIENTE RAPIDO
+        /// <summary>
+        /// Crea un cliente con lo minimo que necesita un domicilio (nombre, telefono y correo opcional) y devuelve
+        /// su Id. La direccion no va aqui: vive en Domicilios, donde un cliente puede tener varias.
+        /// </summary>
+        public static string InsertCustomer(string name, string phone, string email, out int customerId)
+        {
+            customerId = 0;
+            try
+            {
+                using (SqlConnection con = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand("sp_Insertar_cliente", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    SqlParameter id = cmd.Parameters.Add("@Id_cliente", SqlDbType.Int);
+                    id.Direction = ParameterDirection.Output;
+                    cmd.Parameters.Add("@Nombre_cliente", SqlDbType.VarChar, 500).Value = name.Trim().ToUpper();
+                    cmd.Parameters.Add("@Telefono_cliente", SqlDbType.VarChar, 50).Value = phone.Trim();
+                    cmd.Parameters.Add("@Correo_electronico", SqlDbType.VarChar, 500).Value =
+                        string.IsNullOrWhiteSpace(email) ? (object)DBNull.Value : email.Trim().ToUpper();
+                    // Los reportes concatenan estos campos solo cuando no son NULL.
+                    cmd.Parameters.Add("@Direccion_cliente", SqlDbType.VarChar, 100).Value = DBNull.Value;
+                    cmd.Parameters.Add("@Referencia_ubicacion", SqlDbType.VarChar, 100).Value = DBNull.Value;
+                    cmd.Parameters.Add("@Otras_observaciones", SqlDbType.VarChar, 100).Value = DBNull.Value;
+                    cmd.Parameters.Add("@Estado_cliente", SqlDbType.VarChar, 50).Value = "ACTIVO";
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    customerId = Convert.ToInt32(id.Value);
+                    return "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+        #endregion
+
         #region METODO EDITAR CLIENTES
         public string EditarClientes(DClientes DClientes)
         {

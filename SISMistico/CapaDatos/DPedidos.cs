@@ -158,6 +158,10 @@ namespace CapaDatos
                 SqlCmd.Parameters.Add(CantidadClientes);
                 contador += 1;
 
+                // Solo los domicilios llevan direccion; sin el parametro el SP usa NULL (pedido de mesa).
+                if (pedido.AddressId.HasValue)
+                    SqlCmd.Parameters.Add("@Id_direccion", SqlDbType.Int).Value = pedido.AddressId.Value;
+
                 //SqlParameter Detalles_pedido = new SqlParameter("@Detalle_pedido", TablaDetalle);
                 //Detalles_pedido.ParameterName = "@Detalle_pedido";
                 //Detalles_pedido.Value = TablaDetalle;

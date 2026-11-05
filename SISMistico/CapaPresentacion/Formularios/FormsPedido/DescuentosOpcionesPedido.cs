@@ -7,9 +7,39 @@ namespace CapaPresentacion.Formularios.FormsPedido
 {
     public partial class DescuentosOpcionesPedido : UserControl
     {
+        public readonly CheckBox ElectronicInvoice = new CheckBox
+        {
+            Text = "Solicitar factura electrónica con Alegra", AutoSize = true,
+            Location = new System.Drawing.Point(4, 563), TabIndex = 50,
+        };
+        private readonly NumericUpDown deliveryTotal = new NumericUpDown
+        {
+            Name = "deliveryTotal",
+            Maximum = int.MaxValue,
+            Minimum = 0,
+            ThousandsSeparator = true,
+            DecimalPlaces = 0,
+            Visible = false,
+        };
+        private decimal? manualDeliveryTotal;
+        private bool updatingDeliveryTotal;
+
         public DescuentosOpcionesPedido()
         {
             InitializeComponent();
+            this.Height = 600;
+            this.Controls.Add(ElectronicInvoice);
+            this.deliveryTotal.Location = this.lblTotal.Location;
+            this.deliveryTotal.Width = 180;
+            this.deliveryTotal.Font = this.lblTotal.Font;
+            this.deliveryTotal.TabIndex = this.lblTotal.TabIndex;
+            this.Controls.Add(this.deliveryTotal);
+            this.deliveryTotal.ValueChanged += (s, e) =>
+            {
+                if (this.updatingDeliveryTotal || !this.CanEditDeliveryTotal) return;
+                this.manualDeliveryTotal = this.deliveryTotal.Value;
+                this.OperacionSumarPrecios();
+            };
             this.Load += DescuentosOpcionesPedido_Load;
 
             this.txtPropina.LostFocus += Txt_LostFocus;
@@ -73,6 +103,16 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         public DataTable TablaPago(bool isPrecuenta)
         {
+            // Fuerza la lectura del texto incluso si se factura sin salir del campo.
+            if (!isPrecuenta && this.CanEditDeliveryTotal)
+            {
+                decimal editedTotal = this.deliveryTotal.Value;
+                if (editedTotal != this.Total)
+                {
+                    this.manualDeliveryTotal = editedTotal;
+                    this.OperacionSumarPrecios();
+                }
+            }
             DataTable table = new DataTable();
             table.Columns.Add("Pago", typeof(string));
             table.Columns.Add("Valor_pago", typeof(string));
@@ -209,7 +249,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             if (total_valores != this.Total)
             {
-                Mensajes.MensajeInformacion("Verifique los valores del método de pago, la suma debe ser igual al valor total");
+                Mensajes.MensajeInformacion(this.CanEditDeliveryTotal
+                    ? "La suma de los métodos de pago debe ser igual al TOTAL FINAL editado: " + this.Total.ToString("C")
+                    : "Verifique los valores del método de pago, la suma debe ser igual al valor total");
                 return false;
             }
 
@@ -345,17 +387,18 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.lblSubtotal.Text = subtotal.ToString("C").Replace(",00", "");
             this.lblSubtotal.Tag = subtotal;
 
-            if (descuento == 0)
+            decimal finalTotal = descuento == 0 ? subtotal : total_con_descuento;
+            if (this.CanEditDeliveryTotal && this.manualDeliveryTotal.HasValue)
+                finalTotal = this.manualDeliveryTotal.Value;
+            this.Total = finalTotal;
+            this.lblTotal.Text = finalTotal.ToString("C").Replace(",00", "");
+            this.lblTotal.Tag = finalTotal;
+
+            if (this.CanEditDeliveryTotal)
             {
-                this.lblTotal.Text = subtotal.ToString("C").Replace(",00", "");
-                this.lblTotal.Tag = subtotal;
-                this.Total = Convert.ToDecimal(subtotal);
-            }
-            else
-            {
-                this.lblTotal.Text = total_con_descuento.ToString("C").Replace(",00", "");
-                this.lblTotal.Tag = total_con_descuento;
-                this.Total = Convert.ToDecimal(total_con_descuento);
+                this.updatingDeliveryTotal = true;
+                try { this.deliveryTotal.Value = Math.Max(0, Math.Min(int.MaxValue, this.Total)); }
+                finally { this.updatingDeliveryTotal = false; }
             }
 
             this.frmFacturarPedido.ObtenerTotales(this.Total_parcial,
@@ -407,12 +450,17 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private decimal total;
         private int total_parcial;
         private bool _isDomicilio;
+        private bool CanEditDeliveryTotal => this.IsDomicilio && this.frmFacturarPedido != null
+            && !this.frmFacturarPedido.IsPrecuenta;
+
         public bool IsDomicilio
         {
             get => _isDomicilio;
             set
             {
                 _isDomicilio = value;
+                this.deliveryTotal.Visible = this.CanEditDeliveryTotal;
+                this.lblTotal.Visible = !this.CanEditDeliveryTotal;
                 if (value)
                 {
                     this.chkDomicilio.Checked = true;
@@ -426,6 +474,26 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         private void CambioTotal()
         {
+            if (this.CanEditDeliveryTotal)
+            {
+                // No se reemplaza el reparto que el usuario escribio al combinar dos pagos.
+                MetodoPagoSmall selected = null;
+                int count = 0;
+                foreach (Control control in this.panelMetodosPago.Controls)
+                {
+                    if (control is MetodoPagoSmall payment && payment.chkMetodo.Checked)
+                    {
+                        selected = payment;
+                        count++;
+                    }
+                }
+                if (count == 1)
+                {
+                    selected.txtValor.Tag = this.Total;
+                    selected.txtValor.Text = this.Total.ToString("C").Replace(",00", "");
+                }
+                return;
+            }
             if (this.panelMetodosPago.Controls.Count > 0)
             {
                 foreach (UserControl control in this.panelMetodosPago.controlsUser)

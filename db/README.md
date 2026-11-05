@@ -25,6 +25,8 @@ trabajar contra una copia local. Contexto y hallazgos en [`docs/02`](../docs/02-
 | `02_unificar_empleados_duplicados.revert.sql` | Devuelve `Codigo_maestro` y `Estado` desde ese respaldo y lo elimina |
 | `05_activar_empleados.sql` | **Arreglo de datos**: deja `ACTIVO` a JUAN DIEGO DUQUE y ANDRES DAVID HOYOS GARCIA (busca por nombre, no por id). Necesario porque el login del escritorio solo lista empleados `ACTIVO`. Idempotente; no toca el PIN. Aplicado en la copia local el 2026-11-02; **falta en producción** (lo ofrece `Desplegar-Base-de-Datos.ps1`, paso 5) |
 | `05_activar_empleados.revert.sql` | Los deja otra vez `INACTIVO` |
+| `06_domicilios_direcciones.sql` | **Esquema del módulo Domicilios**: tabla `Domicilios` (varias direcciones por cliente, `Id_cliente` → `Clientes`), migra la `Direccion_cliente` actual como principal, agrega `Pedidos.Id_direccion` (NULL en mesas) y reemplaza `sp_Insertar_pedido` por una versión con `@Id_direccion` opcional. SPs nuevos: `sp_Domicilios_listar`, `sp_Domicilio_obtener`, `sp_Domicilio_guardar`, `sp_Domicilio_inactivar`. Idempotente. Aplicado en la copia local el 2026-11-02; **falta en producción** (lo ofrece `Desplegar-Base-de-Datos.ps1`, paso 5). Pruebas: `pruebas-sp-domicilios.sql` |
+| `06_domicilios_direcciones.revert.sql` | Restaura `sp_Insertar_pedido`, quita `Pedidos.Id_direccion` y borra `Domicilios` (se pierden las direcciones nuevas) |
 | `03_sp_Movil_Agregar_items.sql` | **Fase 4.** Agrega líneas a un pedido existente en una transacción (precio de catálogo, ingredientes por línea, solo si está `PENDIENTE`/`SALIENDO`). Aditivo; **no desplegado en producción** |
 | `04_sp_Movil_Quitar_item.sql` | **Fase 4.** Quita unidades de una línea por `Id_detalle_pedido`; si desaparece, borra sus ingredientes en la misma transacción. Aditivo; **no desplegado en producción** |
 | `verificar-despliegue.sql` | **Solo lectura.** Comprueba que estén los tres SP nuevos, que no haya PIN compartidos entre activos ni PIN en cero, y cuenta mesas y pedidos. Se usa al desplegar en el restaurante ([`docs/08`](../docs/08-instalacion-desde-cero.md)) |
@@ -34,6 +36,31 @@ Los respaldos originales **no** están en el repositorio (el completo tiene 280 
 claves, ventas). Viven en `D:\Usuario_JUAN_DIEGO\Escritorio\Casa Grande\`.
 
 ## Cómo reproducirlo
+
+### Despliegue del módulo Domicilios y cambios del 2026-11-02
+
+`scripts/Preparar-USB.ps1` genera un **01-Base-de-Datos.ps1 autocontenido**: lleva embebidos los 16 archivos
+SQL/PowerShell de soporte y extrae una copia temporal al ejecutarse. `Soporte/db` también conserva la copia
+legible, pero el paso 01 no depende de ella. Antes de escribir en la base hace un respaldo y solicita confirmar
+cada paso. Aceptar el paso **6/7 Domicilios** para usar el nuevo módulo y el detalle moderno de ventas.
+
+`06_domicilios_direcciones.sql` incluye la tabla `Domicilios`, la columna/FK `Pedidos.Id_direccion`, migración
+de direcciones, los ocho procedimientos de pedidos/clientes/direcciones y la mesa comodín `Id_mesa = 0`
+si no existía. `verificar-despliegue.sql` comprueba esas dependencias además de los procedimientos de la API.
+
+La columna Tipo del historial, el nuevo detalle de venta y el guardado transaccional de venta/pagos usan SQL
+parametrizado incluido en el ejecutable. Los estilos, total editable para Domicilios y acceso sin PIN adicional
+son cambios de la aplicación: se distribuyen con el instalador recompilado y no necesitan otros cambios de BD.
+
+Prueba repetible (base temporal independiente, sin modificar las bases de trabajo):
+
+```powershell
+.\scripts\Test-DatabaseDeployment.ps1
+```
+
+Comprueba el contenido embebido byte a byte, la sintaxis del paso 01, aplica `01` a `06` dos veces sobre el
+esquema original y verifica que no se duplique la dirección migrada ni cambien las definiciones de los SP.
+El esquema `produccion-schema.sql` es la base histórica; las migraciones se ejecutan después, en orden.
 
 ```powershell
 cd D:\Repositorios\System-RestaurantCasaGrande\db
