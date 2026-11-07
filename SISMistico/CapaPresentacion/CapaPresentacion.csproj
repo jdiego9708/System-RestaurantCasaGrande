@@ -357,6 +357,7 @@
       <DependentUpon>DescuentosOpcionesPedido.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\KpiCard.cs" />
+    <Compile Include="Formularios\FormsPedido\FrmRemoveProductAuthorization.cs" />
     <Compile Include="Formularios\FormsPedido\FrmUnlinkedProductsDialog.cs" />
     <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Electronic.cs">
       <DependentUpon>FrmFacturarPedido.cs</DependentUpon>

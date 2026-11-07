@@ -954,10 +954,31 @@ namespace CapaDatos
         #region METODO INSERTAR ELIMINACIÓN COMANDA
         public static string InsertarEliminaciónComanda(int id_pedido, int id_usuario_clave_maestra, int id_usuario_sesion, int id_tipo, string tipo, string observaciones)
         {
-            string consulta = "INSERT INTO Delete_pedidos VALUES ('" + id_pedido + "','" + id_usuario_clave_maestra + "','" + id_usuario_sesion + "','" +
-                id_tipo + "','" + tipo + "','" + DateTime.Now.ToString("yyyy-MM-dd") + "','" + DateTime.Now.ToString("HH:mm") + "','" + observaciones + "')";
-
-            return Conexion.EjecutarConsultaCadena(consulta, false);
+            // Con parámetros: la observación la escribe una persona y las comillas no pueden romper (ni inyectar) el SQL.
+            const string consulta =
+                "INSERT INTO Delete_pedidos (Id_pedido, Id_usuario_clave_maestra, Id_usuario_sesion, Id_tipo, Tipo, Fecha, Hora, Motivo) " +
+                "VALUES (@Id_pedido, @Clave, @Sesion, @Id_tipo, @Tipo, @Fecha, @Hora, @Motivo)";
+            try
+            {
+                using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand(consulta, cn))
+                {
+                    cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = id_pedido;
+                    cmd.Parameters.Add("@Clave", SqlDbType.Int).Value = id_usuario_clave_maestra;
+                    cmd.Parameters.Add("@Sesion", SqlDbType.Int).Value = id_usuario_sesion;
+                    cmd.Parameters.Add("@Id_tipo", SqlDbType.Int).Value = id_tipo;
+                    cmd.Parameters.Add("@Tipo", SqlDbType.VarChar, 50).Value = tipo;
+                    cmd.Parameters.Add("@Fecha", SqlDbType.Date).Value = DateTime.Now.Date;
+                    cmd.Parameters.Add("@Hora", SqlDbType.Time).Value = DateTime.Now.TimeOfDay;
+                    cmd.Parameters.Add("@Motivo", SqlDbType.VarChar, 500).Value = (object)observaciones ?? DBNull.Value;
+                    cn.Open();
+                    return cmd.ExecuteNonQuery() >= 1 ? "OK" : "ERROR";
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
         #endregion
 

@@ -585,8 +585,14 @@
              * Significa que el producto venía desde la BD**/
             if (product.IsEditar && product.IsAddBD == false)
             {
-                DialogResult dialog = this.Comprobacion();
-                if (dialog == DialogResult.OK)
+                // Quitar algo ya guardado exige el código maestro único y una observación obligatoria (mismo
+                // criterio que el celular). El PIN de empleado de FrmComprobacion ya no autoriza esta acción.
+                string observation;
+                using (FrmRemoveProductAuthorization authorization = new FrmRemoveProductAuthorization(product.Nombre))
+                {
+                    if (authorization.ShowDialog(this) != DialogResult.OK) return;
+                    observation = authorization.Observation;
+                }
                 {
                     Detalle_pedido detalle = new Detalle_pedido
                     {
@@ -598,15 +604,21 @@
                         Observaciones = product.Observaciones == null ? string.Empty : product.Observaciones,
                     };
 
-                    //Eliminar de la base de datos
-                    string rpta = NPedido.ActualizarDetallePedido(detalle, datos.EmpleadoClaveMaestra.Id_empleado, "DELETE");
+                    //Eliminar de la base de datos (el empleado es quien tiene la sesión: el código maestro no identifica a nadie)
+                    string rpta = NPedido.ActualizarDetallePedido(detalle, datos.Id_empleado, "DELETE");
                     if (!rpta.Equals("OK"))
                     {
                         Mensajes.MensajeInformacion("Hubo un error actualizando el detalle del pedido en la bd");
                     }
+                    else
+                    {
+                        // Rastro para el reporte diario: Id 0 en la clave maestra = autorizó el código maestro.
+                        string saved = NPedido.InsertarEliminacionComanda(this.Pedido.Id_pedido, 0, datos.Id_empleado,
+                            product.Id_producto, product.Tipo_producto, observation);
+                        if (!saved.Equals("OK"))
+                            Mensajes.MensajeInformacion("El producto se quitó, pero no se pudo guardar el registro de la eliminación: " + saved);
+                    }
                 }
-                else
-                    return;
             }
 
             //Comprobar existencia del producto en la lista de ProductsSelected
