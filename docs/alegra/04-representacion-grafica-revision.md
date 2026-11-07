@@ -1,3 +1,5 @@
+> Actualizacion 2026-11-06: el usuario aprobo descargar el oficial Carta e imprimir con el renderer propio de 80 mm. Flujo actual y validaciones: [doble impresion](../14-doble-impresion-electronica.md). Lo siguiente conserva el contexto de la revision anterior.
+
 # Representación gráfica para revisión contable
 
 Se obtuvo el XML original de una factura existente usando `GET /invoices/{id}?fields=xml`.

@@ -305,6 +305,26 @@ namespace CapaDatos
         #endregion
 
         #region METODO LOGIN
+        // Se comprueba el PIN sin llevar la credencial de sp_Login a la interfaz.
+        public async Task<(string rpta, List<object> objects)> LoginPorPin(int idEmpleado, int pin, string fecha)
+        {
+            if (idEmpleado <= 0 || pin <= 0) return ("PIN_INVALIDO", new List<object>());
+            string password;
+            using (var connection = new SqlConnection(Conexion.Cn))
+            using (var command = new SqlCommand(
+                "SELECT Password FROM Empleados WHERE Id_empleado = @Id AND Id_empleado > 0 " +
+                "AND Codigo_maestro = @Pin AND Codigo_maestro > 0", connection))
+            {
+                command.Parameters.Add("@Id", SqlDbType.Int).Value = idEmpleado;
+                command.Parameters.Add("@Pin", SqlDbType.Int).Value = pin;
+                await connection.OpenAsync();
+                object value = await command.ExecuteScalarAsync();
+                if (value == null || value == DBNull.Value) return ("PIN_INVALIDO", new List<object>());
+                password = Convert.ToString(value);
+            }
+            return await Login(idEmpleado.ToString(System.Globalization.CultureInfo.InvariantCulture), password, fecha);
+        }
+
         public async Task<(string rpta, List<object> objects)> Login(string usuario, string pass, string fecha)
         {
             string rpta = "OK";

@@ -31,7 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmObservarVentas));
             this.date1 = new System.Windows.Forms.DateTimePicker();
             this.date2 = new System.Windows.Forms.DateTimePicker();
-            this.btnBuscar = new System.Windows.Forms.Button();
+            this.btnBuscar = new CapaPresentacion.UI.ModernButton();
             this.dgvVentas = new System.Windows.Forms.DataGridView();
             this.btnResumen = new System.Windows.Forms.Button();
             this.ListaHora1 = new System.Windows.Forms.ComboBox();
@@ -42,9 +42,8 @@
             this.ListaHora2 = new System.Windows.Forms.ComboBox();
             this.panelFecha2 = new System.Windows.Forms.Panel();
             this.panelFecha1 = new System.Windows.Forms.Panel();
-            this.btnFiltros = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btnOtrasOpciones = new System.Windows.Forms.Button();
+            this.btnOtrasOpciones = new CapaPresentacion.UI.ModernButton();
             this.gbOpciones = new System.Windows.Forms.GroupBox();
             this.btnEliminarCuentas = new System.Windows.Forms.Button();
             this.chkEliminarCuentas = new System.Windows.Forms.CheckBox();
@@ -207,23 +206,7 @@
             this.panelFecha1.Size = new System.Drawing.Size(382, 52);
             this.panelFecha1.TabIndex = 27;
             // 
-            // btnFiltros
-            // 
-            this.btnFiltros.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnFiltros.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
-            this.btnFiltros.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
-            this.btnFiltros.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
-            this.btnFiltros.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnFiltros.Image = ((System.Drawing.Image)(resources.GetObject("btnFiltros.Image")));
-            this.btnFiltros.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnFiltros.Location = new System.Drawing.Point(238, 102);
-            this.btnFiltros.Name = "btnFiltros";
-            this.btnFiltros.Size = new System.Drawing.Size(117, 51);
-            this.btnFiltros.TabIndex = 28;
-            this.btnFiltros.Text = "Opciones de filtro";
-            this.btnFiltros.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnFiltros.UseVisualStyleBackColor = true;
-            // 
+            //
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.panelFecha1);
@@ -304,7 +287,6 @@
             this.Controls.Add(this.gbOpciones);
             this.Controls.Add(this.btnOtrasOpciones);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.btnFiltros);
             this.Controls.Add(this.btnResumen);
             this.Controls.Add(this.dgvVentas);
             this.Controls.Add(this.btnBuscar);
@@ -331,7 +313,7 @@
 
         private System.Windows.Forms.DateTimePicker date1;
         private System.Windows.Forms.DateTimePicker date2;
-        public System.Windows.Forms.Button btnBuscar;
+        public CapaPresentacion.UI.ModernButton btnBuscar;
         private System.Windows.Forms.DataGridView dgvVentas;
         public System.Windows.Forms.Button btnResumen;
         private System.Windows.Forms.ComboBox ListaHora1;
@@ -342,9 +324,8 @@
         private System.Windows.Forms.ComboBox ListaHora2;
         private System.Windows.Forms.Panel panelFecha2;
         private System.Windows.Forms.Panel panelFecha1;
-        public System.Windows.Forms.Button btnFiltros;
         private System.Windows.Forms.GroupBox groupBox1;
-        public System.Windows.Forms.Button btnOtrasOpciones;
+        public CapaPresentacion.UI.ModernButton btnOtrasOpciones;
         private System.Windows.Forms.GroupBox gbOpciones;
         private System.Windows.Forms.CheckBox chkEliminarCuentas;
         public System.Windows.Forms.Button btnEliminarCuentas;

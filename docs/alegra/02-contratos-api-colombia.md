@@ -65,6 +65,15 @@ No confundir el medio fiscal de la factura (códigos Colombia como CASH, CREDIT_
 CREDIT_TRANSFER) con `payments[].paymentMethod` (enum del contrato: cash, check, transfer, deposit,
 credit-card, debit-card). Los pagos mixtos necesitan ambos mapeos, definidos explícitamente.
 
+**Medio fiscal de la cabecera (corregido el 6-nov-2026).** Antes la cabecera llevaba siempre
+`FiscalPaymentMethod` (CASH) y una venta pagada por transferencia salía como efectivo (FE4935). Ahora se
+deriva del pago: `cash`→`CASH`, `transfer`→`BANK_DEPOSIT` (Consignación bancaria, decisión del usuario; el
+catálogo «Medios de pago» de https://developer.alegra.com/reference/colombia también tiene `CREDIT_TRANSFER`,
+`CREDIT_TRANSFER_BANK` y `DEBIT_TRANSFER_BANK`, pendientes de validar con el contador), `credit-card`→`CREDIT_CARD`,
+`debit-card`→`DEBIT_CARD`; cheque y consignación usan `FiscalPaymentMethod` como respaldo. Con pagos mixtos,
+la cabecera (que admite un solo valor) usa el medio del pago de mayor valor; `payments[]` conserva todos.
+`paymentForm` sigue en CASH (contado).
+
 `payments[]` vincula fecha, cuenta receptora y monto. No confundir la cuenta de banco/caja con el código
 del medio de pago. Validar los campos descritos como obligatorios aunque falte un array `required` en el esquema.
 

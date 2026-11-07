@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -24,6 +24,19 @@ namespace CapaNegocio.Alegra
                 Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Machine)
                 ?? Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.User)
                 ?? Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process));
+        }
+
+        public static AlegraCredentials FromEmissionEnvironment()
+        {
+            Func<string, string> read = name =>
+                Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Machine)
+                ?? Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.User)
+                ?? Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
+            if (string.IsNullOrWhiteSpace(read("ALEGRA_EMISSION_API_KEY"))) return FromEnvironment();
+            return FromReader(name => name == "ALEGRA_EMAIL"
+                ? read("ALEGRA_EMISSION_EMAIL") ?? read("ALEGRA_EMAIL")
+                : name == "ALEGRA_API_KEY" ? read("ALEGRA_EMISSION_API_KEY")
+                : read("ALEGRA_EMISSION_AUTH_SCHEME") ?? "Basic");
         }
 
         internal static AlegraCredentials FromReader(Func<string, string> read)

@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 
 using CapaNegocio;
+using CapaNegocio.Alegra;
 
 namespace CapaPresentacion.Api
 {
@@ -45,8 +46,9 @@ namespace CapaPresentacion.Api
             if (error != null) return error;
 
             List<object> lista = new List<object>();
+            var links = AlegraWorkflow.Settings().Products;
             foreach (DataRow r in NApiMovil.Platos(tipo, null, q).Rows)
-                lista.Add(Plato(r, req));
+                lista.Add(Plato(r, req, links));
             return ApiResponse.Ok(lista);
         }
 
@@ -56,7 +58,7 @@ namespace CapaPresentacion.Api
             DataRow r = BuscarPlato(req, out error);
             if (error != null) return error;
 
-            Dictionary<string, object> plato = Plato(r, req);
+            Dictionary<string, object> plato = Plato(r, req, AlegraWorkflow.Settings().Products);
             if ((bool)plato["detallado"])
                 plato["ingredientes"] = Ingredientes(NApiMovil.Ingredientes(null));
             return ApiResponse.Ok(plato);
@@ -93,11 +95,13 @@ namespace CapaPresentacion.Api
             if (error != null) return error;
 
             List<object> lista = new List<object>();
+            var links = AlegraWorkflow.Settings().Products;
             foreach (DataRow r in NApiMovil.Bebidas(tipo, q).Rows)
                 lista.Add(new Dictionary<string, object>
                 {
                     { "id_bebida", Convert.ToInt32(r["Id_bebida"]) },
                     { "nombre", ApiJson.Celda(r, "Nombre_bebida") },
+                    { "alegra_linked", IsLinked(links, "BEBIDA", r["Id_bebida"]) },
                     { "precio", ApiJson.Dinero(r["Precio_bebida"]) },
                     { "id_tipo_bebida", Convert.ToInt32(r["Id_tipo_bebida"]) },
                     { "tipo_bebida", ApiJson.Celda(r, "Tipo_bebida") },
@@ -144,12 +148,13 @@ namespace CapaPresentacion.Api
             return t.Rows[0];
         }
 
-        private static Dictionary<string, object> Plato(DataRow r, ApiRequest req)
+        private static Dictionary<string, object> Plato(DataRow r, ApiRequest req, Dictionary<string, AlegraItemMapping> links)
         {
             return new Dictionary<string, object>
             {
                 { "id_plato", Convert.ToInt32(r["Id_plato"]) },
                 { "nombre", ApiJson.Celda(r, "Nombre_plato") },
+                { "alegra_linked", IsLinked(links, "PLATO", r["Id_plato"]) },
                 { "precio", ApiJson.Dinero(r["Precio_plato"]) },
                 { "id_tipo_plato", Convert.ToInt32(r["Id_tipo_plato"]) },
                 { "tipo_plato", ApiJson.Celda(r, "Tipo_plato") },
@@ -158,6 +163,12 @@ namespace CapaPresentacion.Api
                 { "carta", string.Equals(ApiJson.Celda(r, "Plato_carta"), "ACTIVO", StringComparison.OrdinalIgnoreCase) },
                 { "imagen_url", ApiImagenesHandlers.UrlImagen(req, ApiJson.Celda(r, "Imagen_plato")) }
             };
+        }
+
+        private static bool IsLinked(Dictionary<string, AlegraItemMapping> links, string kind, object id)
+        {
+            return links != null && links.TryGetValue(kind + ":" + Convert.ToString(id, System.Globalization.CultureInfo.InvariantCulture), out AlegraItemMapping mapping)
+                && mapping != null && !string.IsNullOrWhiteSpace(mapping.RemoteId);
         }
 
         private static List<object> Ingredientes(DataTable t)

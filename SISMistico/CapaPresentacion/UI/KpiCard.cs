@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -54,7 +54,7 @@ namespace CapaPresentacion.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            g.Clear(this.Parent?.BackColor ?? Theme.Background);
+            g.Clear(Theme.ContainerBackground(this));
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
@@ -77,9 +77,9 @@ namespace CapaPresentacion.UI
             if (this.icon != IconChar.None)
             {
                 int iconSize = circle / 2;
-                using (Bitmap bitmap = this.icon.ToBitmap(Color.White, iconSize))
-                    g.DrawImage(bitmap, circleBounds.X + (circle - iconSize) / 2,
-                        circleBounds.Y + (circle - iconSize) / 2, iconSize, iconSize);
+                IconRenderer.Draw(this, g, this.icon, Color.White,
+                    new Rectangle(circleBounds.X + (circle - iconSize) / 2,
+                        circleBounds.Y + (circle - iconSize) / 2, iconSize, iconSize));
             }
 
             int textX = circleBounds.Right + 16;

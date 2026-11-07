@@ -18,6 +18,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
         public FrmPedidoPlatos()
         {
             InitializeComponent();
+            CapaPresentacion.UI.AlegraLinkIndicator.Attach(this.dgvPlatos, "Nombre_plato", "Id_plato", "PLATO");
             this.Load += FrmPedidoPlatos_Load;
             this.txtBusqueda.ChangedText += TxtBusqueda_ChangedText;
             this.dgvPlatos.DoubleClick += DgvPlatos_DoubleClick;

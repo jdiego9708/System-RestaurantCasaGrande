@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Globalization;
 using System.Text;
@@ -7,7 +7,7 @@ namespace CapaPresentacion
 {
     /// <summary>
     /// Texto de la tarjeta de una mesa en el mapa del escritorio. Muestra lo mismo que la tarjeta de la app
-    /// móvil: estado, total, hora de apertura en 12 h y mesero (primer nombre + primer apellido).
+    /// móvil: estado, comensales, total, hora de apertura en 12 h y mesero (primer nombre + primer apellido).
     /// </summary>
     internal static class TableCardText
     {
@@ -22,6 +22,12 @@ namespace CapaPresentacion
             StringBuilder text = new StringBuilder(StatusLabel(status));
             if (apiRow == null || string.Equals(status, "DISPONIBLE", StringComparison.OrdinalIgnoreCase))
                 return text.ToString();
+
+            if (apiRow.Table.Columns.Contains("CantidadClientes") && apiRow["CantidadClientes"] != DBNull.Value)
+            {
+                int diners = Convert.ToInt32(apiRow["CantidadClientes"]);
+                text.AppendLine().Append(diners).Append(diners == 1 ? " comensal" : " comensales");
+            }
 
             if (apiRow["Total"] != DBNull.Value)
                 text.AppendLine().Append(Money(Convert.ToDecimal(apiRow["Total"])));

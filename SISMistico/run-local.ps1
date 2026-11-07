@@ -1,17 +1,19 @@
-<#
+﻿<#
     Ejecuta SISMistico (Restaurante Casa Grande) en local, SIN instalar (sin ClickOnce).
 
     - Compila a SISMistico\SISMistico\bin\LocalBuild\ (carpeta ignorada por git)
     - Usa la copia local de PRODUCCION: (localdb)\MSSQLLocalDB -> CasaGrandeBD_prod (db\Restore-ProdCopy.ps1).
       Con -UseDevDb usa la CasaGrandeBD de desarrollo. El cambio se hace en el .exe.config de la compilacion
       local; el App.config versionado (el que se publica al restaurante) no se toca.
-    - Activa la API movil solo en esta compilacion, escuchando en http://localhost:8099/api/v1/ (-NoApi la apaga)
+    - Activa la API movil en la red local (http://+:8099/api/v1/); -NoApi la apaga.
+    - Conserva prefijo y clave en run-local.api.config (privado, ignorado por git, fuera de bin).
     - No toca la carpeta publish\ ni crea accesos directos ni entradas de "Agregar o quitar programas"
 
     Uso:
-        .\run-local.ps1              # compila si hace falta y abre la aplicacion
+        .\run-local.ps1              # compila los cambios pendientes y abre la aplicacion
         .\run-local.ps1 -Rebuild     # fuerza recompilacion y abre
         .\run-local.ps1 -NoRun       # solo compila / valida el entorno
+        .\run-local.ps1 -ApiPrefix 'http://localhost:8099/api/v1/' # cambia y recuerda el prefijo
 
     Requisitos: .NET Framework 4.8 (runtime), SQL Server LocalDB, MSBuild (VS 2022 o Build Tools).
 #>
@@ -22,9 +24,9 @@ param(
     # Por defecto usa la copia local de PRODUCCION (CasaGrandeBD_prod, ver db\Restore-ProdCopy.ps1).
     # -UseDevDb vuelve a la CasaGrandeBD de desarrollo (esquema distinto al real).
     [switch]$UseDevDb,
-    # API movil: se activa solo en la compilacion local, escuchando en localhost (no pide urlacl ni admin).
+    # Sin parametro, reutiliza la configuracion privada; el primer uso prepara el prefijo LAN.
     [switch]$NoApi,
-    [string]$ApiPrefix = "http://localhost:8099/api/v1/"
+    [string]$ApiPrefix
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,6 +36,25 @@ $outputDir = Join-Path $root ("SISMistico\bin\LocalBuild")
 $exe = Join-Path $outputDir "SISMistico.exe"
 
 function Write-Step($msg) { Write-Host "==> $msg" -ForegroundColor Cyan }
+
+# La compilacion necesita reemplazar DLL que una instancia abierta mantiene bloqueadas.
+if (Get-Process SISMistico -ErrorAction SilentlyContinue) {
+    Write-Host "SISMistico esta abierto. Cierra la aplicacion y ejecuta de nuevo este script para compilar y ver los cambios." -ForegroundColor Yellow
+    exit 1
+}
+
+& (Join-Path (Split-Path $root -Parent) 'scripts\Build-AlegraPdfTools.ps1')
+
+# Capturar antes de MSBuild: el .exe.config de salida puede ser reemplazado o eliminado.
+. (Join-Path (Split-Path $root -Parent) 'scripts\Local-ApiConfig.ps1')
+$apiSettingsPath = Join-Path $root 'run-local.api.config'
+$apiSettings = Get-LocalApiSettings -SettingsPath $apiSettingsPath -ExeConfigPath "$exe.config" -PrefixOverride $ApiPrefix
+Save-LocalApiSettings -SettingsPath $apiSettingsPath -Settings $apiSettings
+if (-not $NoApi -and ([string]::IsNullOrWhiteSpace($apiSettings.ApiKey) -or
+    $apiSettings.ApiKey -eq 'cambiar-esta-clave')) {
+    throw "Defina una ApiKey propia en $apiSettingsPath y vuelva a ejecutar. La clave no se muestra en consola."
+}
+$ApiPrefix = $apiSettings.ApiPrefijo
 
 # Cadena de conexion a usar: el nombre se lee de SISMistico\App.config y la BD sale de su Initial Catalog.
 # El App.config versionado sigue apuntando a conexionLocalBD (es la que se publica al restaurante);
@@ -83,9 +104,9 @@ if ($dbOk) {
 }
 
 # ---------------------------------------------------------------------------
-# 2. Compilar si hace falta
+# 2. Compilar incrementalmente para no ejecutar una version anterior del codigo
 # ---------------------------------------------------------------------------
-if ($Rebuild -or -not (Test-Path $exe)) {
+& {
     Write-Step "Compilando solucion ($Configuration)"
 
     $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
@@ -126,7 +147,8 @@ if ($Rebuild -or -not (Test-Path $exe)) {
         exit 1
     }
 
-    $msbuildArgs = @($solution, "/t:Build", "/p:Configuration=$Configuration", "/p:Platform=Any CPU",
+    $buildTarget = if ($Rebuild) { "Rebuild" } else { "Build" }
+    $msbuildArgs = @($solution, "/t:$buildTarget", "/p:Configuration=$Configuration", "/p:Platform=Any CPU",
               "/p:OutputPath=bin\LocalBuild\", "/p:TargetFrameworkRootPath=$targetFrameworkRoot\",
               "/v:m", "/nologo")
     & $msbuild @msbuildArgs
@@ -153,14 +175,13 @@ if (Test-Path $exeConfig) {
         $node.SetAttribute("value", $value)
     }
     Set-AppSetting $cfg "ConexionBaseDeDatos" $connName
-    if (-not $NoApi) {
-        Set-AppSetting $cfg "ApiHabilitada" "true"
-        Set-AppSetting $cfg "ApiPrefijo" $ApiPrefix
-    }
+    Set-LocalApiConfig -Config $cfg -Settings $apiSettings -Enabled (-not $NoApi)
     $cfg.Save($exeConfig)
     $apiInfo = if ($NoApi) { "" } else { "; API en $ApiPrefix" }
     Write-Host "Config local: ConexionBaseDeDatos=$connName$apiInfo"
 }
+
+& (Join-Path (Split-Path $root -Parent) 'scripts\Test-AlegraPackage.ps1') -ApplicationPath $outputDir -RunRendererSelfTest
 
 if ($NoRun) {
     Write-Host "Listo. Ejecutable: $exe"
@@ -176,4 +197,4 @@ if (Get-Process SISMistico -ErrorAction SilentlyContinue) {
 }
 
 Write-Step "Abriendo SISMistico"
-Start-Process -FilePath $exe -WorkingDirectory $outputDir
+Start-Process -FilePath $exe -WorkingDirectory $outputDir -WindowStyle Normal

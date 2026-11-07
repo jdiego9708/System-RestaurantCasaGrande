@@ -1,3 +1,7 @@
+> Para retomar como otro agente: **[CONTINUAR-AQUI](../CONTINUAR-AQUI.md)**.
+
+> Continuidad actual: [sesion 6 de noviembre de 2026](15-cierre-de-sesion-2026-11-06.md), [doble impresion](14-doble-impresion-electronica.md) y [despliegue actualizado](08-instalacion-desde-cero.md).
+
 # Documentación — Sistema Restaurante Casa Grande
 
 Carpeta de documentación técnica del proyecto `System-RestaurantCasaGrande`.

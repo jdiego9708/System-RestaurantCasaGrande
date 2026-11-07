@@ -58,6 +58,43 @@ WHERE di.Id_pedido = @OrderId ORDER BY di.Id_detalle_pedido, di.Id_detalle_ingre
             }
         }
 
+        // Congela importes JSON numericos desde las mismas filas SQL que se acaban de guardar.
+        // Evita depender de coma/punto de la interfaz y mantiene el redondeo real de los pagos.
+        private static string FreezeElectronicRequest(string json, int saleId, SqlConnection connection, SqlTransaction transaction)
+        {
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer { MaxJsonLength=8*1024*1024 };
+            var snapshot = serializer.DeserializeObject(json) as Dictionary<string,object>;
+            if(snapshot==null)throw new InvalidOperationException("Solicitud electronica invalida.");
+            using(var command=new SqlCommand(@"SELECT Id_pedido,Total_parcial,Propina,Subtotal,Descuento,Bono_cupon,Desechables,Domicilio,Total_final,Observaciones FROM dbo.Ventas WHERE Id_venta=@sale;
+SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE Id_venta=@sale;",connection,transaction))
+            {
+                command.Parameters.Add("@sale",SqlDbType.Int).Value=saleId;
+                var data=new DataSet();
+                using(var adapter=new SqlDataAdapter(command))adapter.Fill(data);
+                if(data.Tables[0].Rows.Count!=1 || data.Tables[1].Rows.Count==0)
+                    throw new InvalidOperationException("Falta la venta o sus pagos para la solicitud electronica.");
+                var sale=data.Tables[0].Rows[0];
+                if(Convert.ToInt32(snapshot["orderId"])!=Convert.ToInt32(sale["Id_pedido"]))
+                    throw new InvalidOperationException("La solicitud electronica no corresponde al pedido vendido.");
+                snapshot["saleValues"]=sale.ItemArray.Select(value=>value==DBNull.Value ? null : value).ToArray();
+                var payments=new List<Dictionary<string,object>>();
+                decimal paid=0;
+                foreach(DataRow row in data.Tables[1].Rows)
+                {
+                    paid+=Convert.ToDecimal(row["Valor_pago"]);
+                    payments.Add(new Dictionary<string,object> {
+                        {"Pago",Convert.ToString(row["Metodo_pago"])}, {"Valor_pago",Convert.ToInt32(row["Valor_pago"])},
+                        {"Vaucher",Convert.ToString(row["Vaucher"])}, {"Observaciones",row.IsNull("Observaciones") ? null : row["Observaciones"]}
+                    });
+                }
+                if(paid!=Convert.ToDecimal(sale["Total_final"]))
+                    throw new InvalidOperationException("La suma de pagos guardados no coincide con el total final. Revise los pagos antes de terminar.");
+                snapshot["payments"]=payments;
+                snapshot["version"]=2;
+                return serializer.Serialize(snapshot);
+            }
+        }
+
         #region MENSAJE SQL
         private void SqlCon_InfoMessage(object sender, SqlInfoMessageEventArgs e)
         {
@@ -288,6 +325,7 @@ WHERE di.Id_pedido = @OrderId ORDER BY di.Id_detalle_pedido, di.Id_detalle_ingre
                     {
                         if (electronicRequestJson != null)
                         {
+                            electronicRequestJson = FreezeElectronicRequest(electronicRequestJson, id_venta, SqlCon, transaction);
                             using (SqlCommand request = new SqlCommand(
                                 "INSERT dbo.AlegraInvoiceRequests (SaleId,CompanyKey,RequestJson) VALUES (@sale,'default',@json)", SqlCon, transaction))
                             {
@@ -393,6 +431,63 @@ WHERE di.Id_pedido = @OrderId ORDER BY di.Id_detalle_pedido, di.Id_detalle_ingre
             return rpta;
         }
         #endregion
+
+        // Consultas por lotes limitadas a las ventas visibles; evita una consulta por fila.
+        private static void AddElectronicInvoiceColumns(DataTable sales, SqlConnection connection)
+        {
+            sales.Columns.Add("Factura_electronica", typeof(string));
+            sales.Columns.Add("Numero_factura_electronica", typeof(string));
+            sales.Columns.Add("Estado_factura_electronica", typeof(string));
+            if (!sales.Columns.Contains("Id_venta")) return;
+            var rowsBySale = new Dictionary<int, List<DataRow>>();
+            foreach (DataRow row in sales.Rows)
+            {
+                row["Factura_electronica"] = "No";
+                row["Numero_factura_electronica"] = "";
+                row["Estado_factura_electronica"] = "";
+                int saleId = Convert.ToInt32(row["Id_venta"]);
+                if (!rowsBySale.ContainsKey(saleId)) rowsBySale[saleId] = new List<DataRow>();
+                rowsBySale[saleId].Add(row);
+            }
+            var ids = rowsBySale.Keys.ToList();
+            for (int start = 0; start < ids.Count; start += 500)
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    var parameters = new List<string>();
+                    foreach (int id in ids.Skip(start).Take(500))
+                    {
+                        string name = "@sale" + parameters.Count;
+                        parameters.Add(name);
+                        command.Parameters.Add(name, SqlDbType.Int).Value = id;
+                    }
+                    command.CommandText = "SELECT SaleId, InvoiceNumber, Status FROM dbo.AlegraInvoiceRequests WHERE SaleId IN ("
+                        + string.Join(",", parameters) + ")";
+                    var requests = new DataTable();
+                    using (var adapter = new SqlDataAdapter(command)) adapter.Fill(requests);
+                    foreach (DataRow request in requests.Rows)
+                    {
+                        string status;
+                        switch (Convert.ToString(request["Status"]))
+                        {
+                            case "ACCEPTED": status = "Emitida"; break;
+                            case "REJECTED": status = "Rechazada"; break;
+                            case "ISSUING": status = "En emisi\u00f3n"; break;
+                            case "CREATING": status = "En creaci\u00f3n"; break;
+                            case "CREATED": status = "Pendiente de emisi\u00f3n"; break;
+                            case "PENDING": status = "Pendiente"; break;
+                            default: status = "Requiere revisi\u00f3n"; break;
+                        }
+                        foreach (DataRow row in rowsBySale[Convert.ToInt32(request["SaleId"])])
+                        {
+                            row["Factura_electronica"] = "S\u00ed";
+                            row["Numero_factura_electronica"] = Convert.ToString(request["InvoiceNumber"]);
+                            row["Estado_factura_electronica"] = status;
+                        }
+                    }
+                }
+            }
+        }
 
         #region METODO BUSCAR VENTA FACTURA FINAL
         public static DataTable BuscarVentaFinal(string texto_busqueda,
@@ -647,6 +742,8 @@ WHERE di.Id_pedido = @OrderId ORDER BY di.Id_detalle_pedido, di.Id_detalle_ingre
                         }
                     }
                 }
+
+                AddElectronicInvoiceColumns(DtResultado, SqlCon);
 
                 if (DtResultado.Rows.Count < 1)
                 {

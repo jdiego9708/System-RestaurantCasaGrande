@@ -1,4 +1,4 @@
-using CapaNegocio;
+﻿using CapaNegocio;
 using CapaPresentacion.UI;
 using FontAwesome.Sharp;
 using System;
@@ -28,7 +28,10 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private DataRow sale;
         private readonly ModernButton electronicPdf=new ModernButton {Text="PDF de Alegra",Width=150,Kind=ButtonKind.Outline};
         private readonly ModernButton electronicPrint=new ModernButton {Text="Imprimir Alegra",Width=175,Kind=ButtonKind.Outline};
-        private readonly Label electronicStatus=new Label {AutoSize=false,Height=48,Dock=DockStyle.Bottom,Font=Theme.Small,ForeColor=Theme.TextMuted};
+        private readonly Label electronicStatus=new Label {AutoSize=false,Height=64,Dock=DockStyle.Bottom,Font=Theme.Small,ForeColor=Theme.TextMuted};
+        private readonly ModernButton electronicRetry=new ModernButton {Text="Reintentar",Width=190,Kind=ButtonKind.Primary,Visible=false};
+        // Estado de la solicitud tal como se mostró por última vez: decide qué hace el botón de reintento.
+        private string electronicState;
         private readonly Timer electronicTimer=new Timer {Interval=15000};
         public int Id_venta { get; set; }
         public int Id_pedido { get; private set; }
@@ -100,7 +103,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private void BuildLayout()
         {
             Panel root = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20, 16, 20, 16) };
-            Panel header = new Panel { Dock = DockStyle.Top, Height = 112 };
+            Panel header = new Panel { Dock = DockStyle.Top, Height = 128 };
             header.Controls.Add(electronicStatus);
             heading.Text = "Detalle de venta";
             heading.AutoSize = true;
@@ -149,6 +152,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 finally {if(!IsDisposed)UpdateElectronicStatus();}
             };
             footer.Controls.Add(electronicPdf);footer.Controls.Add(electronicPrint);
+            electronicRetry.Click+=(s,e)=>RetryElectronic();
+            footer.Controls.Add(electronicRetry);
             TableLayoutPanel body = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3 };
             body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 66));
             body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34));
@@ -290,14 +295,98 @@ namespace CapaPresentacion.Formularios.FormsVentas
             {
                 var table=CapaNegocio.Alegra.AlegraWorkflow.Request(Id_venta);
                 electronicPdf.Enabled=electronicPrint.Enabled=false;
+                electronicRetry.Visible=false;electronicState=null;
+                electronicStatus.ForeColor=Theme.TextMuted;
                 if(table.Rows.Count==0){electronicStatus.Text="Sin solicitud de factura electrónica.";return;}
                 var request=table.Rows[0];string state=Convert.ToString(request["Status"]);
-                electronicStatus.Text="Alegra: "+state+" · Factura "+Convert.ToString(request["InvoiceNumber"])+" · ID "+Convert.ToString(request["RemoteId"])
-                    +" · Impresión: "+Convert.ToString(request["PrintStatus"])+Environment.NewLine+Convert.ToString(request["LastError"]);
+                string print=Convert.ToString(request["PrintStatus"]);
+                string error=request["LastError"]==DBNull.Value ? null : Convert.ToString(request["LastError"]);
+                electronicState=state;
+                string retryText;Color color;
+                string summary=DescribeElectronicState(state,print,out retryText,out color);
+                string number=Convert.ToString(request["InvoiceNumber"]);
+                electronicStatus.Text="Factura electrónica"+(string.IsNullOrWhiteSpace(number) ? "" : " "+number)
+                    +(IsPartialInvoice(request) ? " (PARCIAL: solo los productos vinculados con Alegra)" : "")+": "+summary
+                    +(string.IsNullOrWhiteSpace(error) ? "" : Environment.NewLine+"Detalle: "+error);
+                electronicStatus.ForeColor=Theme.Darken(color,0.2f);
+                electronicRetry.Visible=retryText!=null;
+                if(retryText!=null)electronicRetry.Text=retryText;
                 electronicPdf.Enabled=state=="ACCEPTED";
-                electronicPrint.Enabled=state=="ACCEPTED" && Convert.ToString(request["PrintStatus"])!="PRINTING";
+                electronicPrint.Enabled=state=="ACCEPTED" && print!="PRINTING";
             }
             catch {electronicStatus.Text="Estado Alegra no disponible. Verifique la migración 07.";}
+        }
+
+        // El usuario pudo elegir al terminar la venta enviar a Alegra solo los productos vinculados.
+        private static bool IsPartialInvoice(DataRow request)
+        {
+            try
+            {
+                var snapshot=new System.Web.Script.Serialization.JavaScriptSerializer{MaxJsonLength=8*1024*1024}
+                    .DeserializeObject(Convert.ToString(request["RequestJson"])) as System.Collections.Generic.Dictionary<string,object>;
+                return snapshot!=null && snapshot.ContainsKey("onlyLinked") && Convert.ToBoolean(snapshot["onlyLinked"]);
+            }
+            catch {return false;}
+        }
+
+        // Texto en español del estado y, si procede, la acción de reintento. Sin acción en UNCERTAIN a propósito:
+        // reenviar a ciegas podría duplicar una factura fiscal (ver docs/alegra/05-reenvio-y-conciliacion.md).
+        private static string DescribeElectronicState(string state,string print,out string retryText,out Color color)
+        {
+            retryText=null;color=Theme.Neutral;
+            switch(state)
+            {
+                case "ACCEPTED":
+                    if(print=="PRINTED"){color=Theme.Success;return "emitida y entregada.";}
+                    color=Theme.Warning;
+                    if(print=="PRINTING")return "emitida; imprimiendo.";
+                    if(print=="CANCELLED"||print=="UNKNOWN")return "emitida, pero no se confirmó la impresión. Use «Imprimir Alegra».";
+                    return "emitida; la impresión está pendiente.";
+                case "PENDING":
+                    color=Theme.Info;retryText="Reintentar ahora";
+                    return "pendiente de crear en Alegra. Se reintenta automáticamente (por ejemplo, si no hay internet).";
+                case "CREATED":
+                    color=Theme.Info;retryText="Reintentar ahora";
+                    return "creada en Alegra, pendiente de emitir ante la DIAN. Se reintenta automáticamente.";
+                case "ISSUING":
+                case "CREATING":
+                    color=Theme.Info;retryText="Reintentar ahora";
+                    return "en proceso de emisión. Se reintenta automáticamente.";
+                case "NEEDS_REVIEW":
+                    color=Theme.Warning;retryText="Reintentar envío";
+                    return "requiere revisión. La factura ya existe en Alegra si hay ID; reintentar no crea otra.";
+                case "REJECTED":
+                    color=Theme.Danger;retryText="Volver a consultar";
+                    return "rechazada por la DIAN. Reintentar solo vuelve a consultar su estado en Alegra: si el rechazo es por datos, corríjala allí primero.";
+                case "UNCERTAIN":
+                    color=Theme.Danger;
+                    return "resultado incierto: no se confirmó si Alegra llegó a crearla. NO reenviar; requiere conciliación con Alegra.";
+                default:
+                    return state+".";
+            }
+        }
+
+        private void RetryElectronic()
+        {
+            string state=electronicState;
+            if(state==null)return;
+            try
+            {
+                if(state=="NEEDS_REVIEW"||state=="REJECTED")
+                {
+                    DialogResult answer;
+                    Mensajes.MensajePregunta(state=="REJECTED"
+                        ? "Se volverá a consultar el estado de esta factura en Alegra. ¿Continuar?"
+                        : "Se reintentará el envío de esta misma factura a Alegra. No se creará otra venta ni otra factura. ¿Continuar?",
+                        "Continuar","Cancelar",out answer);
+                    if(answer!=DialogResult.Yes)return;
+                    CapaNegocio.Alegra.AlegraWorkflow.Retry(Id_venta);
+                }
+                else CapaNegocio.Alegra.AlegraWorkflow.Expedite(Id_venta);
+                Mensajes.MensajeInformacion("Listo. El sistema reintentará en unos segundos; esta pantalla se actualiza sola.");
+            }
+            catch(Exception ex){Mensajes.MensajeInformacion(ex is InvalidOperationException?ex.Message:"No se pudo programar el reintento.");}
+            finally {if(!IsDisposed)UpdateElectronicStatus();}
         }
 
         private static void BindGrid(DataGridView grid, DataTable table)

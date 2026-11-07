@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Windows.Forms;
 
 namespace CapaPresentacion.UI
 {
@@ -69,6 +70,17 @@ namespace CapaPresentacion.UI
         #endregion
 
         #region UTILIDADES DE DIBUJO
+        /// <summary>Fondo opaco del contenedor, atravesando paneles transparentes.</summary>
+        public static Color ContainerBackground(Control control)
+        {
+            for (Control parent = control.Parent; parent != null; parent = parent.Parent)
+            {
+                if (parent.BackColor.A == 255)
+                    return parent.BackColor;
+            }
+            return Background;
+        }
+
         /// <summary>Rectangulo con esquinas redondeadas; <paramref name="radius"/> es el radio de cada esquina.</summary>
         public static GraphicsPath RoundedPath(Rectangle bounds, int radius)
         {

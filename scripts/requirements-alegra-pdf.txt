@@ -1,0 +1,4 @@
+reportlab==5.1.0
+pillow==12.3.0
+pyinstaller==6.11.1
+pymupdf==2.1

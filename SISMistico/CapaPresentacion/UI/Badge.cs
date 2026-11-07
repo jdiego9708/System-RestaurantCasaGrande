@@ -80,7 +80,7 @@ namespace CapaPresentacion.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             // El fondo se pinta con el del contenedor para que las esquinas redondeadas no dejen cuadros.
-            e.Graphics.Clear(this.Parent != null ? this.Parent.BackColor : Theme.Surface);
+            e.Graphics.Clear(Theme.ContainerBackground(this));
             Rectangle bounds = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
             Draw(e.Graphics, bounds, this.Text, this.kind, this.Font);
         }

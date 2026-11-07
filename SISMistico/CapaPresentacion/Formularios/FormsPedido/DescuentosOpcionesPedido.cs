@@ -10,7 +10,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         public readonly CheckBox ElectronicInvoice = new CheckBox
         {
             Text = "Solicitar factura electrónica con Alegra", AutoSize = true,
-            Location = new System.Drawing.Point(4, 563), TabIndex = 50,
+            TabIndex = 50,
         };
         private readonly NumericUpDown deliveryTotal = new NumericUpDown
         {
@@ -27,8 +27,19 @@ namespace CapaPresentacion.Formularios.FormsPedido
         public DescuentosOpcionesPedido()
         {
             InitializeComponent();
-            this.Height = 600;
             this.Controls.Add(ElectronicInvoice);
+            // Dos filas de metodos de pago, sin reservar una tercera fila vacia.
+            this.groupBox1.Height = this.panelMetodosPago.Top + 2 * 76 + 6;
+            this.groupBox1.Width = this.ClientSize.Width - 8;
+            this.groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            // Etiqueta y observaciones en la misma fila para mantener visible la solicitud electronica.
+            this.label3.Top = this.groupBox1.Bottom + 4;
+            this.txtObservaciones.SetBounds(this.label3.Right + 8, this.label3.Top,
+                this.ClientSize.Width - this.label3.Right - 16, 36);
+            this.txtObservaciones.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.ElectronicInvoice.Location = new System.Drawing.Point(4, this.txtObservaciones.Bottom + 4);
+            this.Height = this.ElectronicInvoice.Bottom + this.Padding.Bottom + 4;
             this.deliveryTotal.Location = this.lblTotal.Location;
             this.deliveryTotal.Width = 180;
             this.deliveryTotal.Font = this.lblTotal.Font;

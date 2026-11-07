@@ -1,4 +1,4 @@
--- verificar-despliegue.sql - SOLO LECTURA. Comprueba API movil, Domicilios e historial de ventas.
+﻿-- verificar-despliegue.sql - SOLO LECTURA. Comprueba API movil, Domicilios e historial de ventas.
 -- Uso (en el PC del restaurante, con el mismo usuario de Windows que abre la app):
 --   .\Invoke-Sql.ps1 -File .\verificar-despliegue.sql -Database CasaGrandeBD
 -- No cambia nada; se puede ejecutar cuantas veces haga falta.
@@ -48,3 +48,9 @@ SELECT
     (SELECT COUNT(*) FROM dbo.Mesas) AS mesas,
     (SELECT COUNT(*) FROM dbo.Pedidos) AS pedidos_historicos;
 GO
+
+-- Requisitos de facturacion electronica (07). Solo lectura.
+SELECT requisito, CASE WHEN OBJECT_ID('dbo.' + requisito, 'U') IS NOT NULL THEN 'OK' ELSE 'FALTA' END AS estado
+FROM (VALUES ('AlegraCustomerLinks'), ('AlegraItemLinks'), ('AlegraInvoiceRequests'), ('AlegraSettings')) AS tablas(requisito);
+SELECT requisito, CASE WHEN COL_LENGTH('dbo.AlegraInvoiceRequests', requisito) IS NOT NULL THEN 'OK' ELSE 'FALTA' END AS estado
+FROM (VALUES ('RemoteRequestJson'), ('WorkToken'), ('NextAttemptAt')) AS columnas(requisito);

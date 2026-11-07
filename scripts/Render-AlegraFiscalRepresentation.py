@@ -1,10 +1,11 @@
-"""Representación para revisión contable desde XML UBL original; no emite facturas.
+"""Representacion de 80 mm desde XML UBL y PDF oficial de Alegra; no emite facturas.
 
 Uso: python Render-AlegraFiscalRepresentation.py factura.xml detalle.json salida.pdf
 Dependencia de soporte: reportlab. Los datos fiscales se mantienen fuera del repositorio.
 """
 import hashlib
 import json
+import re
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -22,7 +23,7 @@ NS = {'c': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2
       'a': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'}
 
 
-def render(xml_path, json_path, output):
+def render(xml_path, json_path, output, receipt=False, official_pdf=None):
     raw = Path(xml_path).read_bytes()
     if b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper():
         raise ValueError('Declaraciones externas no permitidas')
@@ -39,11 +40,35 @@ def render(xml_path, json_path, output):
         return f'{Decimal(s):,.2f}'.replace(',', '_').replace('.', ',').replace('_', '.') + ' COP'
 
     number, cufe = get('c:ID'), get('c:UUID')
+    if root.tag.split('}')[-1] != 'Invoice':
+        raise ValueError('El XML no es una factura UBL')
+    if number != api.get('numberTemplate', {}).get('fullNumber'):
+        raise ValueError('Numero XML y REST no coinciden')
+    if api.get('stamp', {}).get('legalStatus') not in ('ACCEPTED', 'STAMPED_AND_ACCEPTED', 'STAMPED_AND_ACCEPTED_WITH_OBSERVATIONS'):
+        raise ValueError('Factura sin aceptacion electronica confirmada')
+    if not cufe or not api.get('id'):
+        raise ValueError('Falta CUFE o ID remoto')
     total = get('a:LegalMonetaryTotal/c:PayableAmount')
     if cufe != api.get('stamp', {}).get('cufe'):
         raise ValueError('CUFE XML y REST no coinciden')
     if Decimal(total) != Decimal(str(api['total'])):
         raise ValueError('Total XML y REST no coinciden')
+    official = {}
+    if official_pdf:
+        import pymupdf
+        with pymupdf.open(official_pdf) as document:
+            official_text = '\n'.join(page.get_text() for page in document)
+        if cufe not in re.sub(r'\s+', '', official_text) or number not in official_text:
+            raise ValueError('El PDF oficial no corresponde al CUFE/numero del XML')
+        validation = re.search(r'Validaci.n DIAN:\s*(\d{4}-\d{2}-\d{2}[^\r\n]+)', official_text)
+        software = re.search(r'Software:\s*([^\r\n]+)', official_text)
+        provider = re.search(r'Proveedor tecnol.gico:\s*([^\r\n]+)', official_text)
+        official = {'fecha_validacion': validation.group(1).strip() if validation else '',
+                    'software': software.group(1).strip() if software else '',
+                    'proveedor': provider.group(1).strip() if provider else '',
+                    'pdf_sha256': hashlib.sha256(Path(official_pdf).read_bytes()).hexdigest()}
+    if receipt and not all(official.get(key) for key in ('fecha_validacion', 'software', 'proveedor')):
+        raise ValueError('Faltan datos de validacion/software del PDF oficial; no imprimir incompleto')
     qr_value = local('QRCode')
     if not qr_value or cufe not in qr_value:
         raise ValueError('QR XML no corresponde al CUFE')
@@ -85,8 +110,13 @@ def render(xml_path, json_path, output):
 
     add('CASA GRANDE', heading)
     add('FACTURA ELECTRÓNICA DE VENTA ' + number, heading)
-    add('REPRESENTACIÓN GRÁFICA PARA REVISIÓN DEL CONTADOR', heading)
+    if not receipt:
+        add('REPRESENTACIÓN GRÁFICA PARA REVISIÓN DEL CONTADOR', heading)
+    else:
+        add('Representación gráfica del XML electrónico', small)
     add('Fecha y hora de generación: ' + get('c:IssueDate') + ' ' + get('c:IssueTime'))
+    if official.get('fecha_validacion'):
+        add('Validación DIAN: ' + official['fecha_validacion'])
     for tag, label in [('AccountingSupplierParty', 'EMISOR'), ('AccountingCustomerParty', 'ADQUIRENTE')]:
         party = root.find('a:' + tag + '/a:Party', NS)
         if party is None:
@@ -95,7 +125,10 @@ def render(xml_path, json_path, output):
         add(get('a:PartyTaxScheme/c:RegistrationName', party) or get('a:PartyLegalEntity/c:RegistrationName', party))
         node = party.find('a:PartyTaxScheme/c:CompanyID', NS)
         if node is not None:
-            add('Identificación: ' + (node.text or ''))
+            identifier = node.text or ''
+            if node.get('schemeName') == '31' and node.get('schemeID'):
+                identifier += '-' + node.get('schemeID')
+            add('Identificación: ' + identifier)
         address = party.find('a:PhysicalLocation/a:Address', NS)
         if address is None:
             address = party.find('a:PartyTaxScheme/a:RegistrationAddress', NS)
@@ -152,16 +185,24 @@ def render(xml_path, json_path, output):
     add('SOFTWARE Y TRAZABILIDAD', heading)
     add('Proveedor de software, NIT XML: ' + local('ProviderID'))
     provider_source = None
-    if local('ProviderID') == '900559088':
+    if local('ProviderID') == '900559088' and not official.get('proveedor'):
         add('Proveedor tecnológico: SOLUCIONES ALEGRA S.A.S')
-        add('Razón social contrastada con el listado oficial de proveedores tecnológicos DIAN.', small)
+        if not receipt:
+            add('Razón social contrastada con el listado oficial de proveedores tecnológicos DIAN.', small)
         provider_source = 'https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/proveedores-tecnologicos/'
+    if official.get('software'):
+        add('Software: ' + official['software'], small)
+    if official.get('proveedor'):
+        add('Proveedor tecnologico: ' + official['proveedor'], small)
     add('ID software: ' + local('SoftwareID'), small)
-    add('Pendiente: confirmar fabricante y nombre registrado del software, condición de agente retenedor de IVA y fecha/hora de validación DIAN mediante ApplicationResponse. Identificar el proveedor no acredita por sí solo quién es el fabricante.', small)
-    add('Estado reportado por Alegra: ' + str(api.get('stamp', {}).get('legalStatus', 'No informado')), small)
-    if api.get('stamp', {}).get('date'):
+    if not receipt:
+        add('Pendiente: confirmar fabricante y nombre registrado del software, condición de agente retenedor de IVA y fecha/hora de validación DIAN mediante ApplicationResponse. Identificar el proveedor no acredita por sí solo quién es el fabricante.', small)
+    state = str(api.get('stamp', {}).get('legalStatus', 'No informado'))
+    add('Estado: ' + ('Aceptada con observaciones' if 'WITH_OBSERVATIONS' in state else 'Aceptada') if receipt else 'Estado reportado por Alegra: ' + state, small)
+    if not receipt and api.get('stamp', {}).get('date'):
         add('Fecha de emisión reportada por Alegra (no verificada con ApplicationResponse): ' + str(api['stamp']['date']), small)
-    add('No se descargó el ApplicationResponse DIAN ni se verificó criptográficamente la firma del XML. Revisar las observaciones de validación en Alegra.', small)
+    if not receipt:
+        add('No se descargó el ApplicationResponse DIAN ni se verificó criptográficamente la firma del XML. Revisar las observaciones de validación en Alegra.', small)
     add('CUFE', heading)
     add('\n'.join(cufe[i:i+32] for i in range(0, len(cufe), 32)), small)
     qr = QrCodeWidget(qr_value)
@@ -171,24 +212,63 @@ def render(xml_path, json_path, output):
     drawing.add(qr)
     story.extend([Spacer(1, 2*mm), drawing])
     add('Consulta DIAN: escanear el QR original incluido en el XML.', small)
-    add('Representación generada localmente del XML firmado descargado desde Alegra. No es una descarga del PDF de Alegra. Conservar el XML original y obtener el contenedor con la validación para entrega electrónica.', small)
+    if receipt:
+        add('Representación gráfica generada a partir del XML de la factura electrónica de Alegra.', small)
+    else:
+        add('Representación generada localmente del XML firmado descargado desde Alegra. No es una descarga del PDF de Alegra. Conservar el XML original y obtener el contenedor con la validación para entrega electrónica.', small)
     warnings = api.get('stamp', {}).get('warnings') or []
     if warnings:
-        add('OBSERVACIONES PARA EL CONTADOR', heading)
+        add('OBSERVACIONES DE VALIDACIÓN' if receipt else 'OBSERVACIONES PARA EL CONTADOR', heading)
         for warning in warnings:
             add(str(warning), small)
     width = 70 * mm
     height = sum(item.wrap(width, 14000)[1] + item.getSpaceBefore() + item.getSpaceAfter() for item in story) + 20*mm
     if height > 14000:
         raise ValueError('Documento excede altura segura de PDF')
-    SimpleDocTemplate(str(output), pagesize=(80*mm, height), leftMargin=5*mm, rightMargin=5*mm, topMargin=5*mm, bottomMargin=5*mm, title=number + ' - revisión contable', author='Casa Grande').build(story)
-    report = {'factura': number, 'xml_sha256': hashlib.sha256(raw).hexdigest(), 'cufe_coincide': True, 'total_coincide': True, 'qr_coincide': True, 'total_xml': total, 'estado_alegra': api.get('stamp', {}).get('legalStatus'), 'listo_para_cliente': False, 'pendientes': ['Confirmar fabricante y nombre del software con soporte Alegra.', 'Confirmar condición de agente retenedor de IVA con contador.', 'Obtener ApplicationResponse / contenedor de validación DIAN y revisar observaciones.', 'Revisar requisitos de representación y entrega: Resolución DIAN 227/2025, art. 1.5.1.2.2.1 y sección de entrega, más anexo técnico vigente.', 'Aprobar diseño de 80 mm y legibilidad del QR.'], 'firma_criptografica_verificada': False}
-    report.update(proveedor_fuente=provider_source, observaciones_alegra=warnings)
+    SimpleDocTemplate(str(output), pagesize=(80*mm, height), leftMargin=5*mm, rightMargin=5*mm, topMargin=5*mm, bottomMargin=5*mm, title=number + (' - representación gráfica' if receipt else ' - revisión contable'), author='Casa Grande').build(story)
+    report = {'factura': number, 'xml_sha256': hashlib.sha256(raw).hexdigest(), 'cufe_coincide': True, 'total_coincide': True, 'qr_coincide': True, 'total_xml': total, 'estado_alegra': api.get('stamp', {}).get('legalStatus'), 'modo': 'recibo' if receipt else 'revision', 'id_alegra': str(api['id']), 'listo_para_cliente': False, 'pendientes': ['Confirmar fabricante y nombre del software con soporte Alegra.', 'Confirmar condición de agente retenedor de IVA con contador.', 'Obtener ApplicationResponse / contenedor de validación DIAN y revisar observaciones.', 'Revisar requisitos de representación y entrega: Resolución DIAN 227/2025, art. 1.5.1.2.2.1 y sección de entrega, más anexo técnico vigente.', 'Aprobar diseño de 80 mm y legibilidad del QR.'], 'firma_criptografica_verificada': False}
+    report.update(proveedor_fuente=provider_source, observaciones_alegra=warnings, datos_pdf_oficial=official, validacion_de_datos_completa=bool(official), numero_coincide=True)
+    if receipt:
+        report.pop('listo_para_cliente', None)
+        report['revision_contable_pendiente'] = True
+        report['pendientes'] = ['Revision contable del diseno y leyendas aplicables.', 'Conservar el XML original y el contenedor DIAN para entrega electronica.']
     Path(output).with_suffix('.revision.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-    print('PDF generado; CUFE, QR y total XML/REST coinciden. Pendiente de revisión contable.')
+    print('PDF de 80 mm generado; numero, CUFE, QR y total verificados.' if receipt else 'PDF de revision generado; pendiente de revision contable.')
+
+
+def self_test():
+    import tempfile
+    import pymupdf
+    from reportlab.pdfgen import canvas
+    with tempfile.TemporaryDirectory(prefix='CasaGrande-pdf-check-') as folder:
+        file = Path(folder) / 'renderer-check.pdf'
+        document = canvas.Canvas(str(file), pagesize=(80 * mm, 100 * mm))
+        document.drawString(5 * mm, 90 * mm, 'CasaGrande PDF self-test')
+        qr = QrCodeWidget('CasaGrande portable renderer')
+        x0, y0, x1, y1 = qr.getBounds()
+        side = 50 * mm
+        drawing = Drawing(side, side, transform=[side/(x1-x0), 0, 0, side/(y1-y0), 0, 0])
+        drawing.add(qr)
+        drawing.drawOn(document, 5 * mm, 10 * mm)
+        document.save()
+        with pymupdf.open(file) as generated:
+            if len(generated) != 1 or abs(generated[0].rect.width * 25.4 / 72 - 80) > .01 or 'CasaGrande' not in generated[0].get_text():
+                raise ValueError('El renderer portable no genera PDF de 80 mm valido')
+    print('OK: renderer portable, texto, QR y lectura PDF de 80 mm.')
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        raise SystemExit('Uso: factura.xml detalle.json salida.pdf')
-    render(*sys.argv[1:])
+    if sys.argv[1:] == ['--self-test']:
+        self_test()
+        raise SystemExit(0)
+    args = sys.argv[1:]
+    official_pdf = None
+    if '--official-pdf' in args:
+        index = args.index('--official-pdf')
+        official_pdf = args[index + 1]
+        del args[index:index + 2]
+    receipt = '--receipt' in args
+    args = [arg for arg in args if arg != '--receipt']
+    if len(args) != 3:
+        raise SystemExit('Uso: factura.xml detalle.json salida.pdf [--receipt --official-pdf oficial.pdf]')
+    render(*args, receipt=receipt, official_pdf=official_pdf)

@@ -4,6 +4,7 @@ using CapaPresentacion.UI;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace CapaPresentacion.Formularios.FormsPedido
@@ -39,6 +40,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.btnDescuentos.Click += BtnDescuentos_Click;
             this.Load += FrmFacturarPedido_Load;
             this.btnTerminar.Click += BtnTerminar_Click;
+            this.FormClosing += BlockCloseWhileWaiting;
             this.lblMesero.Click += LblMesero_Click;
             this.datosUsuario.onChangedEmail += DatosUsuario_onChangedEmail;
         }
@@ -134,7 +136,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         public event EventHandler OnFacturarPedidoSuccess;
 
-        private void BtnTerminar_Click(object sender, EventArgs e)
+        private async void BtnTerminar_Click(object sender, EventArgs e)
         {
             try
             {
@@ -203,6 +205,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         {
                             if (detalle_pago.Rows.Count > 0)
                             {
+                                // Con factura electrónica marcada, avisar ANTES de guardar si hay productos sin vincular.
+                                if (this.opcionesPedido.ElectronicInvoice.Checked
+                                    && !this.ResolveElectronicScope(variables, detalle_pago)) return;
                                 MensajeEspera.ShowWait("Facturando y terminando");
 
                                 rpta =
@@ -245,6 +250,20 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                     }
 
                                     MensajeEspera.CloseForm();
+                                    if (this.opcionesPedido.ElectronicInvoice.Checked)
+                                    {
+                                        // La venta local ya está guardada. Esta ventana sigue abierta y bloqueada hasta que
+                                        // Alegra confirme y la factura electrónica se imprima; solo entonces se cierra
+                                        // y se muestra el mensaje final.
+                                        string electronicFailure = await this.WaitForElectronicInvoiceAsync(id_venta);
+                                        this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
+                                        this.Close();
+                                        if (electronicFailure == null)
+                                            Mensajes.MensajeOkForm("Se realizó la facturación y la factura electrónica correctamente");
+                                        else
+                                            Mensajes.MensajeErrorForm("La venta quedó registrada, pero la factura electrónica no se completó. " + electronicFailure);
+                                        return;
+                                    }
                                     Mensajes.MensajeOkForm("Se realizó la facturación correctamente");
                                     this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
                                     this.Close();
@@ -288,15 +307,15 @@ namespace CapaPresentacion.Formularios.FormsPedido
         public void ObtenerTotales(int total_parcial, int sub_total, int total)
         {
             this.Total_parcial = total_parcial;
-            this.lblTotalParcial.Text = string.Format("{0:C}", this.Total_parcial);
+            this.lblTotalParcial.Text = this.Total_parcial.ToString("C0", CultureInfo.GetCultureInfo("es-CO"));
             this.lblTotalParcial.Tag = total_parcial;
 
             this.panelSubTotal.Visible = true;
-            this.lblSubTotal.Text = string.Format("{0:C}", sub_total);
+            this.lblSubTotal.Text = sub_total.ToString("C0", CultureInfo.GetCultureInfo("es-CO"));
             this.lblSubTotal.Tag = sub_total;
 
             this.Total_final = total;
-            this.lblTotal.Text = string.Format("{0:C}", this.Total_final);
+            this.lblTotal.Text = this.Total_final.ToString("C0", CultureInfo.GetCultureInfo("es-CO"));
             this.lblTotal.Tag = Total_final;
         }
 
@@ -320,6 +339,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.opcionesPedido.IsDomicilio = this.IsDomicilio;
             this.opcionesPedido.Total_parcial = this.Total_parcial;
             this.opcionesPedido.frmFacturarPedido = this;
+            this.opcionesPedido.Dock = DockStyle.Top;
             this.panelDescuentos.Controls.Add(this.opcionesPedido);
             this.panelDescuentos.AutoScroll = true;
             this.Show();
@@ -336,6 +356,8 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 { "products", SnapshotRows(this.TablaDetalle) }, { "payments", SnapshotRows(payments) },
                 { "requestedAt", DateTime.UtcNow.ToString("o") }
             };
+            // Solo se escribe cuando el usuario eligió facturar únicamente los productos vinculados.
+            if (this.electronicOnlyLinked) snapshot["onlyLinked"] = true;
             return new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(snapshot);
         }
 
@@ -490,11 +512,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 }
             }
             this.Total_parcial = total_parcial;
-            this.lblTotalParcial.Text = string.Format("{0:C}", this.Total_parcial);
+            this.lblTotalParcial.Text = this.Total_parcial.ToString("C0", CultureInfo.GetCultureInfo("es-CO"));
             this.lblTotalParcial.Tag = total_parcial;
 
             this.Total_final = total_parcial;
-            this.lblTotal.Text = string.Format("{0:C}", this.Total_parcial);
+            this.lblTotal.Text = this.Total_parcial.ToString("C0", CultureInfo.GetCultureInfo("es-CO"));
             this.lblTotal.Tag = total_parcial;
         }
 

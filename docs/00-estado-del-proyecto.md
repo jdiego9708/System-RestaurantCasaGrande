@@ -1,3 +1,5 @@
+﻿> Estado actualizado el 6 de noviembre: [cierre completo, Alegra, FE4931/FE4932 y auditoria USB](15-cierre-de-sesion-2026-11-06.md). Descargar PDF conserva el oficial; imprimir usa 80 mm. El kit incluye el paso 05 de configuracion.
+
 # 00 — Estado del proyecto (2026-10-26, cierre del día)
 
 Foto del proyecto el **26 de octubre de 2026**: qué está construido, qué está verificado, qué falta y por qué.
@@ -358,3 +360,8 @@ cd D:\Repositorios\System-RestaurantCasaGrande\scripts
 
 
 Los documentos se actualizan cuando cambie el estado; este es el punto de entrada para saber **cómo está hoy**.
+
+
+## Continuidad al cierre del 5 de noviembre de 2026
+
+Consultar [cierre de sesi?n y pendientes para ma?ana](13-cierre-de-sesion-2026-11-05.md). La copia de producci?n de hoy est? activa localmente, con 51 v?nculos exactos Alegra e indicadores en m?vil y selectores del escritorio. Emisi?n electr?nica end-to-end pendiente de validaci?n.

@@ -1,4 +1,4 @@
-using CapaNegocio.Alegra;
+﻿using CapaNegocio.Alegra;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -7,12 +7,13 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace CapaPresentacion
 {
     public static class AlegraPdfService
     {
-        public static async Task<string> DownloadAsync(int saleId,CancellationToken token)
+        public static async Task<string> DownloadAsync(int saleId,CancellationToken token,bool refresh=false)
         {
             var requests=AlegraWorkflow.Request(saleId);
             if(requests.Rows.Count!=1)throw new InvalidOperationException("Esta venta no tiene una solicitud electrónica vinculada.");
@@ -21,11 +22,39 @@ namespace CapaPresentacion
             string cached=Convert.ToString(row["PdfPath"]);
             string cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"CasaGrande","Alegra","PDF");
             Directory.CreateDirectory(cache);
-            string file=Path.Combine(cache,saleId+".pdf");
-            if(cached==file && File.Exists(file) && IsPdf(file))return file;
-            string downloaded=await DownloadDocumentAsync(Convert.ToString(row["RemoteId"]),file,token).ConfigureAwait(false);
+            string file=Path.Combine(cache,saleId+"-electronica.pdf");
+            if(!refresh && cached==file && File.Exists(file) && IsPdf(file))return file;
+            string downloaded;
+            using (var api = new AlegraClient(new HttpClientHandler { AllowAutoRedirect = false }, AlegraCredentials.FromEmissionEnvironment()))
+            {
+                var settings = AlegraWorkflow.Settings();
+                var company = AlegraWorkflow.Object(await api.GetCompanyAsync(token).ConfigureAwait(false));
+                if (AlegraWorkflow.CompanyIdentity(company) != settings.CompanyId)
+                    throw new InvalidOperationException("La credencial PDF pertenece a otra empresa.");
+                var invoice = AlegraWorkflow.Object(await api.GetInvoiceAsync(Convert.ToString(row["RemoteId"]), token).ConfigureAwait(false));
+                // Total esperado: el de la venta o, en una factura parcial, el de los productos vinculados.
+                decimal total = AlegraInvoiceBuilder.ExpectedTotal(Convert.ToString(row["RequestJson"]), settings);
+                if (!invoice.ContainsKey("total") || Math.Abs(Convert.ToDecimal(invoice["total"]) - total) > 0.01m)
+                    throw new InvalidOperationException("El total de la factura electronica no coincide con lo que debía facturarse en Alegra.");
+                downloaded = await DownloadDocumentAsync(Convert.ToString(row["RemoteId"]), file, token, true).ConfigureAwait(false);
+            }
             AlegraWorkflow.StorePdf(saleId,downloaded);
             return downloaded;
+        }
+
+        public static async Task<string> RenderForPrintAsync(int saleId, CancellationToken token, bool refresh=false)
+        {
+            string official = await DownloadAsync(saleId,token,refresh).ConfigureAwait(false);
+            var row = AlegraWorkflow.Request(saleId).Rows[0];
+            var settings = AlegraWorkflow.Settings();
+            using (var api = new AlegraClient(new HttpClientHandler {AllowAutoRedirect=false}, AlegraCredentials.FromEmissionEnvironment()))
+            {
+                var company = AlegraWorkflow.Object(await api.GetCompanyAsync(token).ConfigureAwait(false));
+                if (AlegraWorkflow.CompanyIdentity(company) != settings.CompanyId)
+                    throw new InvalidOperationException("La credencial de impresion pertenece a otra empresa.");
+                string file=Path.Combine(Path.GetDirectoryName(official),saleId+"-80mm.pdf");
+                return await RenderReviewAsync(api,Convert.ToString(row["RemoteId"]),file,token,true,official).ConfigureAwait(false);
+            }
         }
 
         public static Task<string> DownloadRemoteAsync(string remoteId,CancellationToken token)
@@ -36,9 +65,9 @@ namespace CapaPresentacion
             return DownloadDocumentAsync(remoteId,Path.Combine(cache,Guid.NewGuid().ToString("N")+".pdf"),token);
         }
 
-        private static async Task<string> DownloadDocumentAsync(string remoteId,string file,CancellationToken token)
+        private static async Task<string> DownloadDocumentAsync(string remoteId,string file,CancellationToken token,bool requireOfficial=false)
         {
-            using(var api=new AlegraClient())
+            using(var api=new AlegraClient(new HttpClientHandler { AllowAutoRedirect=false }, AlegraCredentials.FromEmissionEnvironment()))
             {
                 var invoice=AlegraWorkflow.Object(await api.GetInvoiceAsync(remoteId,token).ConfigureAwait(false));
                 if(AlegraWorkflow.Text(invoice,"id")!=remoteId)throw new InvalidOperationException("El documento recibido no coincide con la factura seleccionada.");
@@ -52,13 +81,16 @@ namespace CapaPresentacion
                 }
                 catch(InvalidOperationException ex)
                 {
-                    if(!ex.Message.Contains("HTTP 500"))throw;
+                    if(requireOfficial || !ex.Message.Contains("HTTP 500"))throw;
                     return await RenderReviewAsync(api,remoteId,file,token).ConfigureAwait(false);
                 }
                 string pdf=AlegraWorkflow.Text(invoice,"pdf");
                 if(invoice.ContainsKey("pdf") && invoice["pdf"] is System.Collections.Generic.Dictionary<string,object> value)pdf=AlegraWorkflow.Text(value,"url");
                 if(!Uri.TryCreate(pdf,UriKind.Absolute,out Uri uri)||uri.Scheme!="https"||!string.IsNullOrEmpty(uri.UserInfo))
+                {
+                    if(requireOfficial)throw new InvalidOperationException("Alegra no proporciono el PDF oficial necesario para contrastar fecha de validacion y software.");
                     return await RenderReviewAsync(api,remoteId,file,token).ConfigureAwait(false);
+                }
                 // Cliente separado: nunca enviar Authorization de Alegra al almacenamiento del PDF.
                 using(var handler=new HttpClientHandler {AllowAutoRedirect=false})
                 using(var client=new HttpClient(handler) {Timeout=TimeSpan.FromSeconds(45)})
@@ -104,15 +136,18 @@ namespace CapaPresentacion
             using(var stream=File.OpenRead(file)) {byte[] signature=new byte[5];return stream.Read(signature,0,5)==5 && System.Text.Encoding.ASCII.GetString(signature)=="%PDF-";}
         }
 
-        // Alternativa explícita de revisión: mismo XML y comprobaciones que el diseño revisado.
-        // No se utiliza para impresión automática ni se presenta como PDF original de Alegra.
-        private static async Task<string> RenderReviewAsync(AlegraClient api,string id,string file,CancellationToken token)
+        // Renderiza desde el XML real; receipt=true usa los datos de validacion del PDF oficial.
+        // La descarga oficial y la representacion termica se conservan como archivos separados.
+        private static async Task<string> RenderReviewAsync(AlegraClient api,string id,string file,CancellationToken token,bool receipt=false,string official=null)
         {
             string script=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Alegra","Render-AlegraFiscalRepresentation.py");
-            if(!File.Exists(script))throw new InvalidOperationException("Alegra no pudo generar su PDF (HTTP 500). No se encontró el generador de representación para revisión.");
+            string renderer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Alegra","Tools","Renderer","CasaGrandeFiscalPdf.exe");
+            if(!File.Exists(renderer) && !File.Exists(script))throw new InvalidOperationException("No se encontro el generador de PDF de 80 mm. Actualice la instalacion.");
             string json=await api.GetInvoiceXmlAsync(id,token).ConfigureAwait(false);
             var invoice=AlegraWorkflow.Object(json);
             if(AlegraWorkflow.Text(invoice,"id")!=id)throw new InvalidOperationException("El XML no corresponde a la factura seleccionada.");
+            if (!new[] {"ACCEPTED","STAMPED_AND_ACCEPTED","STAMPED_AND_ACCEPTED_WITH_OBSERVATIONS"}.Contains(AlegraWorkflow.Emission(invoice)))
+                throw new InvalidOperationException("La factura aun no esta aceptada; no se imprime.");
             if(!Uri.TryCreate(AlegraWorkflow.Text(invoice,"xml"),UriKind.Absolute,out Uri uri))throw new InvalidOperationException("Alegra no devolvió el XML necesario para generar el PDF.");
             await CheckPublicHost(uri).ConfigureAwait(false);
             string xmlPath=file+".xml",jsonPath=file+".json";
@@ -132,20 +167,28 @@ namespace CapaPresentacion
             // No persistir enlaces temporales firmados en el detalle utilizado por el renderer.
             invoice.Remove("xml");invoice.Remove("pdf");
             File.WriteAllText(jsonPath,new System.Web.Script.Serialization.JavaScriptSerializer {MaxJsonLength=8*1024*1024}.Serialize(invoice),System.Text.Encoding.UTF8);
-            string review=Path.Combine(Path.GetDirectoryName(file),Path.GetFileNameWithoutExtension(file)+"-revision.pdf");
+            string review=receipt ? file : Path.Combine(Path.GetDirectoryName(file),Path.GetFileNameWithoutExtension(file)+"-revision.pdf");
+            string tempPdf=Path.Combine(Path.GetDirectoryName(file),Guid.NewGuid().ToString("N")+".pdf");
+            string arguments=(File.Exists(renderer) ? "" : "\""+script+"\" ")
+                + "\""+xmlPath+"\" \""+jsonPath+"\" \""+tempPdf+"\""
+                + (receipt ? " --receipt --official-pdf \""+official+"\"" : "");
             try
             {
-                using(var process=Process.Start(new ProcessStartInfo {FileName="python",Arguments="\""+script+"\" \""+xmlPath+"\" \""+jsonPath+"\" \""+review+"\"",UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,RedirectStandardOutput=true,RedirectStandardError=true}))
+                using(var process=Process.Start(new ProcessStartInfo {FileName=File.Exists(renderer) ? renderer : "python",Arguments=arguments,UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,RedirectStandardOutput=true,RedirectStandardError=true}))
                 {
                     Task<string> stdout=process.StandardOutput.ReadToEndAsync(),stderr=process.StandardError.ReadToEndAsync();
                     bool exited=await Task.Run(()=>process.WaitForExit(45000)).ConfigureAwait(false);
                     if(!exited){process.Kill();throw new InvalidOperationException("El generador PDF excedió el tiempo de espera.");}
                     await Task.WhenAll(stdout,stderr).ConfigureAwait(false);
                     token.ThrowIfCancellationRequested();
-                    if(process.ExitCode!=0||!File.Exists(review)||!IsPdf(review))throw new InvalidOperationException("No se pudo generar la representación. Verifique Python con reportlab y la coincidencia de XML, CUFE y total.");
+                    if(process.ExitCode!=0||!File.Exists(tempPdf)||!IsPdf(tempPdf))throw new InvalidOperationException("No se pudo generar el PDF de 80 mm. Revise coincidencia de numero, CUFE, total y datos de validacion del XML/PDF oficial.");
                 }
             }
-            catch(System.ComponentModel.Win32Exception){throw new InvalidOperationException("Alegra devolvió HTTP 500. Para generar la representación de revisión instale Python 3 con reportlab, o descargue el PDF desde Alegra web.");}
+            catch(System.ComponentModel.Win32Exception){throw new InvalidOperationException("No se pudo iniciar el generador PDF. Actualice la instalacion con las herramientas portables de Alegra.");}
+            File.Copy(tempPdf,review,true);
+            File.Delete(tempPdf);
+            string report=Path.ChangeExtension(tempPdf,".revision.json");
+            if(File.Exists(report)) { File.Copy(report,Path.ChangeExtension(review,".revision.json"),true); File.Delete(report); }
             return review;
         }
         private static async Task CheckPublicHost(Uri uri)
@@ -163,20 +206,72 @@ namespace CapaPresentacion
         public static async Task PrintAsync(int saleId,CancellationToken token,bool reprint=false)
         {
             var settings=AlegraWorkflow.Settings();
-            if(!File.Exists(settings.PdfPrinterExecutable)||!Path.GetFileName(settings.PdfPrinterExecutable).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))
+            string executable = PrinterExecutable(settings.PdfPrinterExecutable);
+            string printer = string.IsNullOrWhiteSpace(settings.PrinterName) ? new System.Drawing.Printing.PrinterSettings().PrinterName : settings.PrinterName;
+            if(!File.Exists(executable)||!Path.GetFileName(executable).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Configure SumatraPDF para imprimir el PDF de Alegra.");
-            if(string.IsNullOrWhiteSpace(settings.PrinterName)||settings.PrinterName.Contains("\"")||settings.PrinterName.Contains("\r")||settings.PrinterName.Contains("\n"))
+            if(string.IsNullOrWhiteSpace(printer)||printer.Contains("\"")||printer.Contains("\r")||printer.Contains("\n"))
                 throw new InvalidOperationException("Configure una impresora térmica válida.");
-            string file=await DownloadAsync(saleId,token).ConfigureAwait(false);
+            string file=await RenderForPrintAsync(saleId,token,reprint).ConfigureAwait(false);
             if(Path.GetFileName(file).EndsWith("-revision.pdf",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Alegra no proporcionó su PDF. La representación de revisión debe abrirse y revisarse manualmente; no se imprimirá automáticamente.");
+            var printerSettings = new System.Drawing.Printing.PrinterSettings { PrinterName=printer };
+            if (!printerSettings.IsValid)throw new InvalidOperationException("Seleccione una impresora instalada en Windows.");
             if(!AlegraWorkflow.ClaimPrint(saleId,reprint))throw new InvalidOperationException("El documento ya está impreso o en proceso. Actualice el estado antes de reintentar.");
             try
             {
-                await PrintFileAsync(file,settings.PdfPrinterExecutable,settings.PrinterName,token).ConfigureAwait(false);
+                await PrintFileAsync(file,executable,printer,token).ConfigureAwait(false);
                 AlegraWorkflow.MarkPrint(saleId,"PRINTED");
             }
+            catch (OperationCanceledException) { AlegraWorkflow.MarkPrint(saleId,"CANCELLED");throw; }
             catch { AlegraWorkflow.MarkPrint(saleId,"UNKNOWN");throw; }
+        }
+
+        public static string PrinterExecutable(string configured)
+        {
+            return string.IsNullOrWhiteSpace(configured)
+                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Alegra", "Tools", "SumatraPDF.exe")
+                : configured;
+        }
+
+        private sealed class DialogOwner : IWin32Window
+        {
+            public IntPtr Handle { get; private set; }
+            public DialogOwner(IntPtr handle) { Handle=handle; }
+        }
+
+        // Mantiene el PDF oficial intacto y muestra el dialogo Windows de guardado.
+        // Hilo STA propio: la descarga/emision siguen fuera del hilo de la interfaz.
+        private static Task SaveVirtualPdfAsync(string file, CancellationToken token)
+        {
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            IntPtr owner = Process.GetCurrentProcess().MainWindowHandle;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                    using (var dialog = new SaveFileDialog
+                    {
+                        Title="Guardar factura electronica de Alegra", Filter="Factura electronica PDF (*.pdf)|*.pdf",
+                        FileName=Path.GetFileName(file), DefaultExt="pdf", AddExtension=true, OverwritePrompt=true,
+                    })
+                    {
+                        var result = owner == IntPtr.Zero ? dialog.ShowDialog() : dialog.ShowDialog(new DialogOwner(owner));
+                        if (result != DialogResult.OK) { completion.TrySetCanceled(); return; }
+                        token.ThrowIfCancellationRequested();
+                        if (!string.Equals(Path.GetFullPath(file), Path.GetFullPath(dialog.FileName), StringComparison.OrdinalIgnoreCase))
+                            File.Copy(file, dialog.FileName, true);
+                        completion.TrySetResult(true);
+                    }
+                }
+                catch (OperationCanceledException) { completion.TrySetCanceled(); }
+                catch (Exception ex) { completion.TrySetException(ex); }
+            });
+            thread.IsBackground=true;
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            return completion.Task;
         }
 
         public static async Task PrintFileAsync(string file,string executable,string printer,CancellationToken token)
@@ -185,12 +280,18 @@ namespace CapaPresentacion
             if(!File.Exists(executable)||!Path.GetFileName(executable).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Configure SumatraPDF.exe para imprimir sin cambiar el PDF original.");
             if(string.IsNullOrWhiteSpace(printer)||printer.IndexOfAny(new[]{'\"','\r','\n'})>=0)throw new InvalidOperationException("La impresora seleccionada no es válida.");
-            using(var process=Process.Start(new ProcessStartInfo {
-                FileName=executable,Arguments="-silent -print-to \""+printer+"\" -print-settings \"noscale,disable-auto-rotation\" \""+Path.GetFullPath(file)+"\"",
-                UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden }))
+            if (printer.Equals("Microsoft Print to PDF", StringComparison.OrdinalIgnoreCase) || printer.Equals("Adobe PDF", StringComparison.OrdinalIgnoreCase))
             {
-                bool exited=await Task.Run(()=>process.WaitForExit(60000),token).ConfigureAwait(false);
-                if(!exited||process.ExitCode!=0)throw new InvalidOperationException("La impresión no fue confirmada. Revise la cola de Windows antes de reimprimir.");
+                await SaveVirtualPdfAsync(file, token).ConfigureAwait(false);
+                return;
+            }
+            bool interactive = printer.IndexOf("PDF", StringComparison.OrdinalIgnoreCase) >= 0 || printer.IndexOf("OneNote", StringComparison.OrdinalIgnoreCase) >= 0;
+            using(var process=Process.Start(new ProcessStartInfo {
+                FileName=executable,Arguments=(interactive ? "" : "-silent ") + "-print-to \""+printer+"\" -print-settings \"noscale,disable-auto-rotation\" \""+Path.GetFullPath(file)+"\"",
+                UseShellExecute=false,CreateNoWindow=!interactive,WindowStyle=interactive ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden }))
+            {
+                await Task.Run(()=>process.WaitForExit(),token).ConfigureAwait(false);
+                if(process.ExitCode!=0)throw new InvalidOperationException("La impresión no fue confirmada. Revise la cola de Windows antes de reimprimir.");
             }
         }
     }

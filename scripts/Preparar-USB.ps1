@@ -9,6 +9,10 @@
         02-Setup-Casa-Grande.exe        PC del restaurante: instalador del sistema (activa la API movil)
         03-Configurar-Red.ps1           PC del restaurante: IP, firewall y datos que se escriben en los celulares
         04-APK-Casa-Grande.apk          Cada celular Android: app del mesero
+        05-Configurar-Alegra.ps1        PC: importa tokens y prepara cuenta e impresion
+        06-Cambiar-Codigo-Maestro.ps1   PC: cambia el codigo maestro de 8 digitos cuando se requiera
+        07-Configurar-Impresora-Termica.ps1   PC: deja la POS-80 en el formato de rollo largo (tickets largos sin cortar)
+        Credenciales-Alegra\           Tokens renombrados para el PC destino
         Soporte\                        copia legible de scripts SQL, auxiliares y reversiones
         SHA256SUMS.txt                  sumas para comprobar que la copia no se daño
 
@@ -34,7 +38,9 @@ param(
     [switch]$SinCompilar,
     [switch]$Si,
     [string]$ApkRuta,
-    [string]$FlutterBin = 'D:\DevTools\flutter-3.47.8\bin'
+    [string]$FlutterBin = 'D:\DevTools\flutter-3.47.8\bin',
+    [string]$AlegraBearerFile = 'D:\Setup\apikeyAlegraCasaGrandeNuevo.txt',
+    [string]$AlegraBasicFile = 'D:\Setup\apikeyAlegraCasaGrandeViejo.txt'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -58,6 +64,21 @@ function New-DatabaseDeploymentScript([string]$source, [string]$databaseDir, [st
     }
     $payload.Add('} # USB_DATABASE_PAYLOAD')
     [IO.File]::WriteAllText($output, $content.Replace($marker, ($payload -join "`r`n")), (New-Object Text.UTF8Encoding $true))
+}
+
+function New-AlegraDeploymentScript([string]$source, [hashtable]$support, [string]$output) {
+    $content=[IO.File]::ReadAllText($source)
+    $marker='$embeddedAlegraFiles = @{} # USB_ALEGRA_PAYLOAD'
+    if(!$content.Contains($marker)) { throw 'Falta el marcador del configurador Alegra.' }
+    $payload=New-Object 'System.Collections.Generic.List[string]'
+    $payload.Add('$embeddedAlegraFiles = @{')
+    foreach($name in ($support.Keys | Sort-Object)) {
+        if([IO.Path]::GetFileName($name) -ne $name) { throw 'Nombre de soporte Alegra invalido.' }
+        $data=[Convert]::ToBase64String([IO.File]::ReadAllBytes($support[$name]))
+        $payload.Add("    '$name' = '$data'")
+    }
+    $payload.Add('} # USB_ALEGRA_PAYLOAD')
+    [IO.File]::WriteAllText($output,$content.Replace($marker,($payload -join "`r`n")),(New-Object Text.UTF8Encoding $true))
 }
 
 # ---------------------------------------------------------------------------
@@ -125,6 +146,12 @@ $setupOrigen = Join-Path $repo "installer\Output\$setupNombre"
 if (-not $ApkRuta) { $ApkRuta = Join-Path $mesero 'app\build\app\outputs\flutter-apk\app-release.apk' }
 
 Paso '1/5  Comprobando los archivos de origen'
+foreach($credential in @($AlegraBearerFile,$AlegraBasicFile)) {
+    if(!(Test-Path -LiteralPath $credential -PathType Leaf) -or (Get-Item -LiteralPath $credential).Length -eq 0) {
+        Falla "No existe el TXT de credencial o esta vacio: $credential"
+    }
+}
+
 
 # Por defecto SIEMPRE se recompilan el instalador y el APK: la USB nunca debe llevar una version vieja.
 # Solo -SinCompilar lo evita (y aun asi compila el instalador si no existe).
@@ -143,10 +170,16 @@ if ($compilarTodo -and -not $apkPropio) {
     if (-not (Test-Path $flutter)) { Falla "No encuentro Flutter 3.47.8 en $FlutterBin (use -FlutterBin). El flutter del PATH suele ser el 3.11.5 y no sirve." }
     Push-Location (Join-Path $mesero 'app')
     try {
+        $previousFlutterPath=$env:Path
         $env:Path = "$FlutterBin;$env:Path"
-        & $flutter build apk --release
-        if ($LASTEXITCODE -ne 0) { Falla 'flutter build apk fallo.' }
-    } finally { Pop-Location }
+        $previousNativePreference=$ErrorActionPreference
+        try {
+            $ErrorActionPreference='Continue'
+            & $flutter build apk --release 2>&1 | ForEach-Object { Write-Host $_.ToString() }
+            $flutterExit=$LASTEXITCODE
+        } finally { $ErrorActionPreference=$previousNativePreference }
+        if ($flutterExit -ne 0) { Falla 'flutter build apk fallo.' }
+    } finally { if($null -ne $previousFlutterPath) { $env:Path=$previousFlutterPath }; Pop-Location }
 }
 if (-not (Test-Path $ApkRuta)) { Falla "No existe el APK $ApkRuta. Repita sin -SinCompilar (compila con Flutter 3.47.8)." }
 
@@ -155,22 +188,35 @@ $dbDir = Join-Path $repo 'db'
 $soporteDb = @('Invoke-Sql.ps1', 'Restore-ProdCopy.ps1', 'verificar-despliegue.sql', 'produccion-schema.sql',
                '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql',
                '02_unificar_empleados_duplicados.sql', '05_activar_empleados.sql',
-               '06_domicilios_direcciones.sql', '07_alegra_integration.sql',
+               '06_domicilios_direcciones.sql', '07_alegra_integration.sql', '08_items_eliminados.sql', 'Configurar-Alegra.ps1',
                '01_sp_Movil_Insertar_pedido.revert.sql', '03_sp_Movil_Agregar_items.revert.sql',
                '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql',
-               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql')
+               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql', '08_items_eliminados.revert.sql')
 
 # El paso 01 es autocontenido; Soporte\db se conserva para consulta y ejecucion manual.
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
 $databaseScript = Join-Path $env:TEMP ('CasaGrande-01-' + [guid]::NewGuid().ToString('N') + '.ps1')
 New-DatabaseDeploymentScript (Join-Path $scriptsDir 'Desplegar-Base-de-Datos.ps1') $dbDir $soporteDb $databaseScript
+$alegraScript=Join-Path $env:TEMP ('CasaGrande-05-'+[guid]::NewGuid().ToString('N')+'.ps1')
+New-AlegraDeploymentScript (Join-Path $scriptsDir 'Configurar-Alegra-Equipo.ps1') @{
+    'Configurar-Alegra.ps1'=(Join-Path $dbDir 'Configurar-Alegra.ps1')
+    'Test-AlegraPackage.ps1'=(Join-Path $scriptsDir 'Test-AlegraPackage.ps1')
+} $alegraScript
+
 
 # Plan de copia: origen -> nombre numerado en la USB
 $plan = @(
     @{ Origen = $databaseScript;                                       Destino = '01-Base-de-Datos.ps1' },
     @{ Origen = $setupOrigen;                                           Destino = '02-Setup-Casa-Grande.exe' },
     @{ Origen = (Join-Path $scriptsDir 'Configurar-Red.ps1');           Destino = '03-Configurar-Red.ps1' },
-    @{ Origen = $ApkRuta;                                               Destino = '04-APK-Casa-Grande.apk' }
+    @{ Origen = $ApkRuta;                                               Destino = '04-APK-Casa-Grande.apk' },
+    @{ Origen = $alegraScript; Destino = '05-Configurar-Alegra.ps1' },
+    @{ Origen = (Join-Path $scriptsDir 'Cambiar-Codigo-Maestro.ps1'); Destino = '06-Cambiar-Codigo-Maestro.ps1' },
+    @{ Origen = (Join-Path $scriptsDir 'Configurar-Impresora-Termica.ps1'); Destino = '07-Configurar-Impresora-Termica.ps1' },
+    @{ Origen = (Join-Path $scriptsDir 'Diagnosticar-Impresora.ps1'); Destino = 'Soporte\scripts\Diagnosticar-Impresora.ps1' },
+    @{ Origen = (Join-Path $scriptsDir 'Test-AlegraPackage.ps1'); Destino = 'Soporte\scripts\Test-AlegraPackage.ps1' },
+    @{ Origen = $AlegraBearerFile; Destino = 'Credenciales-Alegra\Token-Nuevo-Bearer.txt' },
+    @{ Origen = $AlegraBasicFile; Destino = 'Credenciales-Alegra\Token-Anterior-Basic.txt' }
 )
 foreach ($p in $plan) { if (-not (Test-Path $p.Origen)) { Falla "Falta el archivo de origen: $($p.Origen)" } }
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
@@ -244,14 +290,26 @@ New-Item -ItemType Directory -Path $destino -Force | Out-Null
 
 # Quitar lo que generaron versiones anteriores del kit (solo dentro de la carpeta propia)
 if ((Split-Path $destino -Leaf) -ne $NombreCarpeta) { Falla 'Ruta de destino inesperada; no se borra nada.' }
+$resolvedDestination=[IO.Path]::GetFullPath($destino)
+$expectedDestination=[IO.Path]::GetFullPath((Join-Path $raiz $NombreCarpeta))
+if($resolvedDestination -ne $expectedDestination -or ((Get-Item -LiteralPath $destino).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+    Falla 'La carpeta de la USB tiene una ruta/enlace inesperado. No se limpia.'
+}
+
 Get-ChildItem $destino -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^\d\d-' -or $_.Name -eq 'SHA256SUMS.txt' } |
     Remove-Item -Force
 $soporte = Join-Path $destino 'Soporte'
-if (Test-Path $soporte) { Remove-Item $soporte -Recurse -Force }
+if (Test-Path -LiteralPath $soporte) {
+    if((Get-Item -LiteralPath $soporte).Attributes -band [IO.FileAttributes]::ReparsePoint) { Falla 'Soporte no puede ser un enlace.' }
+    if([IO.Path]::GetFullPath($soporte) -ne (Join-Path $resolvedDestination 'Soporte')) { Falla 'Ruta Soporte inesperada.' }
+    Remove-Item -LiteralPath $soporte -Recurse -Force
+}
 New-Item -ItemType Directory -Path (Join-Path $soporte 'db') -Force | Out-Null
 
 foreach ($p in $plan) {
-    Copy-Item -LiteralPath $p.Origen -Destination (Join-Path $destino $p.Destino) -Force
+    $archivoDestino = Join-Path $destino $p.Destino
+    New-Item -ItemType Directory -Path (Split-Path $archivoDestino -Parent) -Force | Out-Null
+    Copy-Item -LiteralPath $p.Origen -Destination $archivoDestino -Force
     Write-Host ("    {0}" -f $p.Destino)
 }
 foreach ($f in $soporteDb) { Copy-Item -LiteralPath (Join-Path $dbDir $f) -Destination (Join-Path $soporte 'db') -Force }
@@ -269,21 +327,60 @@ Preparado el $(Get-Date -Format 'yyyy-MM-dd HH:mm')   (commit $commit)
 
 EJECUTE LOS ARCHIVOS EN ORDEN (el numero del nombre es el orden).
 
-EN EL PC DEL RESTAURANTE (Windows 10/11, con el mismo usuario que abre el sistema)
+EN EL PC DEL RESTAURANTE (Windows 10/11 de 64 bits, mismo usuario: pasos 01, 02, 03 y 05)
 --------------------------------------------------------------
  01-Base-de-Datos.ps1       Clic derecho > "Ejecutar con PowerShell".
-                            Hace copia de seguridad, actualiza la API movil, empleados y el modulo Domicilios.
-                            Incluye tabla de direcciones y procedimientos de clientes/pedidos. Es repetible.
-                            Lleva los scripts embebidos: funciona incluso sin la carpeta Soporte.
-                            Pide confirmacion en cada paso; acepte Domicilios para usar la nueva version.
+                            Hace respaldo y aplica las migraciones de API, empleados, Domicilios y Alegra (07).
+                            Lleva los SQL embebidos. No requiere tokens ni conexion con Alegra.
+                            La verificacion final debe indicar OK en las tablas/columnas Alegra.
+                            Elija la misma base que usa el escritorio. Mantengalo cerrado hasta terminar 05.
 
- 02-Setup-Casa-Grande.exe   Doble clic (pide administrador; si Windows avisa "SmartScreen":
-                            Mas informacion > Ejecutar de todos modos).
-                            Deje marcado "Activar la API movil" y ANOTE LA CLAVE que muestra.
+ 02-Setup-Casa-Grande.exe   Doble clic (administrador). Windows 10/11 de 64 bits.
+                            Deje marcada la API movil y anote su clave para los celulares.
+                            Pide el CODIGO MAESTRO de 8 digitos (dos veces): es el que se escribe en el celular, junto
+                            con una observacion, para quitar un producto de un pedido. No reemplaza el PIN de 4 digitos.
+                            No abra el sistema al terminar: primero configure Alegra con el paso 05.
+                            La tarea opcional de credenciales tiene dos paginas si prefiere introducirlas a mano:
+                            principal: correo + token nuevo + Bearer; emision: correo + token anterior + Basic.
+                            El instalador incluye renderer de 80 mm y lector PDF; no necesita Python en el restaurante.
 
- 03-Configurar-Red.ps1      Clic derecho > "Ejecutar con PowerShell" (pide administrador).
-                            Muestra la IP del PC, el puerto y la clave que se escriben en los celulares, y avisa si
-                            la red esta como Publica o la IP es dinamica (reservela en el router).
+ 03-Configurar-Red.ps1      Ejecutar como administrador para IP, puerto, firewall y datos de conexion movil.
+
+ 05-Configurar-Alegra.ps1   Ejecutar con el MISMO usuario de Windows del sistema (LocalDB es por usuario).
+                            Localiza solo la instalacion (registro, accesos directos, Program Files y unidades):
+                            no hace falta indicar la carpeta. Si hubiera varias, use -ApplicationPath "carpeta".
+                            Importa Credenciales-Alegra\Token-Nuevo-Bearer.txt y Token-Anterior-Basic.txt.
+                            Pide el correo API si aun no esta configurado. No muestra los tokens.
+                            Verifica ambos accesos por lectura, misma empresa y herramientas PDF instaladas.
+                            Conserva configuracion existente; en una base nueva usa el perfil conocido Casa Grande.
+                            Solo vincula nombres exactos unicos activos; exporta pendientes, no aprueba similitudes.
+                            Permite ventas con productos aprobados; los productos/cargos sin vinculo bloquean su emision.
+                            Habilita doble impresion para ventas nuevas, sin reimprimir las anteriores.
+                            Si hay variables Machine diferentes, use PowerShell elevado del mismo usuario y -Scope Machine.
+                            Para otra base: .\05-Configurar-Alegra.ps1 -Database NombreBase
+                            Comprobacion posterior sin cambios: .\05-Configurar-Alegra.ps1 -VerifyOnly
+                            No crea ni emite documentos. Reinicie/abra el sistema despues de terminar este paso.
+
+ FACTURACION ELECTRONICA    Con el sistema abierto y venta marcada: imprime la local, emite y espera aceptacion.
+                            Luego genera/imprime la electronica de 80 mm usando XML y datos del PDF oficial.
+                            Descargar PDF en el detalle conserva el original Carta; imprimir usa el modelo de 80 mm.
+                            Impresora vacia: predeterminada Windows, como la local.
+                            Con Microsoft Print to PDF abre un segundo dialogo para guardar el PDF de 80 mm.
+                            COBRADA no confirma emision: revise estado electronico y errores en el historial/detalle.
+
+ 06-Cambiar-Codigo-Maestro.ps1   CUANDO SE REQUIERA cambiar el codigo maestro (no es parte de la instalacion).
+                            Localiza solo la instalacion y pide el codigo nuevo (8 digitos, oculto, dos veces).
+                            Guarda solo sal + hash en SISMistico.exe.config (con copia .bak). Reinicie el sistema despues.
+                            Tambien esta en el menu Inicio: "Cambiar codigo maestro".
+
+ 07-Configurar-Impresora-Termica.ps1   Despues del 02, con SISRestaurante CERRADO y sin trabajos en la cola.
+                            PowerShell COMO ADMINISTRADOR, con el MISMO usuario de Windows del sistema.
+                            Cambia el papel predeterminado de la impresora (POS-80) de 297 mm al rollo largo de 3276 mm
+                            que anuncia su controlador, para que facturas y comandas largas no salgan partidas.
+                            Guarda un respaldo en el Escritorio y revierte solo si falla.
+                            Ver sin cambiar: .\07-Configurar-Impresora-Termica.ps1 -Modo Estado
+                            Deshacer: -Modo Restaurar -Respaldo "carpeta del respaldo". Luego abra el sistema.
+                            Si algo no sale bien: Soporte\scripts\Diagnosticar-Impresora.ps1 (solo lectura).
 
 EN CADA CELULAR ANDROID (7.0 o superior, en el mismo WiFi que el PC)
 --------------------------------------------------------------
@@ -292,6 +389,7 @@ EN CADA CELULAR ANDROID (7.0 o superior, en el mismo WiFi que el PC)
 
 OTROS ARCHIVOS
 --------------------------------------------------------------
+ Credenciales-Alegra\       Token-Nuevo-Bearer.txt y Token-Anterior-Basic.txt (contienen las claves).
  Soporte\                   Copia legible de scripts SQL y reversiones para soporte tecnico.
  SHA256SUMS.txt             Sumas de comprobacion de los archivos.
 
@@ -317,6 +415,7 @@ foreach ($f in $soporteDb) {
     $sumas += "$hCopia  $rel"
 }
 if ($errores -gt 0) { Falla "$errores archivo(s) se copiaron mal. Repita; si persiste, pruebe otro puerto USB o revise la memoria." }
+$sumas += ((Get-FileHash -LiteralPath (Join-Path $destino '00-LEEME.txt') -Algorithm SHA256).Hash + '  00-LEEME.txt')
 Set-Content -Path (Join-Path $destino 'SHA256SUMS.txt') -Value $sumas -Encoding ASCII
 Ok "Todos los archivos coinciden con el origen (SHA-256)"
 

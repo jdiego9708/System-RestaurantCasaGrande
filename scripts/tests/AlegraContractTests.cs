@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -79,12 +79,40 @@ class AlegraContractTests
         Assert(json.Contains("customer-uuid") && json.Contains("template-uuid"),"IDs texto");
         Assert(!json.Contains("generateStamp"),"No emitir al crear");
         var parsed = serializer.DeserializeObject(json) as Dictionary<string,object>;
+        Assert((string)parsed["paymentMethod"]=="BANK_DEPOSIT","Pago mixto: la cabecera usa el medio del pago mayor (transferencia)");
+        string cashOnly=AlegraInvoiceBuilder.Build(snapshot.Replace("\"Pago\":\"TRANSFERENCIA\"","\"Pago\":\"EFECTIVO\""),config,new DateTime(2026,11,2));
+        Assert((string)((Dictionary<string,object>)serializer.DeserializeObject(cashOnly))["paymentMethod"]=="CASH","Solo efectivo: la cabecera es CASH");
+        string transferOnly=AlegraInvoiceBuilder.Build(snapshot.Replace("\"Pago\":\"EFECTIVO\"","\"Pago\":\"TRANSFERENCIA\""),config,new DateTime(2026,11,2));
+        Assert((string)((Dictionary<string,object>)serializer.DeserializeObject(transferOnly))["paymentMethod"]=="BANK_DEPOSIT","Solo transferencia: la cabecera no es CASH");
         var items = (object[])parsed["items"];
         decimal gross = 0;
         foreach(Dictionary<string,object> item in items) gross += Convert.ToDecimal(item["price"]) * Convert.ToDecimal(item["quantity"]) * 1.08m;
         Assert(Math.Abs(gross-15000) < 0.01m,"Impuestos incluidos y total editado");
+        string localizedSnapshot=serializer.Serialize(new {
+            orderId=43, saleValues=new[] {"43","16200","0,00","16200","0","","0,00","0,00","15000",""},
+            products=products, payments=new[] {new {Pago="EFECTIVO",Valor_pago="15000,00"}}
+        });
+        string localizedJson=AlegraInvoiceBuilder.Build(localizedSnapshot,config,new DateTime(2026,11,6));
+        var localized=serializer.DeserializeObject(localizedJson) as Dictionary<string,object>;
+        var localizedPayment=(Dictionary<string,object>)((object[])localized["payments"])[0];
+        Assert(Convert.ToDecimal(localizedPayment["amount"])==15000,"Coma decimal es-CO conserva el importe real del pago");
+        Reject(()=>AlegraInvoiceBuilder.Build(localizedSnapshot.Replace("15000,00","1.5000,00"),config,DateTime.Today),"No aceptar separadores ambiguos como miles");
         config.Products.Remove("PLATO:1");
         Reject(() => AlegraInvoiceBuilder.Build(snapshot,config,DateTime.Today),"Rechazar producto sin vinculo");
+        // Factura parcial: solo BEBIDA:2 (5400 de 16200 -> 5000 de los 15000 de la venta) y pagos repartidos en proporcion.
+        Assert(AlegraInvoiceBuilder.UnlinkedProducts(snapshot,config).SequenceEqual(new[]{"Plato"}),"Detectar el producto sin vinculo");
+        Assert(AlegraInvoiceBuilder.AnyLinked(snapshot,config),"Hay al menos un producto vinculado");
+        string partialSnapshot=snapshot.Replace("\"orderId\":42","\"onlyLinked\":true,\"orderId\":42");
+        decimal partialTotal=AlegraInvoiceBuilder.ExpectedTotal(partialSnapshot,config);
+        Assert(partialTotal==5000,"El total esperado es solo el de los productos vinculados");
+        Assert(AlegraInvoiceBuilder.ExcludedProducts(partialSnapshot,config).SequenceEqual(new[]{"Plato"}),"Lista de productos omitidos");
+        var partialInvoice=serializer.DeserializeObject(AlegraInvoiceBuilder.Build(partialSnapshot,config,new DateTime(2026,11,6))) as Dictionary<string,object>;
+        Assert(((object[])partialInvoice["items"]).Length==1,"La factura parcial solo lleva el producto vinculado");
+        decimal partialPaid=((object[])partialInvoice["payments"]).Cast<Dictionary<string,object>>().Sum(p=>Convert.ToDecimal(p["amount"]));
+        Assert(partialPaid==5000,"Los pagos de la factura parcial suman el total de la factura");
+        config.Products.Remove("BEBIDA:2");
+        Reject(() => AlegraInvoiceBuilder.Build(partialSnapshot,config,DateTime.Today),"Nada vinculado: no hay nada que facturar");
+        Assert(!AlegraInvoiceBuilder.AnyLinked(snapshot,config),"Ningun producto vinculado");
         Console.WriteLine("OK: " + passed + " comprobaciones sin red, credenciales reales ni escrituras en BD.");
     }
 }

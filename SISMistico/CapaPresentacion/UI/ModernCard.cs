@@ -52,7 +52,7 @@ namespace CapaPresentacion.UI
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             // El fondo real de la tarjeta lo dibuja OnPaint; aqui solo se limpia con el color del contenedor.
-            e.Graphics.Clear(this.Parent?.BackColor ?? Theme.Background);
+            e.Graphics.Clear(Theme.ContainerBackground(this));
         }
 
         protected override void OnPaint(PaintEventArgs e)

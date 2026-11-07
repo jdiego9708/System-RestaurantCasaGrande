@@ -11,6 +11,7 @@ namespace CapaPresentacion.Formularios.FormsPedido.Bebidas
         public FrmPedidoBebidas()
         {
             InitializeComponent();
+            CapaPresentacion.UI.AlegraLinkIndicator.Attach(this.dgvBebidas, "Nombre_bebida", "Id_bebida", "BEBIDA");
             this.Load += FrmPedidoBebidas_Load;
             this.txtBusqueda.ChangedText += TxtBusqueda_ChangedText;
             this.dgvBebidas.DoubleClick += DgvBebidas_DoubleClick;

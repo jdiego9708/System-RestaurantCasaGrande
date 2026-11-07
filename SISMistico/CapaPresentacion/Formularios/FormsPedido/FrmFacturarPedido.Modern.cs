@@ -168,7 +168,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             this.label12.Text = "Total parcial";
             this.label5.Text = "Subtotal";
-            this.label11.Text = "TOTAL";
+            this.label11.Text = "TOTAL FINAL";
 
             card.Controls.Add(totalRow);
             card.Controls.Add(subRow);
@@ -261,19 +261,47 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private static void FillTotalRow(Panel row, Label caption, Label value, Font valueFont, Color valueColor)
         {
             value.AutoSize = false;
-            value.Dock = DockStyle.Fill;
+            value.Dock = DockStyle.None;
+            value.Anchor = AnchorStyles.None;
             value.TextAlign = ContentAlignment.MiddleRight;
             value.Font = valueFont;
             value.ForeColor = valueColor;
 
             caption.AutoSize = false;
             caption.Dock = DockStyle.Left;
-            caption.Width = 130;
+            caption.Width = 100;
             caption.TextAlign = ContentAlignment.MiddleLeft;
             caption.StyleLabel(LabelKind.Muted);
 
             row.Controls.Add(value);
             row.Controls.Add(caption);
+            Action arrangeAmount = () => value.SetBounds(caption.Width, 0,
+                Math.Max(0, row.ClientSize.Width - caption.Width), row.ClientSize.Height);
+            row.SizeChanged += (s, e) => arrangeAmount();
+            arrangeAmount();
+
+            // Evitar que el simbolo monetario quede en una linea y el importe se recorte debajo.
+            Font fittedFont = null;
+            Action fitAmount = () =>
+            {
+                if (value.ClientSize.Width <= 0) return;
+                Font nextFont = valueFont;
+                float size = valueFont.Size;
+                while (size > 8 && TextRenderer.MeasureText(value.Text, nextFont, Size.Empty,
+                    TextFormatFlags.SingleLine).Width > value.ClientSize.Width)
+                {
+                    if (nextFont != valueFont) nextFont.Dispose();
+                    size -= 0.5f;
+                    nextFont = new Font(valueFont.FontFamily, size, valueFont.Style);
+                }
+                value.Font = nextFont;
+                if (fittedFont != null) fittedFont.Dispose();
+                fittedFont = nextFont == valueFont ? null : nextFont;
+            };
+            value.TextChanged += (s, e) => fitAmount();
+            value.SizeChanged += (s, e) => fitAmount();
+            value.Disposed += (s, e) => { if (fittedFont != null) fittedFont.Dispose(); };
+            fitAmount();
         }
 
         #endregion

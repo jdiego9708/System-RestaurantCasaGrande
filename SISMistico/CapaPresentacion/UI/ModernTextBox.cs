@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -138,7 +138,7 @@ namespace CapaPresentacion.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            g.Clear(this.Parent?.BackColor ?? Theme.Background);
+            g.Clear(Theme.ContainerBackground(this));
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
             Rectangle bounds = new Rectangle(1, 1, this.Width - 3, this.Height - 3);
@@ -160,8 +160,8 @@ namespace CapaPresentacion.UI
             if (this.icon != IconChar.None)
             {
                 Color tint = this.hasError ? Theme.Danger : this.focused ? Theme.Primary : Theme.TextMuted;
-                using (Bitmap bitmap = this.icon.ToBitmap(tint, 16))
-                    g.DrawImage(bitmap, 14, (this.Height - 16) / 2, 16, 16);
+                IconRenderer.Draw(this, g, this.icon, tint,
+                    new Rectangle(14, (this.Height - 16) / 2, 16, 16));
             }
         }
     }

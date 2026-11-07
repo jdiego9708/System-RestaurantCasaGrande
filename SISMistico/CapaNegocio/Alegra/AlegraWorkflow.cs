@@ -1,4 +1,4 @@
-using CapaDatos;
+﻿using CapaDatos;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -21,11 +21,23 @@ namespace CapaNegocio.Alegra
         public static DataTable LocalProducts() => DAlegra.LocalProducts();
         public static DataTable Request(int saleId) => DAlegra.GetRequest(saleId);
         public static void Retry(int saleId) => DAlegra.Retry(saleId);
+        public static void Expedite(int saleId) => DAlegra.Expedite(saleId);
         public static void StorePdf(int saleId,string path) => DAlegra.StorePdf(saleId,path);
         public static void MarkPrint(int saleId,string status) => DAlegra.MarkPrint(saleId,status);
         public static bool ClaimPrint(int saleId,bool reprint) => DAlegra.ClaimPrint(saleId,reprint);
-        public static DataTable PendingPrints() => DAlegra.Query(@"IF OBJECT_ID('dbo.AlegraInvoiceRequests') IS NOT NULL
-SELECT TOP(1) SaleId FROM dbo.AlegraInvoiceRequests WHERE Status='ACCEPTED' AND PrintStatus='PENDING' ORDER BY CreatedAt");
+        public static DataTable PendingDocuments(bool autoPrint, DateTime? fromUtc) => DAlegra.Query(@"
+IF OBJECT_ID('dbo.AlegraInvoiceRequests') IS NOT NULL
+SELECT TOP(1) SaleId FROM dbo.AlegraInvoiceRequests
+WHERE Status='ACCEPTED' AND NextAttemptAt<=SYSUTCDATETIME() AND
+(NULLIF(PdfPath,'') IS NULL OR (@print=1 AND PrintStatus='PENDING' AND (@from IS NULL OR CreatedAt>=@from)))
+ORDER BY NextAttemptAt, CreatedAt",
+            new System.Data.SqlClient.SqlParameter("@print",autoPrint),
+            new System.Data.SqlClient.SqlParameter("@from",System.Data.SqlDbType.DateTime2) {Value=(object)fromUtc ?? DBNull.Value});
+        public static void DocumentFailed(int saleId, string error) => DAlegra.Query(@"
+UPDATE dbo.AlegraInvoiceRequests SET LastError=@error, UpdatedAt=SYSUTCDATETIME(), NextAttemptAt=DATEADD(minute,1,SYSUTCDATETIME())
+WHERE SaleId=@sale AND Status='ACCEPTED'",
+            new System.Data.SqlClient.SqlParameter("@sale",saleId),
+            new System.Data.SqlClient.SqlParameter("@error",System.Data.SqlDbType.NVarChar,2000) {Value=error.Length>2000 ? error.Substring(0,2000) : error});
         public static Dictionary<string,object> Object(string text) => Json.DeserializeObject(text) as Dictionary<string,object>
             ?? throw new InvalidOperationException("Alegra devolvió una respuesta inesperada.");
         public static string Text(Dictionary<string,object> value,string key) => value != null && value.ContainsKey(key) ? Convert.ToString(value[key]) : string.Empty;
@@ -34,6 +46,17 @@ SELECT TOP(1) SaleId FROM dbo.AlegraInvoiceRequests WHERE Status='ACCEPTED' AND 
             object value = Json.DeserializeObject(text);
             if (value is Dictionary<string,object> wrapper && wrapper.ContainsKey("data")) value=wrapper["data"];
             return (value as object[] ?? new object[0]).Cast<Dictionary<string,object>>().ToList();
+        }
+
+        public static string CompanyIdentity(Dictionary<string, object> company)
+        {
+            string id = Text(company, "id");
+            if (!string.IsNullOrWhiteSpace(id)) return id;
+            var identification = company.ContainsKey("identificationObject") ? company["identificationObject"] as Dictionary<string, object> : null;
+            string number = Text(identification, "number");
+            if (string.IsNullOrWhiteSpace(number)) number = Text(company, "identification");
+            if (string.IsNullOrWhiteSpace(number)) throw new InvalidOperationException("Alegra no devolvi? la identificaci?n de la empresa.");
+            return Text(company, "applicationVersion") + ":" + number.Trim();
         }
 
         // Se invoca en un hilo de fondo. Cada paso libera la solicitud antes del siguiente ciclo.
@@ -54,7 +77,7 @@ SELECT TOP(1) SaleId FROM dbo.AlegraInvoiceRequests WHERE Status='ACCEPTED' AND 
                 using (var api=new AlegraClient())
                 {
                     var company=Object(await api.GetCompanyAsync(cancellationToken).ConfigureAwait(false));
-                    if (Text(company,"id")!=settings.CompanyId || string.IsNullOrWhiteSpace(settings.CompanyId))
+                    if (CompanyIdentity(company)!=settings.CompanyId || string.IsNullOrWhiteSpace(settings.CompanyId))
                         throw new InvalidOperationException("La cuenta API no corresponde a la empresa configurada.");
                     DAlegra.BindCompany(requestId,token,settings.CompanyId);
                     var snapshot=Object(Convert.ToString(row["RequestJson"]));
@@ -97,40 +120,61 @@ SELECT TOP(1) SaleId FROM dbo.AlegraInvoiceRequests WHERE Status='ACCEPTED' AND 
                         DAlegra.Update(requestId,token,"CREATED",remote,null,null,null,payload);
                         return null;
                     }
-                    var invoice=Object(await api.GetInvoiceAsync(remote,cancellationToken).ConfigureAwait(false));
-                    if (Text(invoice,"id")!=remote) throw new InvalidOperationException("El ID consultado no coincide con la factura vinculada.");
-                    var values=(object[])snapshot["saleValues"];
-                    decimal expected=Convert.ToDecimal(values[8],System.Globalization.CultureInfo.InvariantCulture);
-                    if (!invoice.ContainsKey("total") || Math.Abs(Convert.ToDecimal(invoice["total"])-expected)>0.01m)
-                        throw new InvalidOperationException("El total de Alegra no coincide con la venta. Revisar antes de emitir.");
-                    string emission=Emission(invoice);
-                    string number=invoice.ContainsKey("numberTemplate") ? Text(invoice["numberTemplate"] as Dictionary<string,object>,"fullNumber") : null;
-                    if (emission=="STAMPED_AND_ACCEPTED" || emission=="STAMPED_AND_ACCEPTED_WITH_OBSERVATIONS" || emission=="ACCEPTED")
+                    using (var emissionApi = new AlegraClient(new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false }, AlegraCredentials.FromEmissionEnvironment()))
                     {
-                        DAlegra.Update(requestId,token,"ACCEPTED",remote,number,emission,null);
-                        return saleId;
-                    }
-                    if (emission=="STAMPED_AND_REJECTED" || emission=="REJECTED")
-                    {
-                        DAlegra.Update(requestId,token,"REJECTED",remote,number,emission,"La emisión fue rechazada; revise el documento en Alegra.");
-                        return null;
-                    }
-                    if (Convert.ToString(row["Status"])=="ISSUING" || emission=="STAMPED_AND_WAITING_RESPONSE")
-                    {
+                        var emissionCompany = Object(await emissionApi.GetCompanyAsync(cancellationToken).ConfigureAwait(false));
+                        if (CompanyIdentity(emissionCompany) != settings.CompanyId)
+                            throw new InvalidOperationException("La credencial de emision no corresponde a la empresa configurada.");
+                        var invoice=Object(await emissionApi.GetInvoiceAsync(remote,cancellationToken).ConfigureAwait(false));
+                        if (Text(invoice,"id")!=remote) throw new InvalidOperationException("El ID consultado no coincide con la factura vinculada.");
+                        // Total esperado de la factura: el de la venta, o el de lo cubierto si se eligió «solo vinculados».
+                        decimal expected=AlegraInvoiceBuilder.ExpectedTotal(Convert.ToString(row["RequestJson"]),settings);
+                        if (!invoice.ContainsKey("total") || Math.Abs(Convert.ToDecimal(invoice["total"])-expected)>0.01m)
+                            throw new InvalidOperationException("El total de Alegra no coincide con la venta. Revisar antes de emitir.");
+                        string emission=Emission(invoice);
+                        string number=invoice.ContainsKey("numberTemplate") ? Text(invoice["numberTemplate"] as Dictionary<string,object>,"fullNumber") : null;
+                        if (emission=="STAMPED_AND_ACCEPTED" || emission=="STAMPED_AND_ACCEPTED_WITH_OBSERVATIONS" || emission=="ACCEPTED")
+                        {
+                            DAlegra.Update(requestId,token,"ACCEPTED",remote,number,emission,null);
+                            return saleId;
+                        }
+                        if (emission=="STAMPED_AND_REJECTED" || emission=="REJECTED")
+                        {
+                            DAlegra.Update(requestId,token,"REJECTED",remote,number,emission,"La emisión fue rechazada; revise el documento en Alegra.");
+                            return null;
+                        }
+                        if (Convert.ToString(row["Status"])=="ISSUING" || emission=="STAMPED_AND_WAITING_RESPONSE")
+                        {
+                            DAlegra.Update(requestId,token,"ISSUING",remote,number,emission,null);
+                            return null;
+                        }
+                        posting=true;
+                        var stamped=await emissionApi.StampInvoiceAsync(remote,cancellationToken).ConfigureAwait(false);
+                        if (stamped.StatusCode == 401 || stamped.StatusCode == 403)
+                        {
+                            string reason = stamped.StatusCode == 403
+                                ? "Alegra denego el acceso de la credencial API a POST /invoices/stamp (HTTP 403). Revisar permisos de emision con Alegra."
+                                : "Alegra rechazo la autenticacion al emitir (HTTP 401). Revisar las credenciales API.";
+                            DAlegra.Update(requestId, token, "NEEDS_REVIEW", remote, number, emission,
+                                reason + " La factura ya existe; corregir el acceso y reintentar esta misma solicitud sin crear otra venta.");
+                            return null;
+                        }
+                        var stampBody=Object(stamped.Json);
+                        var results=stampBody.ContainsKey("data") ? stampBody["data"] as object[] : null;
+                        var result=results==null ? null : results.OfType<Dictionary<string,object>>().FirstOrDefault(item=>Text(item,"id")==remote);
+                        if (result==null || (!Text(result,"success").Equals("True",StringComparison.OrdinalIgnoreCase) && Text(result,"code")!="3226"))
+                        {
+                            DAlegra.Update(requestId,token,"NEEDS_REVIEW",remote,number,emission,"Alegra no confirmó la emisión de este ID. HTTP "+stamped.StatusCode+".");
+                            return null;
+                        }
+                        string stampEmission = Emission(result);
+                        if (stampEmission == "ACCEPTED" || stampEmission == "STAMPED_AND_ACCEPTED" || stampEmission == "STAMPED_AND_ACCEPTED_WITH_OBSERVATIONS")
+                        {
+                            DAlegra.Update(requestId,token,"ACCEPTED",remote,number,stampEmission,null);
+                            return saleId;
+                        }
                         DAlegra.Update(requestId,token,"ISSUING",remote,number,emission,null);
-                        return null;
                     }
-                    posting=true;
-                    var stamped=await api.StampInvoiceAsync(remote,cancellationToken).ConfigureAwait(false);
-                    var stampBody=Object(stamped.Json);
-                    var results=stampBody.ContainsKey("data") ? stampBody["data"] as object[] : null;
-                    var result=results==null ? null : results.OfType<Dictionary<string,object>>().FirstOrDefault(item=>Text(item,"id")==remote);
-                    if (result==null || (!Text(result,"success").Equals("True",StringComparison.OrdinalIgnoreCase) && Text(result,"code")!="3226"))
-                    {
-                        DAlegra.Update(requestId,token,"NEEDS_REVIEW",remote,number,emission,"Alegra no confirmó la emisión de este ID. HTTP "+stamped.StatusCode+".");
-                        return null;
-                    }
-                    DAlegra.Update(requestId,token,"ISSUING",remote,number,emission,null);
                 }
             }
             catch (Exception ex)

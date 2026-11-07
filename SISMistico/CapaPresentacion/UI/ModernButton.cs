@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -30,6 +30,14 @@ namespace CapaPresentacion.UI
         private int cornerRadius = 10;
         private bool hover;
         private bool pressed;
+        private bool shadow;
+
+        [DefaultValue(false)]
+        public bool Shadow
+        {
+            get => this.shadow;
+            set { this.shadow = value; this.Invalidate(); }
+        }
 
         public ModernButton()
         {
@@ -96,7 +104,7 @@ namespace CapaPresentacion.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            g.Clear(this.Parent?.BackColor ?? Theme.Background);
+            g.Clear(Theme.ContainerBackground(this));
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
@@ -113,6 +121,11 @@ namespace CapaPresentacion.UI
                 fill = this.kind == ButtonKind.Outline ? Theme.SurfaceAlt : Theme.Darken(fill, 0.10f);
 
             Rectangle bounds = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
+            if (this.shadow)
+            {
+                bounds.Inflate(-5, -5);
+                Theme.DrawShadow(g, bounds, this.cornerRadius, this.pressed ? 2 : 4);
+            }
             using (GraphicsPath path = Theme.RoundedPath(bounds, this.cornerRadius))
             using (SolidBrush brush = new SolidBrush(fill))
             {
@@ -122,6 +135,12 @@ namespace CapaPresentacion.UI
                     using (Pen pen = new Pen(this.Enabled ? Theme.Primary : Theme.Border, 1.5f))
                         g.DrawPath(pen, path);
                 }
+            }
+
+            if (this.Focused && this.ShowFocusCues)
+            {
+                Rectangle focus = Rectangle.Inflate(bounds, -4, -4);
+                ControlPaint.DrawFocusRectangle(g, focus, fore, fill);
             }
 
             // Icono + texto centrados como un solo bloque.
@@ -134,8 +153,8 @@ namespace CapaPresentacion.UI
 
             if (hasIcon)
             {
-                using (Bitmap bitmap = this.icon.ToBitmap(fore, iconSize))
-                    g.DrawImage(bitmap, x, (this.Height - iconSize) / 2, iconSize, iconSize);
+                IconRenderer.Draw(this, g, this.icon, fore,
+                    new Rectangle(x, (this.Height - iconSize) / 2, iconSize, iconSize));
                 x += iconSize + spacing;
             }
             TextRenderer.DrawText(g, this.Text, this.Font,

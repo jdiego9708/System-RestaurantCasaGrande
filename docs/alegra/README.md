@@ -1,3 +1,5 @@
+> Estado vigente al cierre del 6 de noviembre de 2026: leer **[CONTINUAR-AQUI](../../CONTINUAR-AQUI.md)** y [cierre completo](../15-cierre-de-sesion-2026-11-06.md). FE4930/FE4931/FE4932 fueron aceptadas; FE4932 completo el flujo automatico. Se usa Bearer nuevo para creacion/catalogos y Basic anterior para emision/PDF. Descargar conserva el oficial Carta; imprimir usa nuestro renderer de 80 mm. El kit incorpora el paso 05 de configuracion. Las notas antiguas siguientes son historicas; no usar sus pendientes ni su esquema de autenticacion como estado actual.
+
 # Integración Alegra — estado de implementación
 
 Contratos obtenidos directamente del MCP y particularidades del país:
@@ -6,6 +8,9 @@ Contratos obtenidos directamente del MCP y particularidades del país:
 Etapa final solicitada por el usuario: [03 — Cola, vínculo con Alegra y reimpresión](03-cola-emision-y-reimpresion.md).
 Implementar al terminar los contratos y validaciones actuales: guardado local inmediato, emisión en segundo
 plano, actualización periódica del ID/estado y reimpresión del PDF mediante el ID remoto asociado a la venta.
+
+Reenvío desde el detalle de venta (etapa 1 hecha) y conciliación de `UNCERTAIN` (etapa 2 pendiente):
+[05 — Reenvío y conciliación](05-reenvio-y-conciliacion.md).
 
 ## Decisiones aprobadas
 

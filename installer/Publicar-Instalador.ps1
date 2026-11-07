@@ -60,6 +60,7 @@ if (-not $iscc) { Falla "No encontre Inno Setup 6. Instalelo (winget install JRS
 
 # ---------- 2. Compilar ----------
 if (-not $SinCompilar) {
+    & (Join-Path $repo 'scripts\Build-AlegraPdfTools.ps1')
     Paso 'Compilando SISMistico en Release'
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
     if (-not (Test-Path $vswhere)) { Falla 'No encontre vswhere.exe (Visual Studio / Build Tools).' }
@@ -86,7 +87,13 @@ if (-not $SinCompilar) {
 
     # ---------- 3. Preparar la carpeta que empaqueta el instalador ----------
     Paso 'Preparando installer\build\app'
-    if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
+    $resolvedStage=[IO.Path]::GetFullPath($stage)
+    $expectedStage=[IO.Path]::GetFullPath((Join-Path $repo 'installer\build\app'))
+    if($resolvedStage -ne $expectedStage) { Falla 'Ruta inesperada de empaquetado.' }
+    if (Test-Path -LiteralPath $stage) {
+        if((Get-Item -LiteralPath $stage).Attributes -band [IO.FileAttributes]::ReparsePoint) { Falla 'La carpeta de empaquetado no puede ser un enlace.' }
+        Remove-Item -LiteralPath $stage -Recurse -Force
+    }
     New-Item -ItemType Directory -Path $stage | Out-Null
     # Fuera: simbolos, documentacion de EntityFramework, restos de ClickOnce, logs de pruebas e idiomas del
     # ReportViewer que el restaurante no usa (se conserva es\).
@@ -97,6 +104,8 @@ if (-not $SinCompilar) {
 }
 
 if (-not (Test-Path (Join-Path $stage 'SISMistico.exe'))) { Falla "No hay nada que empaquetar en $stage. Quite -SinCompilar." }
+
+& (Join-Path $repo 'scripts\Test-AlegraPackage.ps1') -ApplicationPath $stage -RunRendererSelfTest
 
 # ---------- 4. Verificar la configuracion que se va a instalar ----------
 Paso 'Verificando SISMistico.exe.config'
@@ -138,8 +147,10 @@ INSTALAR SISRESTAURANTE (Casa Grande)  -  version $Version
 2. Doble clic y acepte el aviso de administrador.
    (Windows puede mostrar "SmartScreen": Mas informacion > Ejecutar de todos modos; el instalador no esta firmado.)
 3. Marque "Activar la API movil" si los meseros van a usar celular y anote la CLAVE que muestra el instalador.
-4. Requisitos del PC: Windows 10/11, .NET Framework 4.8 y SQL Server Express LocalDB con la base CasaGrandeBD.
-5. Si antes estaba instalada la version ClickOnce, desinstalela en Configuracion > Aplicaciones para no tener dos accesos.
+4. Requisitos del PC: Windows 10/11 de 64 bits, .NET Framework 4.8 y SQL Server Express LocalDB con la base CasaGrandeBD.
+5. Para Alegra use el kit completo de Preparar-USB.ps1: 01 prepara SQL y 05 importa los TXT Bearer/Basic y verifica cuenta/herramientas.
+   Mantenga cerrado el sistema hasta terminar 05. Descargar PDF conserva el oficial; imprimir usa el renderer de 80 mm.
+6. Si antes estaba instalada la version ClickOnce, desinstalela en Configuracion > Aplicaciones para no tener dos accesos.
 
 Actualizar: ejecute el instalador nuevo encima; conserva el SISMistico.exe.config (clave, imagenes, conexion).
 Instalacion silenciosa:  SISRestaurante-Setup-$Version.exe /VERYSILENT /TASKS="api" /ApiKey=SuClaveLarga /ApiPort=8099

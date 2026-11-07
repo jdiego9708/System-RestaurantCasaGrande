@@ -46,6 +46,12 @@ namespace CapaNegocio
         #region LOGIN
 
 
+        public static Task<(string rpta, List<object> objects)> LoginPorPin(int idEmpleado, int pin, DateTime fecha)
+        {
+            return new DEmpleados().LoginPorPin(idEmpleado, pin,
+                fecha.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        }
+
         public static async Task<(string rpta, List<object> objects)> Login(string usuario,
             string pass, string fecha)
         {

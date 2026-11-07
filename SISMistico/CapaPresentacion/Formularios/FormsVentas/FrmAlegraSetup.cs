@@ -1,4 +1,4 @@
-using CapaNegocio.Alegra;
+﻿using CapaNegocio.Alegra;
 using CapaPresentacion.UI;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private readonly ComboBox templates=Combo(), cash=Combo(), transfer=Combo(), card=Combo(), delivery=Combo(), packaging=Combo();
         private readonly ComboBox fiscal=new ComboBox { DropDownStyle=ComboBoxStyle.DropDownList };
         private readonly CheckBox enabled=new CheckBox { Text="Activar emisión electrónica automática (producción)",AutoSize=true };
-        private readonly CheckBox autoPrint=new CheckBox { Text="Imprimir además el PDF de Alegra automáticamente (80 mm)",AutoSize=true };
+        private readonly CheckBox autoPrint=new CheckBox { Text="Imprimir tambien la factura electronica de 80 mm automaticamente",AutoSize=true };
         private readonly ModernTextBox pdfExecutable=new ModernTextBox(), printer=new ModernTextBox(),tipId=new ModernTextBox();
         private readonly Label status=new Label { AutoSize=true,MaximumSize=new Size(900,0) };
         private readonly DataGridView mappings=new DataGridView();
@@ -52,8 +52,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
             Add(fields,"Medio fiscal para pagos combinados (catálogo Colombia)",fiscal);
             Add(fields,"Producto de Alegra para el cobro del domicilio",delivery); Add(fields,"Producto de Alegra para desechables",packaging);
             Add(fields,"ID del cargo de propina configurado en Alegra (si se cobra)",tipId);
-            Add(fields,"SumatraPDF.exe instalado en este equipo (para imprimir el PDF)",pdfExecutable);
-            Add(fields,"Nombre exacto de impresora térmica Windows",printer);
+            Add(fields,"SumatraPDF.exe (vacio: usar el incluido con la aplicacion)",pdfExecutable);
+            Add(fields,"Impresora Windows (vacio: predeterminada, igual que la factura local)",printer);
             fields.Controls.Add(autoPrint); fields.Controls.Add(enabled);
             general.Controls.Add(fields);
             mappings.Dock=DockStyle.Fill; mappings.AllowUserToAddRows=false; mappings.AllowUserToDeleteRows=false;
@@ -89,7 +89,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
             using(var api=new AlegraClient())
             {
                 var company=AlegraWorkflow.Object(await api.GetCompanyAsync(lifetime.Token));
-                companyId=AlegraWorkflow.Text(company,"id");
+                companyId=AlegraWorkflow.CompanyIdentity(company);
                 if(string.IsNullOrWhiteSpace(companyId))throw new InvalidOperationException("La cuenta no devolvió identificador de empresa.");
                 if(!string.IsNullOrWhiteSpace(settings.CompanyId)&&settings.CompanyId!=companyId)
                     throw new InvalidOperationException("Las credenciales pertenecen a otra empresa. No se pueden reutilizar estas vinculaciones.");
@@ -148,11 +148,12 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 if(enabled.Checked&&string.IsNullOrWhiteSpace(Convert.ToString(templates.SelectedValue)))throw new InvalidOperationException("Seleccione la numeración electrónica antes de activar.");
                 if(autoPrint.Checked)
                 {
-                    if(!File.Exists(pdfExecutable.Text)||!Path.GetFileName(pdfExecutable.Text).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("Seleccione el ejecutable SumatraPDF.exe instalado.");
-                    if(!PrinterSettings.InstalledPrinters.Cast<string>().Contains(printer.Text))throw new InvalidOperationException("Seleccione una impresora instalada en Windows.");
+                    if(!File.Exists(AlegraPdfService.PrinterExecutable(pdfExecutable.Text))||!Path.GetFileName(AlegraPdfService.PrinterExecutable(pdfExecutable.Text)).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("Seleccione el ejecutable SumatraPDF.exe instalado.");
+                    if(!string.IsNullOrWhiteSpace(printer.Text) && !PrinterSettings.InstalledPrinters.Cast<string>().Contains(printer.Text))throw new InvalidOperationException("Seleccione una impresora instalada en Windows.");
                 }
                 mappings.EndEdit();
                 var updated=new AlegraInvoiceConfiguration {CompanyId=companyId,Enabled=enabled.Checked,AutoPrint=autoPrint.Checked,
+                    AutoPrintFromUtc=autoPrint.Checked && !settings.AutoPrint ? DateTime.UtcNow : settings.AutoPrintFromUtc,
                     NumberTemplateId=Convert.ToString(templates.SelectedValue),FiscalPaymentMethod=fiscal.Text,TipChargeId=tipId.Text.Trim(),
                     PdfPrinterExecutable=pdfExecutable.Text.Trim(),PrinterName=printer.Text.Trim(),DeliveryItem=Item(Convert.ToString(delivery.SelectedValue)),PackagingItem=Item(Convert.ToString(packaging.SelectedValue))};
                 foreach(DataGridViewRow row in mappings.Rows)

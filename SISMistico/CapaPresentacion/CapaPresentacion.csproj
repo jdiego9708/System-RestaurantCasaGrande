@@ -357,14 +357,21 @@
       <DependentUpon>DescuentosOpcionesPedido.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\KpiCard.cs" />
+    <Compile Include="Formularios\FormsPedido\FrmUnlinkedProductsDialog.cs" />
+    <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Electronic.cs">
+      <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Modern.cs">
       <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Badge.cs" />
+    <Compile Include="UI\IconRenderer.cs" />
+    <Compile Include="UI\ModernDateField.cs" />
     <Compile Include="UI\ModernButton.cs" />
     <Compile Include="UI\ModernCard.cs" />
     <Compile Include="UI\ModernTextBox.cs" />
     <Compile Include="UI\Theme.cs" />
+    <Compile Include="UI\AlegraLinkIndicator.cs" />
     <Compile Include="UI\ThemeExtensions.cs" />
     <Compile Include="Formularios\FormsDomicilios\FrmDeliveries.cs" />
     <Compile Include="Formularios\FormsDomicilios\FrmDeliveryCustomer.cs" />
@@ -621,6 +628,9 @@
     <Compile Include="Servicios\TableCardText.cs" />
     <Compile Include="Servicios\FormCloseTracer.cs" />
     <Compile Include="Servicios\EnviarEmailErrores2.cs" />
+    <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.Layout.cs">
+      <DependentUpon>FrmIniciarSesion.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPrincipales\FrmIniciarSesion.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -645,12 +655,6 @@
     <Compile Include="Formularios\FormsPrincipales\PasosError.Designer.cs">
       <DependentUpon>PasosError.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\FormsVentas\Filtrosventa.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Formularios\FormsVentas\Filtrosventa.Designer.cs">
-      <DependentUpon>Filtrosventa.cs</DependentUpon>
-    </Compile>
     <Compile Include="Formularios\FormsVentas\FrmDetalleVenta.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -662,12 +666,18 @@
     <Compile Include="Formularios\FormsVentas\FrmAlegraSetup.cs" />
     <Compile Include="Formularios\FormsVentas\FrmAlegraInvoices.cs" />
     <Compile Include="Formularios\FormsVentas\FrmAlegraInvoiceDetails.cs" />
+    <Content Include="..\..\installer\build\pdf-tools\runtime\**\*">
+      <Link>Alegra\Tools\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\scripts\Render-AlegraFiscalRepresentation.py">
       <Link>Alegra\Render-AlegraFiscalRepresentation.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Servicios\AlegraPdfService.cs" />
     <Compile Include="Servicios\AlegraBackgroundWorker.cs" />
+    <Compile Include="Formularios\FormsVentas\SalesDashboard.cs" />
+    <Compile Include="Formularios\FormsVentas\SalesColumnFilters.cs" />
     <Compile Include="Formularios\FormsVentas\FrmObservarVentas.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1007,9 +1017,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsReservas\ReservaMesaSmall.resx">
       <DependentUpon>ReservaMesaSmall.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Formularios\FormsVentas\Filtrosventa.resx">
-      <DependentUpon>Filtrosventa.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formularios\FormsVentas\FrmDetalleVenta.resx">
       <DependentUpon>FrmDetalleVenta.cs</DependentUpon>

@@ -1,3 +1,5 @@
+> Actualizacion 2026-11-06: Windows de 64 bits. En el PC ejecute **01, 02, 03 y 05**; el 04 corresponde a Android. El paso 01 prepara SQL sin credenciales; el nuevo **05-Configurar-Alegra.ps1** importa los TXT Bearer/Basic, verifica la cuenta y configura emision e impresion. Mantenga cerrado el programa hasta terminar 05. El kit incluye las herramientas PDF portables. Detalle y pruebas: [cierre de sesion](15-cierre-de-sesion-2026-11-06.md).
+
 # 08 — Instalación desde cero en el restaurante
 
 Guía paso a paso para dejar funcionando **el sistema de escritorio, la API móvil y la app Android** en el PC del
@@ -35,7 +37,7 @@ que se ejecutan. La crea automáticamente `scripts\Preparar-USB.ps1` (sección 2
 Casa Grande Installers\
 ├─ 00-LEEME.txt                 ← el mismo orden, en corto, para llevarlo en la USB
 ├─ 01-Base-de-Datos.ps1         ← PC del restaurante: respaldo + procedimientos de la API (+ empleados)
-├─ 02-Setup-Casa-Grande.exe     ← PC del restaurante: instalador del sistema (~10 MB)
+├─ 02-Setup-Casa-Grande.exe     ← PC del restaurante: instalador del sistema con herramientas PDF
 ├─ 03-Configurar-Red.ps1        ← PC del restaurante: IP, firewall y datos para los celulares
 ├─ 04-APK-Casa-Grande.apk       ← cada celular Android: app del mesero (~63 MB)
 ├─ SHA256SUMS.txt               ← sumas de comprobación de los archivos
@@ -83,7 +85,7 @@ Solo escribe dentro de esa carpeta: no formatea ni borra nada más de la USB.
 El script avisa si el instalador o el APK son **más viejos que el último cambio del código** (señal de que falta
 `-SinCompilar`). Si falta algún archivo de origen, se detiene con el motivo.
 
-☐ La USB tiene `Casa Grande Installers` con `01` a `04`, `00-LEEME.txt` y `Soporte\`. Expúlsela con seguridad.
+☐ La USB tiene `Casa Grande Installers` con `01` a `05`, `Credenciales-Alegra`, `00-LEEME.txt` y `Soporte\`. Expúlsela con seguridad.
 
 ---
 ## 3. En el PC del restaurante
@@ -448,3 +450,19 @@ desinstalar primero.
   servidor limita los intentos de login; no la comparta por chats públicos y **cámbiela si se pierde un celular** con
   *Cambiar clave de la API* (3.6) y actualice los demás celulares.
 * Cualquier PIN válido permite quitar líneas o cancelar un pedido: es la misma regla del escritorio.
+
+
+## Configuracion Alegra del kit actual
+
+Despues de instalar, ejecute el paso 05 con el mismo usuario de Windows que usa LocalDB. Copia desde `Credenciales-Alegra/Token-Nuevo-Bearer.txt` y `Token-Anterior-Basic.txt` a las variables correspondientes sin mostrarlas; solicita el correo si no existe. En una actualizacion conserva los parametros existentes. En una base nueva usa el perfil conocido y nombres exactos unicos activos; exporta pendientes sin aprobar similitudes.
+
+```powershell
+.\05-Configurar-Alegra.ps1 -Database CasaGrandeBD
+.\05-Configurar-Alegra.ps1 -Database CasaGrandeBD -VerifyOnly
+```
+
+La segunda orden no modifica entorno ni SQL. Si hay valores Machine diferentes con prioridad, el script explica el conflicto; ejecute PowerShell elevado con el mismo usuario y `-Scope Machine` para actualizarlos. No cambie de usuario para trabajar con otra LocalDB.
+
+La doble impresion se activa para ventas nuevas. Descargar PDF desde el detalle conserva el oficial Carta; imprimir Alegra usa el renderer de 80 mm. La impresora vacia usa la predeterminada; Microsoft Print to PDF muestra el guardado del PDF termico. El numero/estado electronico se consulta desde el historial; COBRADA no significa aceptacion.
+
+El build de desarrollo requiere Python 3.12 de 64 bits y las versiones de `scripts/requirements-alegra-pdf.txt`; el restaurante recibe ejecutables y no necesita Python. El paso 05 verifica el paquete con un PDF sintetico antes de guardar configuracion. No emite facturas para comprobar permisos.

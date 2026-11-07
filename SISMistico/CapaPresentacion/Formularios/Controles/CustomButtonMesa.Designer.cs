@@ -45,7 +45,7 @@
             this.btnMesa.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnMesa.Location = new System.Drawing.Point(0, 0);
             this.btnMesa.Name = "btnMesa";
-            this.btnMesa.Size = new System.Drawing.Size(197, 148);
+            this.btnMesa.Size = new System.Drawing.Size(197, 180);
             this.btnMesa.TabIndex = 0;
             this.btnMesa.Tag = "0";
             this.btnMesa.Text = "Texto";
@@ -61,7 +61,7 @@
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "CustomButtonMesa";
-            this.Size = new System.Drawing.Size(197, 148);
+            this.Size = new System.Drawing.Size(197, 180);
             this.Tag = "0";
             this.ResumeLayout(false);
 
