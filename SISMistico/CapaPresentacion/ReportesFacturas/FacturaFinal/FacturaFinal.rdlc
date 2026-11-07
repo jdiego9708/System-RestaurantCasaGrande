@@ -194,7 +194,7 @@
                     <Value>=Parameters!Titulo.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>12pt</FontSize>
+                      <FontSize>14pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -228,7 +228,7 @@
                     <Value>Nit 1053803248-1</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -243,7 +243,7 @@
                     <Value>Regimen común</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -258,7 +258,7 @@
                     <Value>Impuesto nacional al consumo</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -273,7 +273,7 @@
                     <Value>Dirección Calle 65 A# 23 B 40 </Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -288,7 +288,7 @@
                     <Value>Barrio palermo - 3045401462 - 8875609 - 8909664</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -303,7 +303,7 @@
                     <Value>MANIZALES</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -339,7 +339,7 @@
                     <Value>=First("Documento equivalente: " &amp; Fields!Id_pedido.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -374,7 +374,7 @@
                     <Value>=First("Fecha: " &amp; Fields!Fecha_venta.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -445,7 +445,7 @@
                     <Value>=First("Mesa: " &amp; Fields!Num_mesa.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -480,7 +480,7 @@
                     <Value>=First("Atiende: " &amp; Fields!Nombre_empleado.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -515,7 +515,7 @@
                     <Value>=First("Cliente: " &amp; Fields!Nombre_cliente.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>8pt</FontSize>
+                      <FontSize>10pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -584,7 +584,7 @@
                                   <Value>Nombre</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>SemiBold</FontWeight>
                                   </Style>
                                 </TextRun>
@@ -618,7 +618,7 @@
                                   <Value>Precio</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>SemiBold</FontWeight>
                                   </Style>
                                 </TextRun>
@@ -654,7 +654,7 @@
                                   <Value>Cant.</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>SemiBold</FontWeight>
                                   </Style>
                                 </TextRun>
@@ -690,7 +690,7 @@
                                   <Value>Total</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>SemiBold</FontWeight>
                                   </Style>
                                 </TextRun>
@@ -731,7 +731,7 @@
                                   <Value>=Fields!Nombre.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -764,7 +764,7 @@
                                   <Value>="$" &amp; Fields!Precio.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -799,7 +799,7 @@
                                   <Value>=Fields!Cantidad.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -834,7 +834,7 @@
                                   <Value>="$" &amp; Fields!Total.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>9pt</FontSize>
+                                    <FontSize>11pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -890,7 +890,7 @@
                 <Style>None</Style>
               </Border>
               <FontFamily>Segoe UI</FontFamily>
-              <FontSize>7pt</FontSize>
+              <FontSize>9pt</FontSize>
             </Style>
           </Tablix>
           <Textbox Name="txtTotalParcial">
@@ -1040,7 +1040,7 @@
                     <Value>=First("TOTAL: $" &amp; Fields!Total_final.Value, "DatosPrincipales")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>11pt</FontSize>
+                      <FontSize>13pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -1086,7 +1086,7 @@
                     <Value>Información de pago:</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>9pt</FontSize>
+                      <FontSize>11pt</FontSize>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -1162,7 +1162,7 @@
                     <Value>POR DISPOSICIÓN DE LA SUPERINTENDENCIA DE INDUSTRIA Y COMERCIO SE INFORMA QUE EN ESTE ESTABLECIMIENTO LA PROPINA SUGERIDA AL CONSUMIDOR CORRESPONDE AL 10% SOBRE EL VALOR TOTAL DE LA CUENTA ANTES DE IMPUESTOS. EL CUAL PODRÁ SER ACEPTADO, RECHAZADO O MODIFICADO POR USTED DE ACUERDO CON SU VALORACIÓN DEL SERVICIO PRESTADO.</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>7pt</FontSize>
+                      <FontSize>9pt</FontSize>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -1174,7 +1174,7 @@
                     <Value>PROPINA VOLUNTARIA: </Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>7pt</FontSize>
+                      <FontSize>9pt</FontSize>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -1186,7 +1186,7 @@
                     <Value>SI____   NO_____  MONTO: _____________</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>7pt</FontSize>
+                      <FontSize>9pt</FontSize>
                     </Style>
                   </TextRun>
                 </TextRuns>
@@ -1237,7 +1237,7 @@
                                   <Value>Método de pago</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1270,7 +1270,7 @@
                                   <Value>Valor</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1305,7 +1305,7 @@
                                   <Value>Observaciones</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1343,7 +1343,7 @@
                                   <Value>=Fields!Metodo_pago.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1376,7 +1376,7 @@
                                   <Value>="$" &amp; Fields!Valor_pago.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1411,7 +1411,7 @@
                                   <Value>=Fields!Observaciones.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
+                                    <FontSize>10pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1464,7 +1464,7 @@
                 <Style>None</Style>
               </Border>
               <FontFamily>Segoe UI</FontFamily>
-              <FontSize>8pt</FontSize>
+              <FontSize>10pt</FontSize>
             </Style>
           </Tablix>
           <Textbox Name="txtDescuento2">
@@ -1540,7 +1540,7 @@
                     <Value>=Parameters!NumFactura.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>12pt</FontSize>
+                      <FontSize>14pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>

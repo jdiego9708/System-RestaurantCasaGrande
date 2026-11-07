@@ -130,7 +130,7 @@
                     <Value>=Parameters!Titulo.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>12pt</FontSize>
+                      <FontSize>14pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -164,7 +164,7 @@
                     <Value>=First("Número de pedido: " &amp; Fields!Id_pedido.Value, "DatosPedido")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>9pt</FontSize>
+                      <FontSize>11pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -257,7 +257,7 @@
                     <Value>=First(Fields!Mesa.Value, "DatosPedido")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>16pt</FontSize>
+                      <FontSize>18pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -326,7 +326,7 @@
                     <Value>=First("Cliente: " &amp; Fields!Cliente.Value, "DatosPedido")</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>9pt</FontSize>
+                      <FontSize>11pt</FontSize>
                       <FontWeight>Normal</FontWeight>
                     </Style>
                   </TextRun>
@@ -361,7 +361,7 @@
                     <Value>="Hora: " &amp; Parameters!parameterHora.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>12pt</FontSize>
+                      <FontSize>14pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
@@ -481,7 +481,7 @@
                                   <Value>=Fields!Nombre.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>11pt</FontSize>
+                                    <FontSize>13pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -513,7 +513,7 @@
                                   <Value>=Fields!Cantidad.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>11pt</FontSize>
+                                    <FontSize>13pt</FontSize>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -567,7 +567,7 @@
                 <Width>2pt</Width>
               </Border>
               <FontFamily>Segoe UI</FontFamily>
-              <FontSize>7pt</FontSize>
+              <FontSize>9pt</FontSize>
             </Style>
           </Tablix>
           <Line Name="Line5">
@@ -626,7 +626,7 @@
                     <Value>="Comanda # " &amp; Parameters!NumeroComanda.Value</Value>
                     <Style>
                       <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>16pt</FontSize>
+                      <FontSize>18pt</FontSize>
                       <FontWeight>SemiBold</FontWeight>
                     </Style>
                   </TextRun>
