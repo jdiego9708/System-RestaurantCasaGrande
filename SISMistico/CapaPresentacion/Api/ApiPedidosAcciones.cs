@@ -193,9 +193,10 @@ namespace CapaPresentacion.Api
             string codigoMaestro = req.Query["clave_maestra"];
             if (string.IsNullOrEmpty(codigoMaestro) || codigoMaestro.Length != 8 || !codigoMaestro.All(char.IsDigit))
                 return ApiResponse.Error(400, "VALIDACION", "clave_maestra es obligatoria: el código maestro de 8 dígitos.");
+            // 409 y no 503: el móvil muestra "El servidor tiene un problema" ante cualquier 5xx, y esto es configuración.
             if (!ApiConfig.CodigoMaestroConfigurado)
-                return ApiResponse.Error(503, "NO_CONFIGURADO",
-                    "El código maestro no está configurado en el PC (instalador o Cambiar-Codigo-Maestro.ps1).");
+                return ApiResponse.Error(409, "CODIGO_NO_CONFIGURADO",
+                    "El código maestro no está configurado en el PC del restaurante. Ejecute 06-Cambiar-Codigo-Maestro.ps1 y reinicie el sistema.");
             if (!ApiConfig.CodigoMaestroValido(codigoMaestro))
             {
                 ApiAuth.RegistrarFallo(req.Ip);
@@ -241,6 +242,13 @@ namespace CapaPresentacion.Api
             catch (SqlException ex) when (ex.Number >= 50020 && ex.Number <= 50023)
             {
                 return DeSpAError(ex, id);
+            }
+            // sp_Movil_Quitar_item sin los parametros de db/08 (demasiados argumentos, parametro esperado, SP inexistente).
+            catch (SqlException ex) when (ex.Number == 8144 || ex.Number == 201 || ex.Number == 2812 || ex.Number == 8146)
+            {
+                ApiLog.Error("sp_Movil_Quitar_item desactualizado: falta aplicar db/08_items_eliminados.sql", ex);
+                return ApiResponse.Error(409, "BD_DESACTUALIZADA",
+                    "A la base de datos le falta la actualización 08. Ejecute 01-Base-de-Datos.ps1 en el PC del restaurante.");
             }
 
             ApiImpresion.RefrescarMapa();
