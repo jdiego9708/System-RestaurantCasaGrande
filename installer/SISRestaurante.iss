@@ -134,9 +134,13 @@ begin
     Padre := Doc.selectSingleNode('/configuration/appSettings');
     Nodo := Doc.createElement('add');
     Nodo.setAttribute('key', Clave);
+    // El valor se fija ANTES de añadir el nodo: tocar un nodo recien anadido con appendChild provoca
+    // "Access violation" en Inno Setup (esta rama solo se usa con claves que aun no existen en el .config).
+    Nodo.setAttribute('value', Valor);
     Padre.appendChild(Nodo);
-  end;
-  Nodo.setAttribute('value', Valor);
+  end
+  else
+    Nodo.setAttribute('value', Valor);
 end;
 
 // Clave aleatoria FACIL DE TECLEAR en el celular: 12 caracteres en minuscula, sin 0/o ni 1/l/i (se confunden).
@@ -442,6 +446,12 @@ begin
   Result := True;
   if CurPageID = MasterPage.ID then
   begin
+    // Instalacion silenciosa: no hay campos que rellenar. Se usa /MasterCode, o se conserva el codigo existente.
+    if WizardSilent then
+    begin
+      MasterCodeElegido := ExpandConstant('{param:MasterCode|}');
+      Exit;
+    end;
     if (LeerAjuste('MasterCodeHash') <> '') and
        (((MasterPage.Values[0] = MarcadorCodigo) and (MasterPage.Values[1] = MarcadorCodigo)) or
         ((MasterPage.Values[0] = '') and (MasterPage.Values[1] = ''))) then

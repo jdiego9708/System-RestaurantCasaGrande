@@ -59,7 +59,11 @@ class LongReceiptTests
                 using(var report=Report("CapaPresentacion.ReportesFacturas."+name+".rdlc",count))
                 using(var controller=new ControladorImpresion())
                 {
+                    // Tiempo previo a enviar nada a la impresora: maquetar el informe y medir donde acaba la tinta.
+                    var timer=System.Diagnostics.Stopwatch.StartNew();
                     typeof(ControladorImpresion).GetMethod("Prepare",Private).Invoke(controller,new object[]{report,283,12897});
+                    timer.Stop();
+                    Console.WriteLine("  preparacion "+name+" rows="+count+": "+timer.ElapsedMilliseconds+" ms");
                     int height=(int)typeof(ControladorImpresion).GetMethod("CurrentHeight",Private).Invoke(controller,null);
                     var streams=(IList)typeof(ControladorImpresion).GetField("m_streams",Private).GetValue(controller);
                     Check(streams.Count==1,"Un ticket de 50 productos (maximo real) debe caber en el rollo largo: "+name);

@@ -77,17 +77,32 @@ namespace CapaPresentacion
             continuous=IsReceipt(report) && !string.Equals(ConfigurationManager.AppSettings["TicketsAlturaAutomatica"],"false",StringComparison.OrdinalIgnoreCase);
             targetWidth=Math.Max(1,Math.Min((int)Math.Round(width),printableWidth));
             maxPaperHeight=Math.Max(1,maximumHeight);
-            if(continuous)height=maximumHeight;
-            m_streams=new List<Stream>();
+            // Rasterizar para medir una pagina de 129 pulgadas tardaba 8-12 s antes de imprimir. Casi todos los tickets
+            // caben en 40 pulgadas: se mide ahi y solo se repite con la pagina completa si el contenido llega abajo.
+            double renderHeight=continuous ? Math.Min(maximumHeight,FirstPassHeight) : height;
             try
             {
-                Warning[] warnings;
-                report.Render("Image",DeviceInfo(width,height),CreateStream,out warnings);
-                foreach(var stream in m_streams)
+                while(true)
                 {
-                    stream.Position=0;
-                    using(var image=new Metafile(stream))inkHeights.Add(continuous ? InkBottom(image) : image.Height);
-                    stream.Position=0;
+                    m_streams=new List<Stream>();
+                    inkHeights.Clear();
+                    Warning[] warnings;
+                    report.Render("Image",DeviceInfo(width,renderHeight),CreateStream,out warnings);
+                    bool reachesBottom=m_streams.Count>1;
+                    foreach(var stream in m_streams)
+                    {
+                        stream.Position=0;
+                        using(var image=new Metafile(stream))
+                        {
+                            int ink=continuous ? InkBottom(image) : image.Height;
+                            inkHeights.Add(ink);
+                            if(continuous && ink>=image.Height-image.Height/50)reachesBottom=true;
+                        }
+                        stream.Position=0;
+                    }
+                    if(!continuous || !reachesBottom || renderHeight>=maximumHeight)break;
+                    foreach(var stream in m_streams)stream.Dispose();
+                    renderHeight=maximumHeight;
                 }
                 // El indice siempre se reinicia tambien cuando se repite una copia.
                 m_currentPageIndex=0;
@@ -96,24 +111,31 @@ namespace CapaPresentacion
             catch { Dispose(); throw; }
         }
 
+        // Primera pasada de un ticket: 40 pulgadas (~1 m), muy por encima de los 50 productos maximos reales (~42 cm).
+        private const double FirstPassHeight=4000;
+
+        // Mide donde acaba la tinta sobre una copia a media resolucion: 4 veces menos pixeles que 1:1 y la precision
+        // (+-2 px) sobra, porque despues se suman EndFeed y el redondeo del alto.
         private static int InkBottom(Metafile image)
         {
-            using(var bitmap=new Bitmap(image.Width,image.Height,PixelFormat.Format24bppRgb))
+            const int step=2;
+            int width=Math.Max(1,image.Width/step),height=Math.Max(1,image.Height/step);
+            using(var bitmap=new Bitmap(width,height,PixelFormat.Format24bppRgb))
             {
                 using(var graphics=Graphics.FromImage(bitmap))
                 {
                     graphics.Clear(Color.White);
-                    graphics.DrawImage(image,new Rectangle(0,0,bitmap.Width,bitmap.Height));
+                    graphics.DrawImage(image,new Rectangle(0,0,width,height));
                 }
-                var data=bitmap.LockBits(new Rectangle(0,0,bitmap.Width,bitmap.Height),ImageLockMode.ReadOnly,PixelFormat.Format24bppRgb);
+                var data=bitmap.LockBits(new Rectangle(0,0,width,height),ImageLockMode.ReadOnly,PixelFormat.Format24bppRgb);
                 try
                 {
-                    var bytes=new byte[Math.Abs(data.Stride)*bitmap.Height];
+                    var bytes=new byte[Math.Abs(data.Stride)*height];
                     Marshal.Copy(data.Scan0,bytes,0,bytes.Length);
-                    for(int y=bitmap.Height-1;y>=0;y--)
+                    for(int y=height-1;y>=0;y--)
                     {
-                        int row=data.Stride>=0 ? y*data.Stride : (bitmap.Height-1-y)*-data.Stride;
-                        for(int x=0;x<bitmap.Width*3;x++)if(bytes[row+x]<250)return y+1;
+                        int row=data.Stride>=0 ? y*data.Stride : (height-1-y)*-data.Stride;
+                        for(int x=0;x<width*3;x++)if(bytes[row+x]<250)return Math.Min(image.Height,(y+1)*step);
                     }
                     return 1;
                 }
