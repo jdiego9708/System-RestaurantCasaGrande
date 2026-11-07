@@ -1,0 +1,645 @@
+﻿DIAGNOSTICO DE IMPRESORA - CASA GRANDE
+Fecha local: 2026-11-06 21:40:25 -05:00
+Equipo: DESKTOP-V0M8ILV | Usuario: Casa Grande
+PowerShell: 5.1.19041.6456 | Proceso 64 bits: True
+Solo lectura. No se enviaron pruebas de impresion ni se cambiaron preferencias.
+Los tamanos se convierten de centesimas de pulgada a milimetros (factor 0.254).
+Estos son ajustes de Windows/controlador; cada aplicacion puede sobrescribir papel y margenes.
+
+========================================================================
+WINDOWS Y SERVICIO DE IMPRESION
+========================================================================
+
+
+Caption        : Microsoft Windows 10 Pro
+Version        : 10.0.19045
+BuildNumber    : 19045
+OSArchitecture : 64 bits
+
+
+
+
+
+Name      : Spooler
+Status    : Running
+StartType : Automatic
+
+========================================================================
+IMPRESORAS INSTALADAS
+========================================================================
+
+Name                          Default DriverName                        PortName                                                                                                                           Network Shared WorkOffline PrinterStatus
+----                          ------- ----------                        --------                                                                                                                           ------- ------ ----------- -------------
+OneNote for Windows 10          False Microsoft Software Printer Driver Microsoft.Office.OneNote_16001.14326.22594.0_x64__8wekyb3d8bbwe_microsoft.onenoteim_S-1-5-21-1116039153-2995429928-3886574478-1001   False  False       False             3
+POS-80                           True POS-80                            USB002                                                                                                                               False  False       False             3
+Microsoft XPS Document Writer   False Microsoft XPS Document Writer v4  PORTPROMPT:                                                                                                                          False  False       False             3
+Microsoft Print to PDF          False Microsoft Print To PDF            PORTPROMPT:                                                                                                                          False  False       False             3
+Fax                             False Microsoft Shared Fax Driver       SHRFAX:                                                                                                                              False  False       False             3
+EPSON TM-T20II Receipt          False EPSON TM-T20II Receipt5           ESDPRT001                                                                                                                            False  False       False             4
+Impresora seleccionada para el diagnostico: POS-80
+
+========================================================================
+DATOS COMPLETOS WIN32_PRINTER
+========================================================================
+
+
+Status                      : Unknown
+Name                        : POS-80
+Caption                     : POS-80
+Description                 : 
+InstallDate                 : 
+Availability                : 
+ConfigManagerErrorCode      : 
+ConfigManagerUserConfig     : 
+CreationClassName           : Win32_Printer
+DeviceID                    : POS-80
+ErrorCleared                : 
+ErrorDescription            : 
+LastErrorCode               : 
+PNPDeviceID                 : 
+PowerManagementCapabilities : 
+PowerManagementSupported    : 
+StatusInfo                  : 
+SystemCreationClassName     : Win32_ComputerSystem
+SystemName                  : DESKTOP-V0M8ILV
+AvailableJobSheets          : 
+Capabilities                : {4, 2, 5}
+CapabilityDescriptions      : {Copies, Color, Collate}
+CharSetsSupported           : 
+CurrentCapabilities         : 
+CurrentCharSet              : 
+CurrentLanguage             : 
+CurrentMimeType             : 
+CurrentNaturalLanguage      : 
+CurrentPaperType            : 
+DefaultCapabilities         : 
+DefaultCopies               : 
+DefaultLanguage             : 
+DefaultMimeType             : 
+DefaultNumberUp             : 
+DefaultPaperType            : 
+DetectedErrorState          : 0
+ErrorInformation            : 
+HorizontalResolution        : 203
+JobCountSinceLastReset      : 0
+LanguagesSupported          : 
+MarkingTechnology           : 
+MaxCopies                   : 
+MaxNumberUp                 : 
+MaxSizeSupported            : 
+MimeTypesSupported          : 
+NaturalLanguagesSupported   : 
+PaperSizesSupported         : {1, 1, 1}
+PaperTypesAvailable         : 
+PrinterStatus               : 3
+TimeOfLastReset             : 
+VerticalResolution          : 203
+Attributes                  : 68
+AveragePagesPerMinute       : 0
+Comment                     : 
+Default                     : True
+DefaultPriority             : 0
+Direct                      : False
+DoCompleteFirst             : False
+DriverName                  : POS-80
+EnableBIDI                  : False
+EnableDevQueryPrint         : False
+ExtendedDetectedErrorState  : 0
+ExtendedPrinterStatus       : 2
+Hidden                      : False
+KeepPrintedJobs             : False
+Local                       : True
+Location                    : 
+Network                     : False
+Parameters                  : 
+PortName                    : USB002
+PrinterPaperNames           : {80(72.1) x 210 mm, 80(72.1) x 297 mm, 80(72.1) x 3276 mm}
+PrinterState                : 0
+PrintJobDataType            : RAW
+PrintProcessor              : winprint
+Priority                    : 1
+Published                   : False
+Queued                      : False
+RawOnly                     : False
+SeparatorFile               : 
+ServerName                  : 
+Shared                      : False
+ShareName                   : 
+SpoolEnabled                : True
+StartTime                   : 
+UntilTime                   : 
+WorkOffline                 : False
+PSComputerName              : 
+CimClass                    : root/cimv2:Win32_Printer
+CimInstanceProperties       : {Caption, Description, InstallDate, Name...}
+CimSystemProperties         : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+COLA Y CONFIGURACION GENERAL
+========================================================================
+
+
+RenderingMode                : 
+PrinterStatus                : Normal
+Type                         : Local
+DeviceType                   : Print
+Caption                      : 
+Description                  : 
+ElementName                  : 
+InstanceID                   : 
+CommunicationStatus          : 
+DetailedStatus               : 
+HealthState                  : 
+InstallDate                  : 
+Name                         : POS-80
+OperatingStatus              : 
+OperationalStatus            : 
+PrimaryStatus                : 
+Status                       : 
+StatusDescriptions           : 
+BranchOfficeOfflineLogSizeMB : 
+Comment                      : 
+ComputerName                 : 
+Datatype                     : RAW
+DefaultJobPriority           : 0
+DisableBranchOfficeLogging   : 
+DriverName                   : POS-80
+JobCount                     : 0
+KeepPrintedJobs              : False
+Location                     : 
+PermissionSDDL               : 
+PortName                     : USB002
+PrintProcessor               : winprint
+Priority                     : 1
+Published                    : False
+SeparatorPageFile            : 
+Shared                       : False
+ShareName                    : 
+StartTime                    : 0
+UntilTime                    : 0
+WorkflowPolicy               : 
+PSComputerName               : 
+CimClass                     : ROOT/StandardCimv2:MSFT_Printer
+CimInstanceProperties        : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties          : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+PREFERENCIAS DE IMPRESION - PRINTCONFIGURATION
+========================================================================
+
+
+DuplexingMode         : OneSided
+PaperSize             : 
+Collate               : True
+Color                 : False
+ComputerName          : 
+PrintCapabilitiesXML  : <?xml version="1.0"?>
+                        <psf:PrintCapabilities xmlns:psf="http://schemas.microsoft.com/windows/2003/08/printing/printschemaframework" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1" 
+                        xmlns:ns0000="http://schemas.microsoft.com/windows/printing/oemdriverpt/POS-80/10.0.19041.6456/" xmlns:psk="http://schemas.microsoft.com/windows/2003/08/printing/printschemakeywords"><psf:ParameterDef 
+                        name="ns0000:PageDevmodeSnapshot"><psf:Property name="psf:DataType"><psf:Value xsi:type="xsd:QName">xsd:string</psf:Value></psf:Property><psf:Property name="psf:UnitType"><psf:Value 
+                        xsi:type="xsd:string">base64</psf:Value></psf:Property><psf:Property name="psf:DefaultValue"><psf:Value xsi:type="xsd:string">UABPAFMALQA4ADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEEAwbcAAwDTe+ABQEAAgGaC9
+                        ACZAABAA8AywABAAEAywACAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAD/////AAAAAAAAAAAAAAAAAAAAAERJTlUiALAADAMAAMg7mTUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAABgAAAAEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAU01USgAAAAAQAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</psf:Value></psf:Property><psf:Property name="psf:Mandatory"><psf:Value xsi:type="xsd:QName">psk:Optional</psf:Value></psf:Property><psf:Property name="psf:MinLength"><psf:Value 
+                        xsi:type="xsd:integer">0</psf:Value></psf:Property><psf:Property name="psf:MaxLength"><psf:Value xsi:type="xsd:integer">174760</psf:Value></psf:Property></psf:ParameterDef><psf:Feature name="psk:DocumentCollate"><psf:Property 
+                        name="psf:SelectionType"><psf:Value xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Intercalar copias</psf:Value></psf:Property><psf:Option 
+                        name="psk:Collated" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Sí</psf:Value></psf:Property></psf:Option><psf:Option name="psk:Uncollated" constrained="psk:None"><psf:Property 
+                        name="psk:DisplayName"><psf:Value xsi:type="xsd:string">No</psf:Value></psf:Property></psf:Option></psf:Feature><psf:ParameterDef name="psk:JobCopiesAllDocuments"><psf:Property name="psf:DataType"><psf:Value 
+                        xsi:type="xsd:QName">xsd:integer</psf:Value></psf:Property><psf:Property name="psf:UnitType"><psf:Value xsi:type="xsd:string">copies</psf:Value></psf:Property><psf:Property name="psf:Multiple"><psf:Value 
+                        xsi:type="xsd:integer">1</psf:Value></psf:Property><psf:Property name="psf:MaxValue"><psf:Value xsi:type="xsd:integer">9999</psf:Value></psf:Property><psf:Property name="psf:MinValue"><psf:Value 
+                        xsi:type="xsd:integer">1</psf:Value></psf:Property><psf:Property name="psf:DefaultValue"><psf:Value xsi:type="xsd:integer">1</psf:Value></psf:Property><psf:Property name="psf:Mandatory"><psf:Value 
+                        xsi:type="xsd:QName">psk:Unconditional</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Número de copias</psf:Value></psf:Property></psf:ParameterDef><psf:Feature 
+                        name="psk:JobNUpAllDocumentsContiguously"><psf:Property name="psf:SelectionType"><psf:Value xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Páginas por 
+                        hoja</psf:Value></psf:Property><psf:Option constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">1</psf:Value></psf:Property><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value 
+                        xsi:type="xsd:integer">1</psf:Value></psf:ScoredProperty><psf:Property name="psf:IdentityOption"><psf:Value xsi:type="xsd:string">True</psf:Value></psf:Property></psf:Option><psf:Option constrained="psk:None"><psf:Property 
+                        name="psk:DisplayName"><psf:Value xsi:type="xsd:string">2</psf:Value></psf:Property><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value xsi:type="xsd:integer">2</psf:Value></psf:ScoredProperty></psf:Option><psf:Option 
+                        constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">4</psf:Value></psf:Property><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value 
+                        xsi:type="xsd:integer">4</psf:Value></psf:ScoredProperty></psf:Option><psf:Option constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">6</psf:Value></psf:Property><psf:ScoredProperty 
+                        name="psk:PagesPerSheet"><psf:Value xsi:type="xsd:integer">6</psf:Value></psf:ScoredProperty></psf:Option><psf:Option constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value 
+                        xsi:type="xsd:string">9</psf:Value></psf:Property><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value xsi:type="xsd:integer">9</psf:Value></psf:ScoredProperty></psf:Option><psf:Option constrained="psk:None"><psf:Property 
+                        name="psk:DisplayName"><psf:Value xsi:type="xsd:string">16</psf:Value></psf:Property><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value xsi:type="xsd:integer">16</psf:Value></psf:ScoredProperty></psf:Option><psf:Feature 
+                        name="psk:PresentationDirection"><psf:Property name="psf:SelectionType"><psf:Value xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Diseño de páginas por 
+                        hoja</psf:Value></psf:Property><psf:Option name="psk:RightBottom" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Derecha y después abajo</psf:Value></psf:Property></psf:Option><psf:Option 
+                        name="psk:BottomRight" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Abajo y después derecha</psf:Value></psf:Property></psf:Option><psf:Option name="psk:LeftBottom" 
+                        constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Izquierda y después abajo</psf:Value></psf:Property></psf:Option><psf:Option name="psk:BottomLeft" constrained="psk:None"><psf:Property 
+                        name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Abajo y después izquierda</psf:Value></psf:Property></psf:Option></psf:Feature><psf:Feature name="ns0000:Borders"><psf:Property name="psf:SelectionType"><psf:Value 
+                        xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Dibujar bordes</psf:Value></psf:Property><psf:Option name="ns0000:Off" 
+                        constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">No</psf:Value></psf:Property></psf:Option><psf:Option name="ns0000:On" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value 
+                        xsi:type="xsd:string">Sí</psf:Value></psf:Property></psf:Option></psf:Feature></psf:Feature><psf:Feature name="psk:PageMediaSize"><psf:Property name="psf:SelectionType"><psf:Value 
+                        xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Tamaño del papel</psf:Value></psf:Property><psf:Option name="ns0000:Option1" 
+                        constrained="psk:None"><psf:ScoredProperty name="psk:MediaSizeWidth"><psf:Value xsi:type="xsd:integer">72071</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:MediaSizeHeight"><psf:Value 
+                        xsi:type="xsd:integer">209957</psf:Value></psf:ScoredProperty><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">80(72.1) x 210 mm</psf:Value></psf:Property></psf:Option><psf:Option name="ns0000:Option2" 
+                        constrained="psk:None"><psf:ScoredProperty name="psk:MediaSizeWidth"><psf:Value xsi:type="xsd:integer">72071</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:MediaSizeHeight"><psf:Value 
+                        xsi:type="xsd:integer">297042</psf:Value></psf:ScoredProperty><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">80(72.1) x 297 mm</psf:Value></psf:Property></psf:Option><psf:Option name="ns0000:Option3" 
+                        constrained="psk:None"><psf:ScoredProperty name="psk:MediaSizeWidth"><psf:Value xsi:type="xsd:integer">72071</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:MediaSizeHeight"><psf:Value 
+                        xsi:type="xsd:integer">3275974</psf:Value></psf:ScoredProperty><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">80(72.1) x 3276 mm</psf:Value></psf:Property></psf:Option><psf:Option name="psk:CustomMediaSize" 
+                        constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Tamaño definido por el usuario</psf:Value></psf:Property><psf:ScoredProperty name="psk:MediaSizeWidth"><psf:ParameterRef 
+                        name="psk:PageMediaSizeMediaSizeWidth"/></psf:ScoredProperty><psf:ScoredProperty name="psk:MediaSizeHeight"><psf:ParameterRef name="psk:PageMediaSizeMediaSizeHeight"/></psf:ScoredProperty></psf:Option></psf:Feature><psf:ParameterDef 
+                        name="psk:PageMediaSizeMediaSizeWidth"><psf:Property name="psf:DataType"><psf:Value xsi:type="xsd:QName">xsd:integer</psf:Value></psf:Property><psf:Property name="psf:UnitType"><psf:Value 
+                        xsi:type="xsd:string">microns</psf:Value></psf:Property><psf:Property name="psf:Multiple"><psf:Value xsi:type="xsd:integer">1</psf:Value></psf:Property><psf:Property name="psf:MaxValue"><psf:Value 
+                        xsi:type="xsd:integer">72070</psf:Value></psf:Property><psf:Property name="psf:MinValue"><psf:Value xsi:type="xsd:integer">10009</psf:Value></psf:Property><psf:Property name="psf:DefaultValue"><psf:Value 
+                        xsi:type="xsd:integer">10009</psf:Value></psf:Property><psf:Property name="psf:Mandatory"><psf:Value xsi:type="xsd:QName">psk:Conditional</psf:Value></psf:Property></psf:ParameterDef><psf:ParameterDef 
+                        name="psk:PageMediaSizeMediaSizeHeight"><psf:Property name="psf:DataType"><psf:Value xsi:type="xsd:QName">xsd:integer</psf:Value></psf:Property><psf:Property name="psf:UnitType"><psf:Value 
+                        xsi:type="xsd:string">microns</psf:Value></psf:Property><psf:Property name="psf:Multiple"><psf:Value xsi:type="xsd:integer">1</psf:Value></psf:Property><psf:Property name="psf:MaxValue"><psf:Value 
+                        xsi:type="xsd:integer">4099910</psf:Value></psf:Property><psf:Property name="psf:MinValue"><psf:Value xsi:type="xsd:integer">10009</psf:Value></psf:Property><psf:Property name="psf:DefaultValue"><psf:Value 
+                        xsi:type="xsd:integer">10009</psf:Value></psf:Property><psf:Property name="psf:Mandatory"><psf:Value xsi:type="xsd:QName">psk:Conditional</psf:Value></psf:Property></psf:ParameterDef><psf:Feature name="psk:JobInputBin"><psf:Property 
+                        name="psf:SelectionType"><psf:Value xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Origen del papel</psf:Value></psf:Property><psf:Option 
+                        name="psk:AutoSelect" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Selección automática</psf:Value></psf:Property></psf:Option><psf:Option name="psk:Manual" 
+                        constrained="psk:None"><psf:ScoredProperty name="psk:FeedType"><psf:Value xsi:type="xsd:QName">psk:Manual</psf:Value></psf:ScoredProperty><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Alim. de papel 
+                        manual</psf:Value></psf:Property></psf:Option></psf:Feature><psf:Feature name="psk:PageOrientation"><psf:Property name="psf:SelectionType"><psf:Value xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property 
+                        name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Orientación</psf:Value></psf:Property><psf:Option name="psk:Portrait" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value 
+                        xsi:type="xsd:string">Vertical</psf:Value></psf:Property></psf:Option><psf:Option name="psk:Landscape" constrained="psk:None"><psf:Property name="psk:DisplayName"><psf:Value 
+                        xsi:type="xsd:string">Horizontal</psf:Value></psf:Property></psf:Option></psf:Feature><psf:Feature name="psk:PageResolution"><psf:Property name="psf:SelectionType"><psf:Value 
+                        xsi:type="xsd:QName">psk:PickOne</psf:Value></psf:Property><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">Resolución</psf:Value></psf:Property><psf:Option name="ns0000:Option1" 
+                        constrained="psk:None"><psf:ScoredProperty name="psk:ResolutionX"><psf:Value xsi:type="xsd:integer">203</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:ResolutionY"><psf:Value 
+                        xsi:type="xsd:integer">203</psf:Value></psf:ScoredProperty><psf:Property name="psk:DisplayName"><psf:Value xsi:type="xsd:string">203 x 203 dots per inch</psf:Value></psf:Property></psf:Option></psf:Feature><psf:Property 
+                        name="psk:PageImageableSize"><psf:Property name="psk:ImageableSizeWidth"><psf:Value xsi:type="xsd:integer">72070</psf:Value></psf:Property><psf:Property name="psk:ImageableSizeHeight"><psf:Value 
+                        xsi:type="xsd:integer">297042</psf:Value></psf:Property><psf:Property name="psk:ImageableArea"><psf:Property name="psk:OriginWidth"><psf:Value xsi:type="xsd:integer">0</psf:Value></psf:Property><psf:Property 
+                        name="psk:OriginHeight"><psf:Value xsi:type="xsd:integer">0</psf:Value></psf:Property><psf:Property name="psk:ExtentWidth"><psf:Value xsi:type="xsd:integer">72070</psf:Value></psf:Property><psf:Property 
+                        name="psk:ExtentHeight"><psf:Value xsi:type="xsd:integer">297042</psf:Value></psf:Property></psf:Property></psf:Property></psf:PrintCapabilities>
+                        
+PrinterName           : POS-80
+PrintTicketXML        : <?xml version="1.0"?>
+                        <psf:PrintTicket xmlns:psf="http://schemas.microsoft.com/windows/2003/08/printing/printschemaframework" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="1" 
+                        xmlns:ns0000="http://schemas.microsoft.com/windows/printing/oemdriverpt/POS-80/10.0.19041.6456/" xmlns:psk="http://schemas.microsoft.com/windows/2003/08/printing/printschemakeywords"><psf:ParameterInit 
+                        name="ns0000:PageDevmodeSnapshot"><psf:Value xsi:type="xsd:string">UABPAFMALQA4ADAAAABPAFAALQBWADAATQA4AEkATABWAFwAUABPAFMALQA4ADAALABMAG8AYwBhAGwATwAAAAEEAwbcAAwDT++ABQEAAgGaC9ACZAABAA8AywABAAEAywACAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAgAAAAEAAAD/////AAAAAAAAAAAAAAAAAAAAAERJTlUiALAADAMAAMg7mTUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAU01USgAAA
+                        AAQAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</psf:Value><
+                        /psf:ParameterInit><psf:Feature name="psk:DocumentCollate"><psf:Option name="psk:Collated"/></psf:Feature><psf:ParameterInit name="psk:JobCopiesAllDocuments"><psf:Value 
+                        xsi:type="xsd:integer">1</psf:Value></psf:ParameterInit><psf:Feature name="psk:JobNUpAllDocumentsContiguously"><psf:Option><psf:ScoredProperty name="psk:PagesPerSheet"><psf:Value 
+                        xsi:type="xsd:integer">1</psf:Value></psf:ScoredProperty></psf:Option><psf:Feature name="psk:PresentationDirection"><psf:Option name="psk:RightBottom"/></psf:Feature><psf:Feature name="ns0000:Borders"><psf:Option 
+                        name="ns0000:On"/></psf:Feature></psf:Feature><psf:Feature name="psk:PageMediaSize"><psf:Option name="ns0000:Option2"><psf:ScoredProperty name="psk:MediaSizeWidth"><psf:Value 
+                        xsi:type="xsd:integer">72071</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:MediaSizeHeight"><psf:Value xsi:type="xsd:integer">297042</psf:Value></psf:ScoredProperty></psf:Option></psf:Feature><psf:Feature 
+                        name="psk:JobInputBin"><psf:Option name="psk:AutoSelect"/></psf:Feature><psf:Feature name="psk:PageOrientation"><psf:Option name="psk:Portrait"/></psf:Feature><psf:Feature name="psk:PageResolution"><psf:Option 
+                        name="ns0000:Option1"><psf:ScoredProperty name="psk:ResolutionX"><psf:Value xsi:type="xsd:integer">203</psf:Value></psf:ScoredProperty><psf:ScoredProperty name="psk:ResolutionY"><psf:Value 
+                        xsi:type="xsd:integer">203</psf:Value></psf:ScoredProperty></psf:Option></psf:Feature></psf:PrintTicket>
+                        
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterConfiguration
+CimInstanceProperties : {Collate, Color, ComputerName, DuplexingMode...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+CONFIGURACION WIN32_PRINTERCONFIGURATION
+========================================================================
+
+
+DriverVersion         : 1539
+Name                  : POS-80
+Caption               : POS-80
+Description           : POS-80
+SettingID             : POS-80
+BitsPerPel            : 
+Collate               : True
+Color                 : 1
+Copies                : 1
+DeviceName            : POS-80
+DisplayFlags          : 
+DisplayFrequency      : 
+DitherType            : 4294967295
+Duplex                : 
+FormName              : 
+HorizontalResolution  : 203
+ICMIntent             : 2
+ICMMethod             : 1
+LogPixels             : 
+MediaType             : 
+Orientation           : 1
+PaperLength           : 2970
+PaperSize             : 
+PaperWidth            : 720
+PelsHeight            : 
+PelsWidth             : 
+PrintQuality          : 203
+Scale                 : 
+SpecificationVersion  : 1025
+TTOption              : 2
+VerticalResolution    : 203
+XResolution           : 203
+YResolution           : 203
+PSComputerName        : 
+CimClass              : root/cimv2:Win32_PrinterConfiguration
+CimInstanceProperties : {Caption, Description, SettingID, BitsPerPel...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+PUERTO Y CONEXION (USB / TCP-IP / OTRO)
+========================================================================
+
+
+Caption               : 
+Description           : PrinterPOS-80
+ElementName           : 
+InstanceID            : 
+CommunicationStatus   : 
+DetailedStatus        : 
+HealthState           : 
+InstallDate           : 
+Name                  : USB002
+OperatingStatus       : 
+OperationalStatus     : 
+PrimaryStatus         : 
+Status                : 
+StatusDescriptions    : 
+ComputerName          : 
+PortMonitor           : Dynamic Print Monitor
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterPort
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+CONTROLADOR INSTALADO
+========================================================================
+
+
+Caption                 : 
+Description             : 
+ElementName             : 
+InstanceID              : 
+CommunicationStatus     : 
+DetailedStatus          : 
+HealthState             : 
+InstallDate             : 
+Name                    : POS-80
+OperatingStatus         : 
+OperationalStatus       : 
+PrimaryStatus           : 
+Status                  : 
+StatusDescriptions      : 
+ColorProfiles           : 
+ComputerName            : 
+ConfigFile              : C:\WINDOWS\system32\spool\DRIVERS\x64\3\uniDRVUI.DLL
+CoreDriverDependencies  : 
+DataFile                : C:\WINDOWS\system32\spool\DRIVERS\x64\3\POS80.GPD
+Date                    : 
+DefaultDatatype         : RAW
+DependentFiles          : {C:\WINDOWS\system32\spool\DRIVERS\x64\3\TTFSUB.GPD, C:\WINDOWS\system32\spool\DRIVERS\x64\3\STDNAMES.GPD, C:\WINDOWS\system32\spool\DRIVERS\x64\3\UNIRES.DLL, C:\WINDOWS\system32\spool\DRIVERS\x64\3\POS80.DLL}
+DriverVersion           : 0
+HardwareID              : 
+HelpFile                : C:\WINDOWS\system32\spool\DRIVERS\x64\3\uniDRV.HLP
+InfPath                 : 
+IsPackageAware          : False
+MajorVersion            : 3
+Manufacturer            : 
+Monitor                 : 
+OEMUrl                  : 
+Path                    : C:\WINDOWS\system32\spool\DRIVERS\x64\3\uniDRV.DLL
+PreviousCompatibleNames : 
+PrinterEnvironment      : Windows x64
+PrintProcessor          : 
+provider                : 
+VendorSetup             : 
+PSComputerName          : 
+CimClass                : ROOT/StandardCimv2:MSFT_PrinterDriver
+CimInstanceProperties   : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties     : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+VERSIONES DE ARCHIVOS DEL CONTROLADOR
+========================================================================
+
+
+FileName       : C:\WINDOWS\system32\spool\DRIVERS\x64\3\uniDRVUI.DLL
+FileVersion    : 10.0.19041.6456 (WinBuild.160101.0800)
+ProductVersion : 10.0.19041.6456
+CompanyName    : Microsoft Corporation
+ProductName    : Sistema operativo Microsoft® Windows®
+
+
+
+
+
+FileName       : C:\WINDOWS\system32\spool\DRIVERS\x64\3\POS80.GPD
+FileVersion    : 
+ProductVersion : 
+CompanyName    : 
+ProductName    :
+
+========================================================================
+PAPEL PREDETERMINADO, AREA IMPRIMIBLE, MARGENES Y RESOLUCION (.NET)
+========================================================================
+
+
+Impresora              : POS-80
+Predeterminada         : True
+Papel                  : custom
+CodigoPapel            : 0
+Ancho_mm               : 71,88
+Alto_mm                : 296,93
+Horizontal             : False
+Color                  : False
+ResolucionTipo         : Custom
+ResolucionX            : 203
+ResolucionY            : 203
+MargenIzquierdo_mm     : 25,4
+MargenDerecho_mm       : 25,4
+MargenSuperior_mm      : 25,4
+MargenInferior_mm      : 25,4
+MargenFisicoX_mm       : 0
+MargenFisicoY_mm       : 0
+AreaImprimibleX_mm     : 0
+AreaImprimibleY_mm     : 0
+AreaImprimibleAncho_mm : 72,07
+AreaImprimibleAlto_mm  : 297,04
+SoportaColor           : False
+SoportaDuplex          : False
+Duplex                 : Simplex
+Copias                 : 1
+CopiasMaximas          : 9999
+
+========================================================================
+TAMANOS DE PAPEL DISPONIBLES (.NET)
+========================================================================
+
+PaperName          RawKind Ancho_mm Alto_mm
+---------          ------- -------- -------
+80(72.1) x 210 mm      127    71,88   209,8
+80(72.1) x 297 mm      128    71,88  296,93
+80(72.1) x 3276 mm     129    71,88 3275,84
+
+========================================================================
+RESOLUCIONES DISPONIBLES (.NET)
+========================================================================
+
+  Kind   X   Y
+  ----   -   -
+  High  -4  -1
+Medium  -3  -1
+   Low  -2  -1
+ Draft  -1  -1
+Custom 203 203
+
+========================================================================
+PROPIEDADES ADICIONALES DEL CONTROLADOR
+========================================================================
+
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpBottomLogoMode
+Value                 : xpBottomLogoNormal
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpBottomLogoPrint
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpCashDrawer
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpCutterSelect
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpJobEndFeedPaper
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpPrintAlarm
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpTopLogoMode
+Value                 : xpTopLogoNormal
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Type                  : String
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : 
+ComputerName          : 
+PrinterName           : POS-80
+PropertyName          : Config:xpTopLogoPrint
+Value                 : Option1
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_PrinterProperty
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+========================================================================
+DISPOSITIVOS DE IMPRESION RECONOCIDOS POR WINDOWS
+========================================================================
+
+
+Name                   : OneNote for Windows 10
+Manufacturer           : Microsoft
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\{62FA102A-474C-49E3-8B3E-F7B097C8E2EA}
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+Name                   : Cola de impresión raíz
+Manufacturer           : Microsoft
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\PRINTQUEUES
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+Name                   : POS-80
+Manufacturer           : 
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\{8B566685-DC76-4903-A95F-C79B04A3E5FC}
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+Name                   : Fax
+Manufacturer           : Microsoft
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\{2C6B7A1B-28B2-4C7F-BBDA-87CB517BD259}
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+Name                   : Microsoft XPS Document Writer
+Manufacturer           : Microsoft
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\{47BF7C70-973B-44AC-BE52-ECE6356455A4}
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+Name                   : Microsoft Print to PDF
+Manufacturer           : Microsoft
+PNPClass               : PrintQueue
+PNPDeviceID            : SWD\PRINTENUM\{C4E9419E-B437-495E-8EE6-DA28283A286E}
+Status                 : OK
+ConfigManagerErrorCode : 0
+
+NOTAS: Un controlador generico puede no identificar el modelo fisico exacto.
+Corte automatico, avance y densidad pueden estar solo en opciones privadas del fabricante.
+Las propiedades que requieran elevacion quedan registradas como no disponibles; no se elevaron permisos automaticamente.
