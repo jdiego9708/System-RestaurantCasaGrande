@@ -78,6 +78,9 @@ Type: filesandordirs; Name: "{app}\logs"
 [Code]
 const
   ClavePlaceholder = 'cambiar-esta-clave';
+  // Con un codigo maestro ya configurado los campos salen rellenos con esto: el codigo real no se puede mostrar
+  // (solo se guarda su hash) y dejarlo igual significa "conservar el actual".
+  MarcadorCodigo = '********';
   NombreRegla = 'SISRestaurante API';
   AlfabetoClave = 'abcdefghjkmnpqrstuvwxyz23456789';
 
@@ -87,6 +90,7 @@ var
   AlegraEmissionPage: TInputQueryWizardPage;
   MasterPage: TInputQueryWizardPage;
   MasterCodeElegido: String;
+  MasterPageLista: Boolean;
   ApiPageLista: Boolean;
   ClaveElegida: String;
   PuertoElegido: String;
@@ -329,8 +333,8 @@ begin
     'Codigo de 8 digitos para quitar productos de un pedido',
     'Es unico para todo el sistema y se pide en el celular, junto con una observacion, cada vez que se quita un ' +
     'producto de un pedido. No reemplaza el PIN de 4 digitos de cada empleado. Se guarda cifrado (no en claro). ' +
-    'Se puede cambiar despues con "Cambiar codigo maestro" del menu Inicio. Si ya hay uno configurado, deje los ' +
-    'dos campos vacios para conservarlo.');
+    'Se puede cambiar despues con "Cambiar codigo maestro" del menu Inicio. Si ya hay uno configurado, los campos ' +
+    'aparecen rellenos con asteriscos: pulse Siguiente para conservarlo o escriba uno nuevo en los dos campos.');
   MasterPage.Add('Codigo maestro (8 digitos):', True);
   MasterPage.Add('Repita el codigo:', True);
 
@@ -403,6 +407,16 @@ end;
 
 procedure CurPageChanged(CurPageID: Integer);
 begin
+  if (CurPageID = MasterPage.ID) and not MasterPageLista then
+  begin
+    MasterPageLista := True;
+    // Reinstalacion: los campos aparecen ya poblados; basta con pulsar Siguiente para conservar el codigo.
+    if LeerAjuste('MasterCodeHash') <> '' then
+    begin
+      MasterPage.Values[0] := MarcadorCodigo;
+      MasterPage.Values[1] := MarcadorCodigo;
+    end;
+  end;
   if (CurPageID = ApiPage.ID) and not ApiPageLista then
   begin
     ApiPageLista := True;
@@ -428,8 +442,10 @@ begin
   Result := True;
   if CurPageID = MasterPage.ID then
   begin
-    if (MasterPage.Values[0] = '') and (MasterPage.Values[1] = '') and (LeerAjuste('MasterCodeHash') <> '') then
-      MasterCodeElegido := ''   // actualizacion: se conserva el codigo que ya tenia el restaurante
+    if (LeerAjuste('MasterCodeHash') <> '') and
+       (((MasterPage.Values[0] = MarcadorCodigo) and (MasterPage.Values[1] = MarcadorCodigo)) or
+        ((MasterPage.Values[0] = '') and (MasterPage.Values[1] = ''))) then
+      MasterCodeElegido := ''   // reinstalacion: se conserva el codigo que ya tenia el restaurante
     else if not CodigoMaestroValido(MasterPage.Values[0]) then
     begin
       MsgBox('El codigo maestro debe tener exactamente 8 digitos (solo numeros).', mbError, MB_OK);
