@@ -593,31 +593,25 @@
                     if (authorization.ShowDialog(this) != DialogResult.OK) return;
                     observation = authorization.Observation;
                 }
+                if (product.Id_detalle_producto <= 0)
                 {
-                    Detalle_pedido detalle = new Detalle_pedido
-                    {
-                        Id_pedido = this.Pedido.Id_pedido,
-                        Id_tipo = product.Id_producto,
-                        Tipo = product.Tipo_producto,
-                        Precio = product.Precio,
-                        Cantidad = product.Cantidad - 1,
-                        Observaciones = product.Observaciones == null ? string.Empty : product.Observaciones,
-                    };
+                    Mensajes.MensajeInformacion("No se pudo identificar la línea del pedido en la base de datos. Cierre y vuelva a abrir el pedido.");
+                    return;
+                }
 
-                    //Eliminar de la base de datos (el empleado es quien tiene la sesión: el código maestro no identifica a nadie)
-                    string rpta = NPedido.ActualizarDetallePedido(detalle, datos.Id_empleado, "DELETE");
-                    if (!rpta.Equals("OK"))
-                    {
-                        Mensajes.MensajeInformacion("Hubo un error actualizando el detalle del pedido en la bd");
-                    }
-                    else
-                    {
-                        // Rastro para el reporte diario: Id 0 en la clave maestra = autorizó el código maestro.
-                        string saved = NPedido.InsertarEliminacionComanda(this.Pedido.Id_pedido, 0, datos.Id_empleado,
-                            product.Id_producto, product.Tipo_producto, observation);
-                        if (!saved.Equals("OK"))
-                            Mensajes.MensajeInformacion("El producto se quitó, pero no se pudo guardar el registro de la eliminación: " + saved);
-                    }
+                // Mismo procedimiento que el celular (sp_Movil_Quitar_item, db/04 y db/08): quita UNA unidad de la línea por su
+                // Id_detalle_pedido, borra los ingredientes si la línea desaparece y deja el registro en Delete_pedidos en la
+                // misma transacción. Id 0 en la clave maestra = autorizó el código maestro; la sesión es quien tiene la sesión.
+                // sp_Actualizar_detalle_pedido no servía aquí: con DELETE e Id_detalle_pedido = 0 no hace nada.
+                try
+                {
+                    NApiMovil.QuitarItemMovil(this.Pedido.Id_pedido, product.Id_detalle_producto, 1, observation, 0, datos.Id_empleado);
+                }
+                catch (System.Data.SqlClient.SqlException ex)
+                {
+                    // Un 8144/201/2812 aquí significa que a la base le falta db/08_items_eliminados.sql.
+                    Mensajes.MensajeInformacion("No se pudo quitar el producto de la base de datos: " + ex.Message);
+                    return;
                 }
             }
 
