@@ -100,6 +100,8 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             // chkDeletePedidos
             // 
             this.chkDeletePedidos.AutoSize = true;
+            this.chkDeletePedidos.Checked = true;
+            this.chkDeletePedidos.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkDeletePedidos.Location = new System.Drawing.Point(1021, 17);
             this.chkDeletePedidos.Name = "chkDeletePedidos";
             this.chkDeletePedidos.Size = new System.Drawing.Size(245, 21);

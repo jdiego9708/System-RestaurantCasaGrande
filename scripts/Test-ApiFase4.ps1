@@ -17,7 +17,9 @@
 param(
     [string]$Database = "CasaGrandeBD_prod",
     [string]$Base = "http://localhost:8099/api/v1",
-    [int]$Puerto = 0
+    [int]$Puerto = 0,
+    # Codigo maestro de 8 digitos configurado en el SISMistico.exe.config que se prueba (Cambiar-Codigo-Maestro.ps1 -RutaConfig ...).
+    [string]$MasterCode = "12345678"
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,8 +77,8 @@ $bebida = [int](Sql-Scalar "SELECT TOP 1 Id_bebida FROM Bebidas WHERE Estado='AC
 $platoInexistente = [int](Sql-Scalar "SELECT ISNULL(MAX(Id_plato), 0) + 500 FROM Platos")
 $pDet = [decimal](Sql-Scalar "SELECT Precio_plato FROM Platos WHERE Id_plato=$platoDet")
 $pBeb = [decimal](Sql-Scalar "SELECT Precio_bebida FROM Bebidas WHERE Id_bebida=$bebida")
-$pinOk = [int](Sql-Scalar "SELECT TOP 1 Codigo_maestro FROM Empleados WHERE Id_empleado>0 AND Codigo_maestro>0 AND Estado='ACTIVO' ORDER BY Id_empleado")
-$pinMalo = [int](Sql-Scalar "SELECT ISNULL(MAX(Codigo_maestro), 0) + 4021 FROM Empleados")
+$pinOk = $MasterCode
+$pinMalo = if ($MasterCode -eq "87654321") { "11111111" } else { "87654321" }
 
 function Ing-Id([string]$tipo, [string]$patron) { [int](Sql-Scalar "SELECT TOP 1 Id_ingrediente FROM Ingredientes WHERE Tipo_ingrediente='$tipo' AND Nombre_ingrediente $patron ORDER BY Id_ingrediente") }
 $set1 = @("SOPA", "ARROZ", "ACOMPANANTE", "BEBIDA") | ForEach-Object { Ing-Id $_ "NOT LIKE 'SIN%'" }
@@ -173,19 +175,20 @@ try {
     $lineaBebida = [int](@($ag.json.items | Where-Object { $_.tipo -eq "BEBIDA" })[0].id_detalle_pedido)
     Add-Result "quitar sin clave_maestra -> 400" 400 (Invoke-Api "/pedidos/$id/items/$lineaBebida" $h "DELETE").status
     Add-Result "quitar con clave mala -> 403" 403 (Invoke-Api "/pedidos/$id/items/$lineaBebida`?clave_maestra=$pinMalo" $h "DELETE").status
-    Add-Result "quitar linea de otro pedido -> 404" 404 (Invoke-Api "/pedidos/999999999/items/$lineaBebida`?clave_maestra=$pinOk" $h "DELETE").status
-    Add-Result "quitar mas unidades de las que hay -> 422" 422 (Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk&cantidad=9" $h "DELETE").status
+    Add-Result "quitar sin observacion -> 400" 400 (Invoke-Api "/pedidos/$id/items/$lineaBebida`?clave_maestra=$pinOk" $h "DELETE").status
+    Add-Result "quitar linea de otro pedido -> 404" 404 (Invoke-Api "/pedidos/999999999/items/$lineaBebida`?clave_maestra=$pinOk&observacion=prueba" $h "DELETE").status
+    Add-Result "quitar mas unidades de las que hay -> 422" 422 (Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk&observacion=prueba&cantidad=9" $h "DELETE").status
 
-    $q1 = Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk" $h "DELETE"
+    $q1 = Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk&observacion=prueba" $h "DELETE"
     Add-Result "quitar 1 de 2 -> 200" 200 $q1.status
     Add-Result "quitar 1 de 2: la linea queda en 1" 1 ([int](Sql-Scalar "SELECT Cantidad FROM Detalle_pedido WHERE Id_detalle_pedido=$lineaPlato"))
     Add-Result "quitar 1 de 2: los ingredientes siguen" "True" ([int](Sql-Scalar "SELECT COUNT(*) FROM Detalle_ingredientes_pedido WHERE Id_detalle_pedido=$lineaPlato") -gt 0)
 
-    $q2 = Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk" $h "DELETE"
+    $q2 = Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk&observacion=prueba" $h "DELETE"
     Add-Result "quitar la ultima unidad -> 200" 200 $q2.status
     Add-Result "quitar la ultima unidad: la linea desaparece" 0 ([int](Sql-Scalar "SELECT COUNT(*) FROM Detalle_pedido WHERE Id_detalle_pedido=$lineaPlato"))
     Add-Result "quitar la ultima unidad: sus ingredientes tambien" 0 ([int](Sql-Scalar "SELECT COUNT(*) FROM Detalle_ingredientes_pedido WHERE Id_detalle_pedido=$lineaPlato"))
-    Add-Result "quitar una linea que ya no existe -> 404" 404 (Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk" $h "DELETE").status
+    Add-Result "quitar una linea que ya no existe -> 404" 404 (Invoke-Api "/pedidos/$id/items/$lineaPlato`?clave_maestra=$pinOk&observacion=prueba" $h "DELETE").status
 
     # ===== 5. PATCH /estado =====
     Add-Result "estado distinto de SALIENDO -> 422" 422 (Invoke-Api "/pedidos/$id/estado" $h "PATCH" @{ estado = "TERMINADO" }).status
@@ -203,7 +206,7 @@ try {
     Add-Result "cancelar guarda el motivo" "El cliente se retiro" ([string](Sql-Scalar "SELECT Observaciones_pedido FROM Pedidos WHERE Id_pedido=$id"))
     Add-Result "cancelar dos veces -> 422" 422 (Invoke-Api "/pedidos/$id/cancelar" $h "POST" @{ observaciones = "otra" }).status
     Add-Result "tras cancelar no se agregan items -> 422" 422 (Invoke-Api "/pedidos/$id/items" $h "POST" @{ items = @(@{ tipo = "BEBIDA"; id_tipo = $bebida; cantidad = 1 }) }).status
-    Add-Result "tras cancelar no se quitan items -> 422" 422 (Invoke-Api "/pedidos/$id/items/$lineaBebida`?clave_maestra=$pinOk" $h "DELETE").status
+    Add-Result "tras cancelar no se quitan items -> 422" 422 (Invoke-Api "/pedidos/$id/items/$lineaBebida`?clave_maestra=$pinOk&observacion=prueba" $h "DELETE").status
     Add-Result "tras cancelar no se cambia el estado -> 422" 422 (Invoke-Api "/pedidos/$id/estado" $h "PATCH" @{ estado = "SALIENDO" }).status
 
     # ===== 7. imprimir =====

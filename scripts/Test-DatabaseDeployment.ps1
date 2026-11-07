@@ -69,7 +69,7 @@ try {
     Execute-File $database (Join-Path $dbDir 'produccion-schema.sql') -Baseline
     Execute-Sql $database "INSERT dbo.Clientes (Nombre_cliente, Direccion_cliente, Referencia_ubicacion, Estado_cliente) VALUES ('AUDITORIA MIGRACION', 'CRA PRUEBA 123', 'REFERENCIA PRUEBA', 'ACTIVO');"
     $migrations = @('01_sp_Movil_Insertar_pedido.sql','02_unificar_empleados_duplicados.sql',
-        '03_sp_Movil_Agregar_items.sql','04_sp_Movil_Quitar_item.sql','05_activar_empleados.sql','06_domicilios_direcciones.sql','07_alegra_integration.sql')
+        '03_sp_Movil_Agregar_items.sql','04_sp_Movil_Quitar_item.sql','05_activar_empleados.sql','06_domicilios_direcciones.sql','07_alegra_integration.sql','08_items_eliminados.sql')
     $firstDefinitions = $null
     for ($pass = 1; $pass -le 2; $pass++) {
         foreach ($file in $migrations) {

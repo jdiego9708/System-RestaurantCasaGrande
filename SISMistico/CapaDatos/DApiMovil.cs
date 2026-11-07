@@ -313,7 +313,7 @@ namespace CapaDatos
         }
 
         /// <summary>Quita unidades con sp_Movil_Quitar_item. Devuelve lo que queda en la línea (0 = eliminada).</summary>
-        public int QuitarItemMovil(int idPedido, int idDetalle, int cantidad)
+        public int QuitarItemMovil(int idPedido, int idDetalle, int cantidad, string observacion, int idClaveMaestra, int idSesion)
         {
             using (SqlConnection cn = new SqlConnection(Conexion.Cn))
             using (SqlCommand cmd = new SqlCommand("sp_Movil_Quitar_item", cn))
@@ -323,6 +323,9 @@ namespace CapaDatos
                 cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = idPedido;
                 cmd.Parameters.Add("@Id_detalle_pedido", SqlDbType.Int).Value = idDetalle;
                 cmd.Parameters.Add("@Cantidad", SqlDbType.Int).Value = cantidad;
+                cmd.Parameters.Add("@Observacion", SqlDbType.VarChar, 500).Value = (object)observacion ?? DBNull.Value;
+                cmd.Parameters.Add("@Id_usuario_clave_maestra", SqlDbType.Int).Value = idClaveMaestra;
+                cmd.Parameters.Add("@Id_usuario_sesion", SqlDbType.Int).Value = idSesion;
                 SqlParameter salida = cmd.Parameters.Add("@CantidadRestante", SqlDbType.Int);
                 salida.Direction = ParameterDirection.Output;
 

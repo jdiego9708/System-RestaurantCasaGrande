@@ -908,6 +908,49 @@ namespace CapaDatos
 
         #endregion
 
+        #region METODO BUSCAR PRODUCTOS ELIMINADOS (reporte diario)
+        /// <summary>
+        /// Productos quitados de un pedido en el rango de fechas, con quién autorizó, cuándo y el motivo.
+        /// Las unidades quitadas en el mismo minuto, por el mismo motivo, se agrupan en una fila con su cantidad.
+        /// Tabla vacía si no hay ninguno.
+        /// </summary>
+        public static DataTable BuscarProductosEliminados(DateTime desde, DateTime hasta)
+        {
+            const string sql =
+                "SELECT dp.Id_pedido, dp.Tipo, COALESCE(pl.Nombre_plato, be.Nombre_bebida, '') AS Nombre, " +
+                "dp.Fecha, CONVERT(varchar(5), dp.Hora) AS Hora, dp.Motivo, " +
+                "(CASE WHEN dp.Id_usuario_clave_maestra = 0 THEN 'Código maestro' ELSE em.Nombre_empleado END) AS Autoriza, " +
+                "ses.Nombre_empleado AS Sesion, COUNT(*) AS Cantidad " +
+                "FROM Delete_pedidos dp " +
+                "LEFT JOIN Platos pl ON dp.Tipo = 'PLATO' AND pl.Id_plato = dp.Id_tipo " +
+                "LEFT JOIN Bebidas be ON dp.Tipo = 'BEBIDA' AND be.Id_bebida = dp.Id_tipo " +
+                "LEFT JOIN Empleados em ON em.Id_empleado = dp.Id_usuario_clave_maestra " +
+                "LEFT JOIN Empleados ses ON ses.Id_empleado = dp.Id_usuario_sesion " +
+                "WHERE dp.Fecha BETWEEN @Desde AND @Hasta " +
+                "GROUP BY dp.Id_pedido, dp.Tipo, dp.Id_tipo, COALESCE(pl.Nombre_plato, be.Nombre_bebida, ''), " +
+                "dp.Fecha, CONVERT(varchar(5), dp.Hora), dp.Motivo, dp.Id_usuario_clave_maestra, em.Nombre_empleado, ses.Nombre_empleado " +
+                "ORDER BY dp.Fecha, CONVERT(varchar(5), dp.Hora)";
+
+            DataTable tabla = new DataTable("ProductosEliminados");
+            try
+            {
+                using (SqlConnection cn = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand(sql, cn))
+                {
+                    cmd.Parameters.Add("@Desde", SqlDbType.Date).Value = desde.Date;
+                    cmd.Parameters.Add("@Hasta", SqlDbType.Date).Value = hasta.Date;
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        da.Fill(tabla);
+                }
+            }
+            catch (Exception)
+            {
+                // El reporte sigue sin esta sección si la consulta falla.
+            }
+            return tabla;
+        }
+        #endregion
+
         #region METODO INSERTAR ELIMINACIÓN COMANDA
         public static string InsertarEliminaciónComanda(int id_pedido, int id_usuario_clave_maestra, int id_usuario_sesion, int id_tipo, string tipo, string observaciones)
         {

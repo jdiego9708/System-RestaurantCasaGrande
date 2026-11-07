@@ -385,10 +385,18 @@ try {
     } else { Aviso 'Omitido. El modulo de Domicilios del escritorio no funcionara hasta aplicarlo.' }
 
     Write-Host ''
-    if (Pregunta '    Preparar las tablas de integracion con Alegra (07, no emite documentos)?') {
-        Correr-Sql (Join-Path $db '07_alegra_integration.sql') $Database
-        Ok 'Tablas de integracion Alegra preparadas'
-    }
+    Write-Host '    Alegra (07): requisito de esta version. Prepara las solicitudes de factura electronica y su seguimiento.'
+    Write-Host '    Se aplica siempre; es repetible, no envia documentos ni guarda credenciales de Alegra.'
+    Correr-Sql (Join-Path $db '07_alegra_integration.sql') $Database
+    Ok 'Tablas de integracion Alegra preparadas'
+    Write-Host '    Configure credenciales, cuenta e impresion con 05-Configurar-Alegra.ps1 despues de instalar el programa.'
+    Write-Host '    Este paso prepara SQL y no necesita tokens ni conexion con Alegra. Mantenga el escritorio cerrado hasta terminar 05.'
+
+    Write-Host ''
+    Write-Host '    Productos eliminados (08): actualiza sp_Movil_Quitar_item para que el movil deje en Delete_pedidos quien'
+    Write-Host '    autorizo, cuando y el motivo. Se aplica siempre; es repetible y no borra datos.'
+    Correr-Sql (Join-Path $db '08_items_eliminados.sql') $Database
+    Ok 'Registro de productos eliminados preparado'
 
     # ---------- 6. Verificacion final ----------
     Paso '7/7  Verificacion final (solo lectura)'
@@ -396,11 +404,12 @@ try {
     Write-Host ''
     Write-Host '    Deben decir OK los tres procedimientos; pines_compartidos_entre_activos y activos_con_pin_cero deben ser 0.' -ForegroundColor White
     Write-Host '    Domicilios debe decir OK en tabla, columna, relaciones, mesa 0 y los ocho procedimientos.' -ForegroundColor White
+    Write-Host '    Alegra debe decir OK en las cuatro tablas y en las columnas de procesamiento de solicitudes.' -ForegroundColor White
     Write-Host "    Copia de seguridad: $bak" -ForegroundColor White
     Termina 0
 }
 catch {
     Write-Host "`nERROR: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host 'Si ya se hizo la copia de seguridad, la base sigue como estaba antes del paso que fallo.' -ForegroundColor Yellow
+    Write-Host 'Si ya se hizo la copia de seguridad, los pasos anteriores pueden estar aplicados. Revise el error antes de repetir; el respaldo permite restaurar.' -ForegroundColor Yellow
     Termina 1
 }

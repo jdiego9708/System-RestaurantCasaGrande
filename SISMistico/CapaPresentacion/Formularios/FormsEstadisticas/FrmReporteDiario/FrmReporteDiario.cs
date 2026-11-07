@@ -346,6 +346,25 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
 
                     resumenResultados.Append(infoDeletePedidos);
                 }
+
+                // Productos quitados de un pedido: qué, cuándo se autorizó, quién y la observación.
+                DataTable dtEliminados = NPedido.BuscarProductosEliminados(date1, date2);
+                if (dtEliminados.Rows.Count > 0)
+                {
+                    resumenResultados.Append(Environment.NewLine).Append("Productos eliminados de pedidos").Append(Environment.NewLine);
+                    foreach (DataRow row in dtEliminados.Rows)
+                    {
+                        string autoriza = Convert.ToString(row["Autoriza"]);
+                        string motivo = Convert.ToString(row["Motivo"]);
+                        resumenResultados.Append("* " + Convert.ToString(row["Nombre"]) + " x" + Convert.ToInt32(row["Cantidad"]) +
+                            " - Pedido " + Convert.ToInt32(row["Id_pedido"]) +
+                            " - Fecha: " + Convert.ToDateTime(row["Fecha"]).ToString("dd-MM-yy") +
+                            " - Hora: " + Convert.ToString(row["Hora"]) +
+                            " - Autorizó: " + (autoriza.Length > 0 ? autoriza : "(sin dato)") +
+                            (Convert.ToString(row["Sesion"]).Length > 0 ? " - Mesero: " + Convert.ToString(row["Sesion"]) : "") +
+                            " - Observación: " + (motivo.Length > 0 ? motivo : "(sin observación)")).Append(Environment.NewLine);
+                    }
+                }
             }
 
             this.InformacionEmpleado = informacionEmpleado;

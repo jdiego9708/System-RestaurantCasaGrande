@@ -119,7 +119,8 @@ namespace CapaNegocio
         public static DataTable EstadoPedido(int idPedido) { return Datos.EstadoPedido(idPedido); }
         public static DataTable DetalleDePedido(int idPedido, int idDetalle) { return Datos.DetalleDePedido(idPedido, idDetalle); }
         public static int AgregarItemsMovil(int idPedido, string itemsJson) { return Datos.AgregarItemsMovil(idPedido, itemsJson); }
-        public static int QuitarItemMovil(int idPedido, int idDetalle, int cantidad) { return Datos.QuitarItemMovil(idPedido, idDetalle, cantidad); }
+        public static int QuitarItemMovil(int idPedido, int idDetalle, int cantidad, string observacion, int idClaveMaestra, int idSesion)
+        { return Datos.QuitarItemMovil(idPedido, idDetalle, cantidad, observacion, idClaveMaestra, idSesion); }
         public static void CambiarEstadoPedido(int idPedido, string estado, int idMesa) { Datos.CambiarEstadoPedido(idPedido, estado, idMesa); }
         public static void CancelarPedido(int idPedido, string observaciones) { Datos.CancelarPedido(idPedido, observaciones); }
         public static bool ExistePin(int pin) { return Datos.ExistePin(pin); }

@@ -495,7 +495,11 @@ quedó aceptada para imprimir. Dos adiciones simultáneas (a la misma o a distin
 > ignora: agregar no pide PIN (D5). Errores: `400` forma, `404` pedido o producto inexistente, `422` producto
 > inactivo, reglas de ingredientes o estado no editable.
 
-### 6.5 `DELETE /pedidos/{id}/items/{id_detalle_pedido}?clave_maestra=9708`
+### 6.5 `DELETE /pedidos/{id}/items/{id_detalle_pedido}?clave_maestra=9708&observacion=motivo`
+
+> **Desde 2026-11-06:** `observacion` es obligatoria (máx. 500; 400 si falta). Con la clave maestra queda en
+> `Delete_pedidos` (una fila por unidad, como el escritorio) y el reporte diario del escritorio la lista con la
+> hora y quién autorizó. Requiere aplicar `db/08_items_eliminados.sql`.
 
 * Quita **una unidad** de esa fila; si era la última, la fila se elimina. (`?cantidad=n` quita `n`, máximo la
   cantidad de la fila.)

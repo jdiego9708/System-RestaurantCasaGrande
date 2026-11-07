@@ -72,6 +72,11 @@ namespace CapaNegocio
         {
             return DPedidos.BuscarPedidosEliminados(tipo_busqueda, texto_busqueda);
         }
+
+        public static DataTable BuscarProductosEliminados(DateTime desde, DateTime hasta)
+        {
+            return DPedidos.BuscarProductosEliminados(desde, hasta);
+        }
         #endregion
 
         #region INSERTAR ELIMINACIÓN COMANDAS

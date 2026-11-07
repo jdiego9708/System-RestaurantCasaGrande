@@ -28,6 +28,7 @@ OutputBaseFilename=SISRestaurante-Setup-{#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 ; Admin: la reserva de URL (netsh) y la regla de firewall de la API movil lo exigen.
@@ -58,16 +59,18 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "SISMistico.exe.config"; F
 Source: "{#SourceDir}\SISMistico.exe.config"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "..\scripts\Configurar-Red.ps1"; DestDir: "{app}\Herramientas"; Flags: ignoreversion
 Source: "..\scripts\Cambiar-Clave-API.ps1"; DestDir: "{app}\Herramientas"; Flags: ignoreversion
+Source: "..\scripts\Cambiar-Codigo-Maestro.ps1"; DestDir: "{app}\Herramientas"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\SISRestaurante"; Filename: "{app}\{#AppExe}"
 Name: "{group}\Datos para conectar celulares"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -NoExit -File ""{app}\Herramientas\Configurar-Red.ps1"" -SoloInformar -RutaConfig ""{app}\SISMistico.exe.config"""; Comment: "Muestra la IP, el puerto y la clave que se escriben en cada celular"
 Name: "{group}\Cambiar clave de la API"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -NoExit -File ""{app}\Herramientas\Cambiar-Clave-API.ps1"" -RutaConfig ""{app}\SISMistico.exe.config"""; Comment: "Cambia la clave que escriben los celulares (personalizada o aleatoria) sin reinstalar"
+Name: "{group}\Cambiar codigo maestro"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -NoExit -File ""{app}\Herramientas\Cambiar-Codigo-Maestro.ps1"" -RutaConfig ""{app}\SISMistico.exe.config"""; Comment: "Cambia el codigo maestro de 8 digitos que se pide en el celular para quitar productos de un pedido"
 Name: "{group}\Desinstalar SISRestaurante"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\SISRestaurante"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Abrir SISRestaurante"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "Abrir SISRestaurante"; Flags: nowait postinstall skipifsilent unchecked
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\logs"
@@ -81,6 +84,9 @@ const
 var
   ApiPage: TInputQueryWizardPage;
   AlegraPage: TInputQueryWizardPage;
+  AlegraEmissionPage: TInputQueryWizardPage;
+  MasterPage: TInputQueryWizardPage;
+  MasterCodeElegido: String;
   ApiPageLista: Boolean;
   ClaveElegida: String;
   PuertoElegido: String;
@@ -168,6 +174,60 @@ begin
   Result := (Length(Clave) >= 8) and (Pos(' ', Clave) = 0) and (Clave <> ClavePlaceholder);
 end;
 
+// Codigo maestro: exactamente 8 digitos. Solo sirve para quitar productos de un pedido desde el celular.
+function CodigoMaestroValido(const Codigo: String): Boolean;
+var
+  I: Integer;
+begin
+  Result := Length(Codigo) = 8;
+  if not Result then Exit;
+  for I := 1 to 8 do
+    if (Codigo[I] < '0') or (Codigo[I] > '9') then
+    begin
+      Result := False;
+      Exit;
+    end;
+end;
+
+// Sal aleatoria (32 hex) a partir de un GUID de Windows.
+function NuevaSal: String;
+var
+  TipoLib: Variant;
+  Texto: String;
+begin
+  Result := '';
+  // Variable local: pasar Result como parametro por referencia provoca "Access violation" en Inno Setup.
+  try
+    TipoLib := CreateOleObject('Scriptlet.TypeLib');
+    Texto := TipoLib.Guid;
+    StringChangeEx(Texto, '{', '', True);
+    StringChangeEx(Texto, '}', '', True);
+    StringChangeEx(Texto, '-', '', True);
+    Result := Lowercase(Texto);
+  except
+    Result := '';
+  end;
+  if Length(Result) <> 32 then
+    Result := Lowercase(GetSHA256OfString(GetDateTimeString('yyyymmddhhnnss', #0, #0) + ExpandConstant('{computername}{username}')));
+end;
+
+// En la configuracion solo queda sal + SHA-256(sal + codigo); el codigo en claro no se guarda.
+procedure GuardarCodigoMaestro(const Codigo: String);
+var
+  Doc: Variant;
+  Sal: String;
+begin
+  Sal := NuevaSal;
+  if NuevoDocumento(Doc) then
+  begin
+    EscribirAjuste(Doc, 'MasterCodeSalt', Sal);
+    EscribirAjuste(Doc, 'MasterCodeHash', Lowercase(GetSHA256OfString(Sal + Codigo)));
+    Doc.save(RutaConfig);
+  end
+  else
+    MsgBox('No se pudo editar ' + RutaConfig + '. Ejecute "Cambiar codigo maestro" del menu Inicio.', mbError, MB_OK);
+end;
+
 function PuertoDe(const Prefijo: String): String;
 var
   P, Q: Integer;
@@ -214,6 +274,14 @@ begin
     Result := False;
     Exit;
   end;
+  // Igual con /MasterCode=12345678 en una instalacion silenciosa.
+  ClaveParam := ExpandConstant('{param:MasterCode|}');
+  if (ClaveParam <> '') and not CodigoMaestroValido(ClaveParam) then
+  begin
+    SuppressibleMsgBox('El codigo indicado en /MasterCode debe tener exactamente 8 digitos.', mbError, MB_OK, IDOK);
+    Result := False;
+    Exit;
+  end;
   // .NET Framework 4.8 = Release 528040 o mayor (Windows 10 1903+ y Windows 11 ya lo traen).
   if not RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', Release)
      or (Release < 528040) then
@@ -257,8 +325,17 @@ begin
   Boton.Top := ApiPage.Edits[1].Top + ApiPage.Edits[1].Height + ScaleY(14);
   Boton.OnClick := @GenerarClaveClick;
 
+  MasterPage := CreateInputQueryPage(ApiPage.ID, 'Codigo maestro',
+    'Codigo de 8 digitos para quitar productos de un pedido',
+    'Es unico para todo el sistema y se pide en el celular, junto con una observacion, cada vez que se quita un ' +
+    'producto de un pedido. No reemplaza el PIN de 4 digitos de cada empleado. Se guarda cifrado (no en claro). ' +
+    'Se puede cambiar despues con "Cambiar codigo maestro" del menu Inicio. Si ya hay uno configurado, deje los ' +
+    'dos campos vacios para conservarlo.');
+  MasterPage.Add('Codigo maestro (8 digitos):', True);
+  MasterPage.Add('Repita el codigo:', True);
+
   ApiPageLista := False;
-  AlegraPage := CreateInputQueryPage(ApiPage.ID, 'Conexion con Alegra',
+  AlegraPage :=CreateInputQueryPage(ApiPage.ID, 'Conexion con Alegra',
     'Credenciales API de la cuenta del restaurante',
     'Se guardan como ALEGRA_EMAIL y ALEGRA_API_KEY en el entorno del sistema. ' +
     'Este paso no emite facturas ni verifica permisos. Si no selecciona esta tarea, conserva las credenciales existentes.');
@@ -266,12 +343,19 @@ begin
   AlegraPage.Add('Token / API key:', True);
   AlegraPage.Add('Autenticacion: Bearer (token recomendado) o Basic (anterior):', False);
   AlegraPage.Values[2] := 'Bearer';
+  AlegraEmissionPage := CreateInputQueryPage(AlegraPage.ID, 'Emision electronica en Alegra',
+    'Credencial para emitir y consultar el resultado fiscal',
+    'Para Casa Grande: use el token anterior con Basic. El token nuevo con Bearer se conserva para crear facturas y consultar catalogos. No se envian facturas durante la instalacion.');
+  AlegraEmissionPage.Add('Correo de la cuenta API de emision:', False);
+  AlegraEmissionPage.Add('Token de emision (anterior):', True);
+  AlegraEmissionPage.Add('Autenticacion de emision (Basic o Bearer):', False);
+  AlegraEmissionPage.Values[2] := 'Basic';
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := (PageID = ApiPage.ID) and not WizardIsTaskSelected('api');
-  if PageID = AlegraPage.ID then Result := not WizardIsTaskSelected('alegra');
+  if (PageID = AlegraPage.ID) or (PageID = AlegraEmissionPage.ID) then Result := not WizardIsTaskSelected('alegra');
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -286,6 +370,13 @@ begin
     if (CompareText(Trim(AlegraPage.Values[2]), 'Bearer') <> 0) and
        (CompareText(Trim(AlegraPage.Values[2]), 'Basic') <> 0) then
       Result := 'La autenticacion de Alegra debe ser Bearer o Basic.';
+    if (Trim(AlegraEmissionPage.Values[0]) = '') or (Trim(AlegraEmissionPage.Values[1]) = '') then
+      Result := 'Ingrese el correo y token de emision en la segunda pagina de Alegra.';
+    if Pos(':', AlegraEmissionPage.Values[0]) > 0 then
+      Result := 'El correo de emision no puede contener dos puntos.';
+    if (CompareText(Trim(AlegraEmissionPage.Values[2]), 'Bearer') <> 0) and
+       (CompareText(Trim(AlegraEmissionPage.Values[2]), 'Basic') <> 0) then
+      Result := 'La autenticacion de emision debe ser Bearer o Basic.';
   end;
 end;
 
@@ -319,6 +410,8 @@ begin
     ApiPage.Values[0] := ClavePorDefecto;
     ApiPage.Values[1] := PuertoPorDefecto;
   end;
+  if (CurPageID = AlegraEmissionPage.ID) and (AlegraEmissionPage.Values[0] = '') then
+    AlegraEmissionPage.Values[0] := AlegraPage.Values[0];
   if (CurPageID = wpFinished) and (ClaveElegida <> '') then
     WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10 + #13#10 +
       'Datos para cada celular:' + #13#10 +
@@ -333,6 +426,24 @@ var
   Clave: String;
 begin
   Result := True;
+  if CurPageID = MasterPage.ID then
+  begin
+    if (MasterPage.Values[0] = '') and (MasterPage.Values[1] = '') and (LeerAjuste('MasterCodeHash') <> '') then
+      MasterCodeElegido := ''   // actualizacion: se conserva el codigo que ya tenia el restaurante
+    else if not CodigoMaestroValido(MasterPage.Values[0]) then
+    begin
+      MsgBox('El codigo maestro debe tener exactamente 8 digitos (solo numeros).', mbError, MB_OK);
+      Result := False;
+    end
+    else if MasterPage.Values[0] <> MasterPage.Values[1] then
+    begin
+      MsgBox('Los dos codigos no coinciden.', mbError, MB_OK);
+      Result := False;
+    end
+    else
+      MasterCodeElegido := MasterPage.Values[0];
+    Exit;
+  end;
   if CurPageID <> ApiPage.ID then Exit;
   Clave := Trim(ApiPage.Values[0]);
   Puerto := StrToIntDef(Trim(ApiPage.Values[1]), 0);
@@ -395,6 +506,21 @@ begin
     if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
       'ALEGRA_AUTH_SCHEME', Trim(AlegraPage.Values[2])) then
       RaiseException('No se pudo guardar ALEGRA_AUTH_SCHEME en el entorno del sistema.');
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_EMISSION_EMAIL', Trim(AlegraEmissionPage.Values[0])) then
+      RaiseException('No se pudo guardar ALEGRA_EMISSION_EMAIL.');
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_EMISSION_API_KEY', Trim(AlegraEmissionPage.Values[1])) then
+      RaiseException('No se pudo guardar ALEGRA_EMISSION_API_KEY.');
+    if not RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      'ALEGRA_EMISSION_AUTH_SCHEME', Trim(AlegraEmissionPage.Values[2])) then
+      RaiseException('No se pudo guardar ALEGRA_EMISSION_AUTH_SCHEME.');
+  end;
+  if CurStep = ssPostInstall then
+  begin
+    // Instalacion silenciosa: la pagina no se mostro, se usa /MasterCode (sin el, queda lo que hubiera).
+    if MasterCodeElegido = '' then MasterCodeElegido := ExpandConstant('{param:MasterCode|}');
+    if MasterCodeElegido <> '' then GuardarCodigoMaestro(MasterCodeElegido);
   end;
   if (CurStep = ssPostInstall) and WizardIsTaskSelected('api') then
   begin

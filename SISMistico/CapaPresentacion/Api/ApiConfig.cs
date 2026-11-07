@@ -30,6 +30,35 @@ namespace CapaPresentacion.Api
             get { return Leer("ApiKey", ClavePlaceholder); }
         }
 
+        /// <summary>True si el instalador (o Cambiar-Codigo-Maestro.ps1) ya dejó el código maestro configurado.</summary>
+        public static bool CodigoMaestroConfigurado
+        {
+            get { return Leer("MasterCodeSalt", string.Empty).Length > 0 && Leer("MasterCodeHash", string.Empty).Length > 0; }
+        }
+
+        /// <summary>
+        /// Comprueba el código maestro de 8 dígitos (solo para quitar productos de un pedido). En la configuración
+        /// solo hay sal + SHA-256 hexadecimal de (sal + código) en UTF-8; el código en claro no se guarda.
+        /// </summary>
+        public static bool CodigoMaestroValido(string codigo)
+        {
+            if (!CodigoMaestroConfigurado || string.IsNullOrEmpty(codigo) || codigo.Length != 8) return false;
+            foreach (char c in codigo)
+                if (c < '0' || c > '9') return false;
+
+            string esperado = Leer("MasterCodeHash", string.Empty).ToLowerInvariant();
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(Leer("MasterCodeSalt", string.Empty) + codigo);
+            string obtenido;
+            using (System.Security.Cryptography.SHA256 sha = System.Security.Cryptography.SHA256.Create())
+                obtenido = BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", string.Empty).ToLowerInvariant();
+
+            // Comparación de tiempo constante: no filtra cuántos caracteres coinciden.
+            int diferencia = esperado.Length ^ obtenido.Length;
+            for (int i = 0; i < esperado.Length && i < obtenido.Length; i++)
+                diferencia |= esperado[i] ^ obtenido[i];
+            return diferencia == 0;
+        }
+
         public static int TokenHoras
         {
             get

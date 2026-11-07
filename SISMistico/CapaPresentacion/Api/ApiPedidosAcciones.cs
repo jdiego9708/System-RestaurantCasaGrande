@@ -176,7 +176,7 @@ namespace CapaPresentacion.Api
         }
 
         // =========================================================================================
-        // DELETE /pedidos/{id}/items/{id_detalle_pedido}?clave_maestra=9708&cantidad=1
+        // DELETE /pedidos/{id}/items/{id_detalle_pedido}?clave_maestra=12345678&observacion=motivo&cantidad=1
         // =========================================================================================
 
         public static ApiResponse QuitarItem(ApiRequest req)
@@ -189,16 +189,30 @@ namespace CapaPresentacion.Api
             if (!int.TryParse(req.Parametros["id_detalle_pedido"], out idDetalle) || idDetalle <= 0)
                 return ApiResponse.Error(400, "VALIDACION", "id_detalle_pedido debe ser un entero positivo.");
 
-            // Autorización: un PIN de cualquier empleado (igual que FrmComprobacion en el escritorio).
-            string textoPin = req.Query["clave_maestra"];
-            int pin;
-            if (string.IsNullOrEmpty(textoPin) || !int.TryParse(textoPin, out pin) || pin <= 0)
-                return ApiResponse.Error(400, "VALIDACION", "clave_maestra es obligatoria: el PIN del empleado que autoriza.");
-            if (!NApiMovil.ExistePin(pin))
+            // Autorización: el código maestro único de 8 dígitos (ApiConfig), no el PIN de un empleado.
+            string codigoMaestro = req.Query["clave_maestra"];
+            if (string.IsNullOrEmpty(codigoMaestro) || codigoMaestro.Length != 8 || !codigoMaestro.All(char.IsDigit))
+                return ApiResponse.Error(400, "VALIDACION", "clave_maestra es obligatoria: el código maestro de 8 dígitos.");
+            if (!ApiConfig.CodigoMaestroConfigurado)
+                return ApiResponse.Error(503, "NO_CONFIGURADO",
+                    "El código maestro no está configurado en el PC (instalador o Cambiar-Codigo-Maestro.ps1).");
+            if (!ApiConfig.CodigoMaestroValido(codigoMaestro))
             {
                 ApiAuth.RegistrarFallo(req.Ip);
-                return ApiResponse.Error(403, "CLAVE_INVALIDA", "La clave maestra no corresponde a ningún empleado.");
+                return ApiResponse.Error(403, "CLAVE_INVALIDA", "El código maestro no es correcto.");
             }
+
+            // La observación es obligatoria: queda en el registro de eliminados del reporte diario.
+            string observacion = (req.Query["observacion"] ?? string.Empty).Trim();
+            if (observacion.Length == 0)
+                return ApiResponse.Error(400, "VALIDACION", "observacion es obligatoria: el motivo por el que se quita el producto.");
+            if (observacion.Length > 500)
+                return ApiResponse.Error(400, "VALIDACION", "observacion no puede pasar de 500 caracteres.");
+
+            // El código es único, no identifica a nadie: Id 0 ("NINGUNO") marca "autorizó el código maestro" y el
+            // reporte lo muestra así. Id_usuario_sesion sí es el mesero con la sesión abierta.
+            int idSesion = req.Sesion.Empleado.IdEmpleado;
+            const int idCodigoMaestro = 0;
 
             int cantidad = 1;
             string textoCantidad = req.Query["cantidad"];
@@ -222,7 +236,7 @@ namespace CapaPresentacion.Api
             int restante;
             try
             {
-                restante = NApiMovil.QuitarItemMovil(id, idDetalle, cantidad);
+                restante = NApiMovil.QuitarItemMovil(id, idDetalle, cantidad, observacion, idCodigoMaestro, idSesion);
             }
             catch (SqlException ex) when (ex.Number >= 50020 && ex.Number <= 50023)
             {
