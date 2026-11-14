@@ -272,3 +272,20 @@ mesa. Si algún día el móvil debe tomar domicilios, la API tendrá que impleme
 | Catálogo platos/bebidas | `NPlatos`, `NBebidas` | `DPlatos`, `DBebidas` | `sp_Buscar_platos`, `sp_Buscar_bebidas` |
 
 Estos métodos son la base de la capa `Api` propuesta en [03](03-propuesta-api-movil.md).
+
+## 11. Lista de platos y bebidas paginada (2026-11-13)
+
+La lista de resultados de `FrmPedido` muestra **20 productos por página** (`FrmPedido.Catalog.cs`), con una barra
+«Anterior · Página X de N · Siguiente» bajo la lista. Vale igual al elegir un tipo de plato o de bebida y al buscar por
+nombre.
+
+- Antes se creaba una tarjeta `ProductoItem` por cada producto del resultado y se leía su foto original; con un tipo
+  de muchos productos la ventana tardaba en responder. Ahora solo existen las tarjetas de la página visible, y las de
+  la página anterior se liberan al cambiar.
+- La consulta no cambió: `sp_Buscar_platos` / `sp_Buscar_bebidas` siguen devolviendo el resultado completo y se pagina
+  en memoria. No hay nada que desplegar en la base.
+- Las fotos salen de `ProductThumbnails`: se reducen una vez al tamaño en que se muestran y quedan en memoria para toda
+  la sesión (la clave incluye la fecha del fichero, así que una foto cambiada se vuelve a leer). Se cargan fuera del
+  hilo de la ventana y ya no dejan el fichero bloqueado.
+- La lista del pedido (derecha) no se paginó: sigue con `LoadImagesProductsSelected`.
+- Prueba: `scripts\Test-OrderCatalogPaging.ps1`.

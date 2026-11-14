@@ -88,6 +88,16 @@ class AlegraContractTests
         decimal gross = 0;
         foreach(Dictionary<string,object> item in items) gross += Convert.ToDecimal(item["price"]) * Convert.ToDecimal(item["quantity"]) * 1.08m;
         Assert(Math.Abs(gross-15000) < 0.01m,"Impuestos incluidos y total editado");
+        // Precio personalizado: solo cambia la linea editada; el total de la factura pasa a 12000 + 5000 y los pagos lo suman.
+        string customSnapshot=snapshot.Replace("\"Nombre\":\"Plato\",\"Precio\":10800,\"Cantidad\":1","\"Nombre\":\"Plato\",\"Precio\":10800,\"Cantidad\":1,\"ElectronicPrice\":12000");
+        Assert(customSnapshot!=snapshot,"La prueba de precio personalizado modifico el snapshot");
+        Assert(AlegraInvoiceBuilder.ExpectedTotal(customSnapshot,config)==17000,"El total esperado usa el precio personalizado");
+        var custom=serializer.DeserializeObject(AlegraInvoiceBuilder.Build(customSnapshot,config,new DateTime(2026,11,11))) as Dictionary<string,object>;
+        var customItems=((object[])custom["items"]).Cast<Dictionary<string,object>>().ToArray();
+        Assert(Math.Abs(Convert.ToDecimal(customItems[0]["price"])*1.08m-12000)<0.01m,"El item lleva el precio personalizado sin impuestos");
+        Assert(Math.Abs(Convert.ToDecimal(customItems[1]["price"])*1.08m-5000)<0.01m,"Las demas lineas no cambian");
+        Assert(((object[])custom["payments"]).Cast<Dictionary<string,object>>().Sum(p=>Convert.ToDecimal(p["amount"]))==17000,"Los pagos suman el total personalizado");
+        Reject(()=>AlegraInvoiceBuilder.Build(customSnapshot.Replace("\"ElectronicPrice\":12000","\"ElectronicPrice\":0"),config,DateTime.Today),"Rechazar precio personalizado en cero");
         string localizedSnapshot=serializer.Serialize(new {
             orderId=43, saleValues=new[] {"43","16200","0,00","16200","0","","0,00","0,00","15000",""},
             products=products, payments=new[] {new {Pago="EFECTIVO",Valor_pago="15000,00"}}
@@ -113,6 +123,27 @@ class AlegraContractTests
         config.Products.Remove("BEBIDA:2");
         Reject(() => AlegraInvoiceBuilder.Build(partialSnapshot,config,DateTime.Today),"Nada vinculado: no hay nada que facturar");
         Assert(!AlegraInvoiceBuilder.AnyLinked(snapshot,config),"Ningun producto vinculado");
+        // Catalogo de departamentos y municipios de Alegra (grafia exacta) y cambios de contacto.
+        Assert(AlegraPlaces.Departments.Count==33,"33 departamentos en el catalogo");
+        Assert(AlegraPlaces.Municipalities("Caldas").Contains("Manizales"),"Manizales pertenece a Caldas");
+        Assert(AlegraPlaces.Municipalities("Bogotá D.C.").SequenceEqual(new[]{"Bogotá, D.C."}),"Bogota: departamento y municipio con grafia distinta");
+        Assert(AlegraPlaces.CanonicalDepartment("valle del cauca")=="Valle del Cauca","Departamento sin distinguir mayusculas");
+        Assert(AlegraPlaces.CanonicalMunicipality("Antioquia","MEDELLIN")=="Medellín","Municipio sin distinguir tildes");
+        Assert(AlegraPlaces.CanonicalMunicipality("Caldas","Cali")==null,"Un municipio de otro departamento no es valido");
+        var contact=new Dictionary<string,object>{
+            {"id","9"},{"name","LAURA HOYOS"},{"email","a@x.co"},{"phonePrimary","300"},{"kindOfPerson","PERSON_ENTITY"},{"regime","SIMPLIFIED_REGIME"},
+            {"identificationObject",new Dictionary<string,object>{{"number","1053"},{"type","CC"},{"dv",""}}},
+            {"nameObject",new Dictionary<string,object>{{"firstName","LAURA"},{"secondName",""},{"lastName","HOYOS"}}},
+            {"address",new Dictionary<string,object>{{"address","Cll 1"},{"department","Caldas"},{"city","Manizales"},{"country","Colombia"}}}};
+        var form=new Dictionary<string,string>{
+            {"identificationType","CC"},{"kindOfPerson","PERSON_ENTITY"},{"regime","SIMPLIFIED_REGIME"},{"Dígito de verificación (NIT)",""},
+            {"Nombre o razón social","LAURA HOYOS"},{"Primer nombre","LAURA"},{"Segundo nombre",""},{"Apellidos","HOYOS"},
+            {"Correo electrónico","a@x.co"},{"Teléfono","300"},{"Dirección fiscal","Cll 1"},{"Departamento","Caldas"},{"Municipio","Manizales"},{"País","Colombia"}};
+        Assert(AlegraWorkflow.ContactChanges(contact,form).Count==0,"Sin cambios no se envia nada");
+        form["Correo electrónico"]="nuevo@x.co"; form["Municipio"]="Villamaría";
+        var changes=AlegraWorkflow.ContactChanges(contact,form);
+        Assert(changes.Count==2 && changes.ContainsKey("email") && changes.ContainsKey("address"),"Solo viajan los campos modificados (correo y direccion completa)");
+        Assert(!changes.ContainsKey("name") && !changes.ContainsKey("nameObject") && !changes.ContainsKey("phonePrimary"),"Los campos intactos no se envian");
         Console.WriteLine("OK: " + passed + " comprobaciones sin red, credenciales reales ni escrituras en BD.");
     }
 }

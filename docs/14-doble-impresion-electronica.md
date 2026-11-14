@@ -10,6 +10,17 @@ Estado del 6 de noviembre de 2026. Este flujo sustituye la restriccion historica
 - Impresora vacia en configuracion: misma predeterminada Windows que usa la impresion local. Microsoft Print to PDF y Adobe PDF abren un dialogo Windows para guardar una copia intacta del PDF de 80 mm, en un hilo STA. No necesitan reprocesar el archivo con el controlador virtual.
 - El instalador para Windows de 64 bits incluye renderer ejecutable y SumatraPDF portable para impresoras fisicas. El restaurante no necesita instalar Python; solo el equipo que compila usa scripts/requirements-alegra-pdf.txt.
 
+> El resumen completo de la sesion del 11 de noviembre (diseno, ventana de facturas, precio editable, receptor) esta en [16-facturacion-e-impresion-2026-11-11.md](16-facturacion-e-impresion-2026-11-11.md). Las fechas con hora salen en 12 h con segundos.
+
+## Diseno de 80 mm (11-nov-2026)
+
+Orden y contenido, todo centrado salvo la tabla de detalle y los totales: logo (1 bit, 33 mm, embebido en el renderer) · separador fino · emisor (nombre, NIT/CC con digito de verificacion, direccion y ciudad, correo, «Regimen: Impuesto Nacional al Consumo - INC») · separador grueso · adquirente (nombre, identificacion) · separador · «FACTURA ELECTRÓNICA DE VENTA», numero, emision DIAN, forma de pago, metodo de pago, vencimiento · separador · DETALLE (# / Producto / Cantidad / Precio / Imp) · subtotal, total del impuesto por tarifa, TOTAL CON IMPUESTOS · terminos del XML · separador · QR, CUFE en texto, fechas de generacion y validacion · autorizacion de numeracion · software y trazabilidad · observaciones de validacion.
+
+- Precio = unitario sin impuestos; Imp = tarifa de cada linea. Importes en pesos enteros.
+- **QR termico**: antes era vectorial de 53 mm escalado, con modulos de fraccion de punto que el controlador suaviza. Ahora es imagen de 1 bit, correccion M, zona de silencio de 4 modulos y modulo de 8 puntos de 203 dpi (1 mm), 61 mm de ancho como maximo 70 mm. Se decodifica a 203 dpi y con desenfoque; **sigue pendiente leerlo en papel real**.
+- Se conservan las leyendas de gran contribuyente/autorretenedor cuando aplican y las notas del XML. Se quito el telefono del emisor.
+- Tras cambiar el renderer hay que regenerar el ejecutable (`Build-AlegraPdfTools.ps1`) y el instalador/USB.
+
 ## Persistencia y recuperacion
 
 `AlegraInvoiceRequests.PdfPath` apunta al PDF **oficial**. La representacion se guarda aparte, con nombre `{SaleId}-80mm.pdf`, junto con XML, detalle y `.revision.json` de verificaciones. Los documentos reales quedan en `%LOCALAPPDATA%/CasaGrande/Alegra/PDF`, fuera del repositorio y de la USB.

@@ -34,7 +34,8 @@ function Get-RollOptions([Xml.XmlDocument]$xml) {
                 $value=$property.SelectSingleNode('f:Value',$ns)
                 if($value) { $size[($property.GetAttribute('name') -split ':')[-1]]=[double]$value.InnerText }
             }
-            if($size.MediaSizeWidth -ge 65000 -and $size.MediaSizeWidth -le 85000 -and $size.MediaSizeHeight -gt 0) {
+            # Rollos de 58 mm (48 mm imprimibles) y de 80 mm (72 mm imprimibles).
+            if($size.MediaSizeWidth -ge 45000 -and $size.MediaSizeWidth -le 85000 -and $size.MediaSizeHeight -gt 0) {
                 [pscustomobject]@{Nombre=$option.GetAttribute('name'); Ancho_mm=$size.MediaSizeWidth/1000; Alto_mm=$size.MediaSizeHeight/1000; Option=$option}
             }
         }
@@ -145,7 +146,7 @@ try {
         $config=Get-PrintConfiguration -PrinterName $NombreImpresora
         $cap=Read-SafeXml $config.PrintCapabilitiesXML
         $roll=Get-RollOptions $cap | Sort-Object Alto_mm -Descending | Select-Object -First 1
-        if(!$roll -or $roll.Alto_mm -lt 500) { throw 'El controlador no anuncia un formato largo de rollo de 65-85 mm. No se cambia nada.' }
+        if(!$roll -or $roll.Alto_mm -lt 500) { throw 'El controlador no anuncia un formato largo de rollo de 45-85 mm. No se cambia nada.' }
         $newDefault=$queue.MergeAndValidatePrintTicket($queue.DefaultPrintTicket,(Ticket-FromXml (Set-RollInTicket $defaultXml $cap $roll))).ValidatedPrintTicket
         $newUser=$queue.MergeAndValidatePrintTicket((Ticket-FromXml $userXml),(Ticket-FromXml (Set-RollInTicket $userXml $cap $roll))).ValidatedPrintTicket
         Assert-Roll $newDefault $roll; Assert-Roll $newUser $roll

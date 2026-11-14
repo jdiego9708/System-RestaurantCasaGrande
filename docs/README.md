@@ -1,6 +1,8 @@
+> Diagnostico PT210: [conexion Bluetooth, RawBT y pendientes](17-diagnostico-bluetooth-pt210-2026-11-11.md).
+
 > Para retomar como otro agente: **[CONTINUAR-AQUI](../CONTINUAR-AQUI.md)**.
 
-> Continuidad actual: [sesion 6 de noviembre de 2026](15-cierre-de-sesion-2026-11-06.md), [doble impresion](14-doble-impresion-electronica.md) y [despliegue actualizado](08-instalacion-desde-cero.md).
+> Continuidad actual: [facturacion e impresion del 11 de noviembre de 2026](16-facturacion-e-impresion-2026-11-11.md), [sesion 6 de noviembre de 2026](15-cierre-de-sesion-2026-11-06.md), [doble impresion](14-doble-impresion-electronica.md) y [despliegue actualizado](08-instalacion-desde-cero.md).
 
 # Documentación — Sistema Restaurante Casa Grande
 
