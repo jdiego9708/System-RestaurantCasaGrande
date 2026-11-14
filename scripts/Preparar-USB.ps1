@@ -27,7 +27,11 @@
         .\Preparar-USB.ps1 -CarpetaDestino D:\Temp\kit   # NO USB: usa esa carpeta como raiz (pruebas, carpeta de red)
         .\Preparar-USB.ps1 -Si                  # no pide la confirmacion final
         .\Preparar-USB.ps1 -CopiaBase D:\Copias\CasaGrandeBD.bak   # incluye una copia de la base en Copias\ (restaurable por el 01)
-        .\Preparar-USB.ps1 -SqlLocalDb D:\Setup\SqlLocalDB.msi     # incluye LocalDB en Requisitos\ (el 01 lo instala si falta)
+        .\Preparar-USB.ps1 -SqlLocalDb D:\Otro\SqlLocalDB.msi      # otro MSI de LocalDB (por defecto D:\Setup\SqlLocalDB.msi)
+        .\Preparar-USB.ps1 -SinLocalDb                             # no incluye LocalDB
+
+    LocalDB: Windows 11 no lo trae. Por defecto el kit lleva Requisitos\SqlLocalDB.msi y el paso 01 lo instala solo. Si el
+    MSI no esta en D:\Setup, se descarga de Microsoft y solo se usa si trae firma valida de Microsoft.
 
     Solo escribe dentro de "<unidad>\Casa Grande Installers". No formatea ni borra nada fuera de esa carpeta.
 #>
@@ -45,7 +49,8 @@ param(
     # Llevan datos reales (empleados, clientes, ventas): use una copia propia y guarde la USB con cuidado.
     [string[]]$CopiaBase,
     # SqlLocalDB.msi (SQL Server Express, medios LocalDB). Windows 11 no trae LocalDB; con el MSI el 01 lo instala.
-    [string]$SqlLocalDb,
+    [string]$SqlLocalDb = 'D:\Setup\SqlLocalDB.msi',
+    [switch]$SinLocalDb,
     [string]$ApkRuta,
     [string]$FlutterBin = 'D:\DevTools\flutter-3.47.8\bin',
     [string]$AlegraBearerFile = 'D:\Setup\apikeyAlegraCasaGrandeNuevo.txt',
@@ -232,11 +237,24 @@ foreach ($c in @($CopiaBase | Where-Object { $_ })) {
     if ([IO.Path]::GetExtension($c).ToLower() -notin '.bak', '.sql') { Falla "La copia debe ser .bak o .sql: $c" }
     $plan += @{ Origen = (Resolve-Path -LiteralPath $c).Path; Destino = ('Copias\' + (Split-Path $c -Leaf)) }
 }
-if ($SqlLocalDb) {
-    if (-not (Test-Path -LiteralPath $SqlLocalDb -PathType Leaf) -or [IO.Path]::GetExtension($SqlLocalDb).ToLower() -ne '.msi') {
-        Falla "SqlLocalDb debe ser el archivo SqlLocalDB.msi: $SqlLocalDb"
+if ($SqlLocalDb -and -not $SinLocalDb) {
+    if ([IO.Path]::GetExtension($SqlLocalDb).ToLower() -ne '.msi') { Falla "SqlLocalDb debe ser el archivo SqlLocalDB.msi: $SqlLocalDb" }
+    if (-not (Test-Path -LiteralPath $SqlLocalDb -PathType Leaf)) {
+        Aviso "No esta ${SqlLocalDb}: se descarga de Microsoft (SQL Server 2022 LocalDB)."
+        try {
+            New-Item -ItemType Directory -Path (Split-Path $SqlLocalDb -Parent) -Force | Out-Null
+            Invoke-WebRequest -Uri 'https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi' `
+                -OutFile $SqlLocalDb -UseBasicParsing
+        } catch { Aviso "No se pudo descargar LocalDB ($($_.Exception.Message)). El kit queda SIN LocalDB."; $SqlLocalDb = $null }
     }
-    $plan += @{ Origen = (Resolve-Path -LiteralPath $SqlLocalDb).Path; Destino = 'Requisitos\SqlLocalDB.msi' }
+    if ($SqlLocalDb) {
+        $firma = Get-AuthenticodeSignature -LiteralPath $SqlLocalDb
+        if ($firma.Status -ne 'Valid' -or $firma.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+            Falla "SqlLocalDB.msi no tiene una firma valida de Microsoft ($($firma.Status)): $SqlLocalDb"
+        }
+        Ok ("LocalDB: {0} ({1:N0} MB, firmado por Microsoft)" -f (Split-Path $SqlLocalDb -Leaf), ((Get-Item $SqlLocalDb).Length / 1MB))
+        $plan += @{ Origen = (Resolve-Path -LiteralPath $SqlLocalDb).Path; Destino = 'Requisitos\SqlLocalDB.msi' }
+    }
 }
 foreach ($p in $plan) { if (-not (Test-Path $p.Origen)) { Falla "Falta el archivo de origen: $($p.Origen)" } }
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
@@ -362,7 +380,7 @@ EN EL PC DEL RESTAURANTE (Windows 10/11 de 64 bits, mismo usuario: pasos 01, 02,
                             Copias\ de esta USB, C:\Respaldos, Escritorio y Documentos) o [2] CREAR una base nueva y vacia,
                             donde PIDE el nombre y PIN de 4 digitos del administrador y el numero de mesas. Tras restaurar
                             revisa que la base traiga administrador con PIN, mesas y menu, y ofrece completarlo.
-                            Si no hay LocalDB (Windows 11 no lo trae) y la USB trae Requisitos\SqlLocalDB.msi, lo instala.
+                            Si no hay LocalDB (Windows 11 no lo trae) y la USB trae Requisitos\SqlLocalDB.msi, lo instala SOLO (Windows pide permiso de administrador una vez).
                             Hace respaldo y aplica las migraciones de API, empleados, Domicilios, Alegra, Rappi y numeracion.
                             Lleva los SQL embebidos. No requiere tokens ni conexion con Alegra.
                             La verificacion final debe indicar OK en las tablas/columnas Alegra.

@@ -545,25 +545,63 @@ SELECT
     elseif ($r.bebidas -eq 0) { Aviso 'No hay bebidas activas.' }
 }
 
+# ---------------------------------------------------------------------------
+# LocalDB: windows 11 no lo trae. Si falta, se instala solo desde Requisitos\SqlLocalDB.msi de la USB.
+# ---------------------------------------------------------------------------
+function Agregar-LocalDb-Al-Path {
+    foreach ($d in @(Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending)) {
+        $bin = Join-Path $d.FullName 'Tools\Binn'
+        if ((Test-Path (Join-Path $bin 'SqlLocalDB.exe')) -and ($env:Path -notlike "*$bin*")) { $env:Path += ";$bin" }
+    }
+}
+
+function Instalar-LocalDb {
+    $msi = @((Join-Path $PSScriptRoot 'Requisitos\SqlLocalDB.msi'), (Join-Path $PSScriptRoot '..\Requisitos\SqlLocalDB.msi')) |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $msi) { return }
+    $msi = (Resolve-Path $msi).Path
+    # Solo se instala un MSI firmado por Microsoft.
+    $firma = Get-AuthenticodeSignature -LiteralPath $msi
+    if ($firma.Status -ne 'Valid' -or $firma.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+        throw "El instalador de LocalDB no tiene una firma valida de Microsoft ($($firma.Status)). No se instala."
+    }
+    Write-Host '    No hay LocalDB en este equipo (Windows 11 no lo trae): se instala solo desde Requisitos\SqlLocalDB.msi.' -ForegroundColor White
+    $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (-not $admin) { Write-Host '    Windows pedira permiso de administrador SOLO para instalar LocalDB; el resto sigue con su usuario.' -ForegroundColor Yellow }
+    $log = Join-Path $env:TEMP 'CasaGrande-LocalDB-install.log'
+    $argumentos = "/i `"$msi`" /qn /norestart IACCEPTSQLLOCALDBLICENSETERMS=YES /l*v `"$log`""
+    # No se usa -Wait: esperaria tambien al servicio de Windows Installer (hijo de msiexec) y no terminaria en minutos.
+    try {
+        if ($admin) { $p = Start-Process msiexec.exe -ArgumentList $argumentos -PassThru }
+        else { $p = Start-Process msiexec.exe -ArgumentList $argumentos -Verb RunAs -PassThru }
+        $null = $p.Handle
+        $p.WaitForExit()
+    } catch {
+        throw "No se pudo instalar LocalDB (permiso de administrador denegado?): $($_.Exception.Message)"
+    }
+    # El resultado se comprueba por lo que quedo instalado (el codigo de salida de un proceso elevado no siempre se puede leer).
+    Agregar-LocalDb-Al-Path
+    if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+        $motivo = ''
+        if ((Test-Path $log) -and (Select-String -Path $log -Pattern 'administrator group' -Quiet)) {
+            $motivo = ' Windows no concedio permisos de administrador: acepte el aviso con una cuenta de administrador.'
+        }
+        throw "La instalacion de LocalDB no termino bien.$motivo Registro: $log"
+    }
+    Ok 'LocalDB instalado'
+}
+
 try {
     Write-Host "Base de datos: $Database   Instancia: $Instance   Usuario de Windows: $env:USERNAME" -ForegroundColor White
 
     # ---------- 1. LocalDB y existencia de la base ----------
     Paso '1/7  Comprobando SQL Server LocalDB'
+    # LocalDB puede estar instalado y solo faltar en el PATH de esta ventana (se acaba de instalar, p. ej.).
+    if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) { Agregar-LocalDb-Al-Path }
+    if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) { Instalar-LocalDb }
     if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-        $msi = @((Join-Path $PSScriptRoot 'Requisitos\SqlLocalDB.msi'), (Join-Path $PSScriptRoot '..\Requisitos\SqlLocalDB.msi')) |
-            Where-Object { Test-Path $_ } | Select-Object -First 1
-        $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-        if ($msi -and $admin -and (Pregunta '    No hay LocalDB en este equipo. Instalarlo ahora desde la USB (Requisitos\SqlLocalDB.msi)?')) {
-            $p = Start-Process msiexec.exe -ArgumentList "/i `"$((Resolve-Path $msi).Path)`" /qn IACCEPTSQLLOCALDBLICENSETERMS=YES" -Wait -PassThru
-            if ($p.ExitCode -notin 0, 3010) { throw "La instalacion de LocalDB fallo (codigo $($p.ExitCode))." }
-            $env:Path += ';C:\Program Files\Microsoft SQL Server\160\Tools\Binn;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\140\Tools\Binn'
-        }
-    }
-    if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-        Write-Host '    No se encontro SQL Server Express LocalDB (Windows 11 no lo trae).' -ForegroundColor Red
-        if ($msi -and -not $admin) { Write-Host '    La USB trae Requisitos\SqlLocalDB.msi: ejecute este script como ADMINISTRADOR para instalarlo, o instalelo a mano.' -ForegroundColor Yellow }
-        else { Write-Host '    Instale "SqlLocalDB.msi" (SQL Server Express, medios LocalDB) y repita.' -ForegroundColor Red }
+        Write-Host '    No se encontro SQL Server Express LocalDB (Windows 11 no lo trae) y la USB no trae Requisitos\SqlLocalDB.msi.' -ForegroundColor Red
+        Write-Host '    Instale "SqlLocalDB.msi" (SQL Server Express, medios LocalDB) y repita.' -ForegroundColor Red
         Termina 1
     }
     & sqllocaldb start MSSQLLocalDB | Out-Null
