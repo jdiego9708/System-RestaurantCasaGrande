@@ -29,7 +29,11 @@ UNION ALL SELECT 'FK_Pedidos_Domicilios', CASE WHEN EXISTS
 UNION ALL SELECT 'FK_Domicilios_Clientes', CASE WHEN EXISTS
     (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id=OBJECT_ID('dbo.Domicilios') AND name='FK_Domicilios_Clientes' AND is_disabled=0 AND is_not_trusted=0) THEN 'OK' ELSE 'FALTA' END
 UNION ALL SELECT 'Mesa comodin 0', CASE WHEN EXISTS
-    (SELECT 1 FROM dbo.Mesas WHERE Id_mesa=0 AND Num_mesa=0) THEN 'OK' ELSE 'FALTA' END;
+    (SELECT 1 FROM dbo.Mesas WHERE Id_mesa=0 AND Num_mesa=0) THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'Pedidos.Payment_method (09)', CASE WHEN COL_LENGTH('dbo.Pedidos','Payment_method') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'RappiOrders (10)', CASE WHEN OBJECT_ID('dbo.RappiOrders','U') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'Pedidos.DeliveryNumber (11)', CASE WHEN COL_LENGTH('dbo.Pedidos','DeliveryNumber') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'RappiOrders.DayNumber (11)', CASE WHEN COL_LENGTH('dbo.RappiOrders','DayNumber') IS NOT NULL THEN 'OK' ELSE 'FALTA' END;
 GO
 
 -- 2. Empleados (db\02): pines_compartidos_entre_activos y activos_con_pin_cero deben ser 0.
