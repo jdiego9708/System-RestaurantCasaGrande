@@ -32,6 +32,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private readonly ModernButton electronicRetry=new ModernButton {Text="Reintentar",Width=190,Kind=ButtonKind.Primary,Visible=false};
         // Estado de la solicitud tal como se mostró por última vez: decide qué hace el botón de reintento.
         private string electronicState;
+        // Momento en que el usuario pulsó el reintento; null si no hay un envío en curso iniciado desde esta pantalla.
+        private DateTime? retrySentAt;
         private readonly Timer electronicTimer=new Timer {Interval=15000};
         public int Id_venta { get; set; }
         public int Id_pedido { get; private set; }
@@ -311,6 +313,14 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 electronicStatus.ForeColor=Theme.Darken(color,0.2f);
                 electronicRetry.Visible=retryText!=null;
                 if(retryText!=null)electronicRetry.Text=retryText;
+                // Tras pulsar el reintento, el envío corre en segundo plano: se muestra progreso hasta que el estado deje de ser transitorio.
+                bool inProgress=state=="PENDING"||state=="CREATED"||state=="ISSUING"||state=="CREATING";
+                if(!inProgress||(retrySentAt.HasValue&&(DateTime.Now-retrySentAt.Value).TotalMinutes>=6))retrySentAt=null;
+                bool sending=retrySentAt.HasValue;
+                electronicRetry.Busy=sending;electronicRetry.Enabled=!sending;
+                electronicRetry.Width=sending ? 330 : 190;
+                if(sending)electronicRetry.Text="Enviando a Alegra… puede tardar 2-3 min";
+                electronicTimer.Interval=sending ? 5000 : 15000;
                 electronicPdf.Enabled=state=="ACCEPTED";
                 electronicPrint.Enabled=state=="ACCEPTED" && print!="PRINTING";
             }
@@ -383,7 +393,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     CapaNegocio.Alegra.AlegraWorkflow.Retry(Id_venta);
                 }
                 else CapaNegocio.Alegra.AlegraWorkflow.Expedite(Id_venta);
-                Mensajes.MensajeInformacion("Listo. El sistema reintentará en unos segundos; esta pantalla se actualiza sola.");
+                // El botón pasa a mostrar el progreso; la pantalla se actualiza sola cada pocos segundos.
+                retrySentAt=DateTime.Now;
             }
             catch(Exception ex){Mensajes.MensajeInformacion(ex is InvalidOperationException?ex.Message:"No se pudo programar el reintento.");}
             finally {if(!IsDisposed)UpdateElectronicStatus();}

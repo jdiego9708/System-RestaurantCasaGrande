@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CapaPresentacion.Formularios.FormsPedido
@@ -26,6 +28,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
         private FrmObservarMesas()
         {
             InitializeComponent();
+            BuildTablesWorkspace();
             this.Load += FrmNuevoPedido_Load;
             this.btnCargar.Click += BtnCargar_Click;
             this.btnDomicilio.Click += BtnDomicilio_Click;
@@ -63,7 +66,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             List<CapaPresentacion.Api.ApiDispositivo> activos = CapaPresentacion.Api.ApiAuth.DispositivosActivos();
             this.lblDispositivos.Text = activos.Count + (activos.Count == 1 ? " DISPOSITIVO" : " DISPOSITIVOS");
-            this.panelDispositivos.BackColor = activos.Count > 0 ? Color.DodgerBlue : Color.Gray;
+            this.panelDispositivos.BackColor = activos.Count > 0 ? TableWorkspaceColors.Available : Color.Gray;
 
             string detalle = activos.Count == 0
                 ? "Ningún dispositivo ha consultado la API en el último minuto y medio."
@@ -206,65 +209,67 @@ namespace CapaPresentacion.Formularios.FormsPedido
             }
         }
 
-        private void CargarMesas()
+        private bool loadingTables, reloadRequested;
+
+        // Las consultas corren en segundo plano y las tarjetas se montan de una sola vez con el panel oculto;
+        // antes cada mesa hacía una escritura en la base de datos en el hilo de la interfaz y se pintaba una a una.
+        private async void CargarMesas()
         {
+            // Si llega otra recarga mientras se carga (p. ej. un cambio desde el móvil), se repite al terminar.
+            if (loadingTables) { reloadRequested = true; return; }
+            loadingTables = true;
             MensajeEspera.ShowWait("Cargando mesas");
             try
             {
-                this.panelMesas.Controls.Clear();
+                string today = DateTime.Now.ToString("yyyy-MM-dd");
+                DataTable tablaMesasConPedido = null, tablaMesas = null, tablesDetails = null;
+                await Task.Run(() =>
+                {
+                    tablaMesasConPedido = NPedido.BuscarPedidos("MESAS CON PEDIDO", today);
+                    tablaMesas = NPedido.BuscarPedidos("MESAS COMPLETAS", "");
+                    // Total, hora y mesero salen de la misma consulta que alimenta al móvil, para que ambos muestren
+                    // lo mismo; si falla, las tarjetas quedan solo con el estado.
+                    try { tablesDetails = NApiMovil.Mesas(DateTime.Today); }
+                    catch (Exception) { }
+                });
+                if (IsDisposed) return;
+
+                this.Numero_mesas = tablaMesas.Rows.Count - 2;
+                // Índices por número de mesa: evita un DataTable.Select por cada mesa.
+                var mesaRows = IndexByTable(tablaMesas);
+                var pedidoRows = IndexByTable(tablaMesasConPedido);
+                var detailRows = IndexByTable(tablesDetails);
+
                 string estado = "DISPONIBLE";
                 int id_pedido = 0;
                 int id_mesa = 0;
-                DataTable TablaMesasConPedido =
-                    NPedido.BuscarPedidos("MESAS CON PEDIDO", DateTime.Now.ToString("yyyy-MM-dd"));
-                DataTable TablaMesas =
-                    NPedido.BuscarPedidos("MESAS COMPLETAS", "");
-                this.Numero_mesas = TablaMesas.Rows.Count - 2;
-                // Total, hora y mesero salen de la misma consulta que alimenta al móvil, para que ambos muestren
-                // lo mismo; si falla, las tarjetas quedan solo con el estado.
-                DataTable tablesDetails = null;
-                try { tablesDetails = NApiMovil.Mesas(DateTime.Today); }
-                catch (Exception) { }
-                int positionX = 0;
-                int positionY = 0;
-                int contador = 1;
-                List<Control> controles = new List<Control>();
-                while (contador <= this.Numero_mesas)
+                var controles = new List<Control>();
+                var pendingSync = new List<List<string>>();
+                for (int contador = 1; contador <= this.Numero_mesas; contador++)
                 {
-                    if (TablaMesas != null)
-                    {
-                        DataRow[] result =
-                            TablaMesas.Select("Num_mesa = '" + Convert.ToString(contador) + "'");
-                        if (result.Length != 0)
-                        {
-                            id_mesa = Convert.ToInt32(result[0]["Id_mesa"]);
-                        }
-                    }
+                    DataRow row;
+                    if (mesaRows.TryGetValue(contador, out row))
+                        id_mesa = Convert.ToInt32(row["Id_mesa"]);
 
-                    if (TablaMesasConPedido != null)
+                    if (tablaMesasConPedido != null)
                     {
-                        DataRow[] result =
-                            TablaMesasConPedido.Select("Num_mesa = '" + Convert.ToString(contador) + "'");
-                        if (result.Length != 0)
+                        if (pedidoRows.TryGetValue(contador, out row))
                         {
-                            id_pedido = Convert.ToInt32(result[0]["Id_pedido"]);
-                            estado = Convert.ToString(result[0]["Estado_pedido"]);
+                            id_pedido = Convert.ToInt32(row["Id_pedido"]);
+                            estado = Convert.ToString(row["Estado_pedido"]);
                         }
                         else
                         {
-                            id_pedido = Convert.ToInt32(0);
-                            estado = Convert.ToString("DISPONIBLE");
+                            id_pedido = 0;
+                            estado = "DISPONIBLE";
                         }
                     }
 
                     // Solo se usa la fila del móvil si habla del mismo pedido que el mapa.
                     DataRow detailRow = null;
-                    if (tablesDetails != null && id_pedido != 0)
-                    {
-                        DataRow[] found = tablesDetails.Select("Num_mesa = " + contador);
-                        if (found.Length != 0 && Convert.ToInt32(found[0]["Id_pedido"]) == id_pedido)
-                            detailRow = found[0];
-                    }
+                    if (id_pedido != 0 && detailRows.TryGetValue(contador, out row)
+                        && Convert.ToInt32(row["Id_pedido"]) == id_pedido)
+                        detailRow = row;
 
                     CustomButtonMesa ButtonMesa = new CustomButtonMesa
                     {
@@ -276,35 +281,68 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         Id_mesa = id_mesa,
                         Id_pedido = id_pedido
                     };
-                    ButtonMesa.ObtenerEstado(estado, id_pedido, false);
+                    ButtonMesa.ApplyState(estado, id_pedido);
                     ButtonMesa.OnBtnCambiarMesaClick += ButtonMesa_OnBtnCambiarMesaClick;
                     ButtonMesa.OnBtnCancelarPedidoClick += ButtonMesa_OnBtnCancelarPedidoClick;
                     ButtonMesa.OnBtnEditarPedidoClick += ButtonMesa_OnBtnEditarPedidoClick;
                     ButtonMesa.OnBtnFacturarPedidoClick += ButtonMesa_OnBtnFacturarPedidoClick;
-                    ButtonMesa.OnBtnPrecuentaPedidoClick += ButtonMesa_OnBtnPrecuentaPedidoClick; ;
-                    if (positionX > this.panelMesas.Width ||
-                        this.panelMesas.Width < positionX + ButtonMesa.Width)
-                    {
-                        positionY += ButtonMesa.Height + 2;
-                        positionX = 0;
-                    }
-                    ButtonMesa.Location = new Point(positionX, positionY);
+                    ButtonMesa.OnBtnPrecuentaPedidoClick += ButtonMesa_OnBtnPrecuentaPedidoClick;
+                    ButtonMesa.VisualStateChanged += (sender, args) => UpdateTableWorkspace();
                     controles.Add(ButtonMesa);
-
-                    positionX = ButtonMesa.Location.X + ButtonMesa.Width + 2;
-
-                    contador += 1;
+                    pendingSync.Add(new List<string> { id_pedido.ToString(), estado, id_mesa.ToString() });
                 }
-                this.panelMesas.Controls.AddRange(controles.ToArray());
-                this.panelMesas.Refresh();
-                MensajeEspera.CloseForm();
+
+                // Montaje en bloque: panel oculto y sin layout parcial, un solo pintado al terminar.
+                panelMesas.SuspendLayout();
+                panelMesas.Visible = false;
+                try
+                {
+                    foreach (Control old in new List<Control>(this.panelMesas.Controls.Cast<Control>())) old.Dispose();
+                    this.panelMesas.Controls.Clear();
+                    this.panelMesas.Controls.AddRange(controles.ToArray());
+                    UpdateTableWorkspace();
+                }
+                finally
+                {
+                    panelMesas.ResumeLayout(true);
+                    panelMesas.Visible = true;
+                }
+
+                // Sincroniza el estado en la base de datos como antes, pero fuera del hilo de la interfaz.
+                Task.Run(() =>
+                {
+                    foreach (var variables in pendingSync)
+                    {
+                        try { NPedido.CambiarEstadoPedido(variables); }
+                        catch (Exception) { }
+                    }
+                });
             }
             catch (Exception ex)
             {
-                MensajeEspera.CloseForm();
                 Mensajes.MensajeErrorCompleto(this.Name, "CargarMesas",
                     "Hubo un error al cargar las mesas", ex.Message);
             }
+            finally
+            {
+                loadingTables = false;
+                MensajeEspera.CloseForm();
+                if (reloadRequested && !IsDisposed) { reloadRequested = false; CargarMesas(); }
+            }
+        }
+
+        // Primera fila de cada número de mesa (misma semántica que el DataTable.Select anterior).
+        private static Dictionary<int, DataRow> IndexByTable(DataTable table)
+        {
+            var index = new Dictionary<int, DataRow>();
+            if (table == null || !table.Columns.Contains("Num_mesa")) return index;
+            foreach (DataRow row in table.Rows)
+            {
+                int number;
+                if (int.TryParse(Convert.ToString(row["Num_mesa"]), out number) && !index.ContainsKey(number))
+                    index[number] = row;
+            }
+            return index;
         }
 
         private void ButtonMesa_OnBtnPrecuentaPedidoClick(object sender, EventArgs e)

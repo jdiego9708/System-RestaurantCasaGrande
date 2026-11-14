@@ -51,6 +51,7 @@
     <Compile Include="DAlegra.cs" />
     <Compile Include="DBebidas.cs" />
     <Compile Include="DAddresses.cs" />
+    <Compile Include="DRappiOrders.cs" />
     <Compile Include="DClientes.cs" />
     <Compile Include="DTurnos.cs" />
     <Compile Include="DIngresos.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="DNotas.cs" />
     <Compile Include="DPedidos.cs" />
     <Compile Include="DPlatos.cs" />
+    <Compile Include="DProductos.cs" />
     <Compile Include="DReservas.cs" />
     <Compile Include="DVenta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

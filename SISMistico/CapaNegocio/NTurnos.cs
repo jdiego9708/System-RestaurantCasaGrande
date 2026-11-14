@@ -13,6 +13,11 @@ namespace CapaNegocio
     public class NTurnos
     {
 
+        public static Task<(string rpta, DataTable dtTurnos)> BuscarTurnoDelDia(DateTime fecha)
+        {
+            return new DTurnos().BuscarTurnoDelDia(fecha);
+        }
+
         public static Task<(string rpta, DataTable dtTurnos)> BuscarTurnos(string tipo_busqueda, 
             string texto_busqueda1,
             string texto_busqueda2)

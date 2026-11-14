@@ -440,7 +440,7 @@
             this.numericCantidadFacturas.TabIndex = 29;
             this.numericCantidadFacturas.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericCantidadFacturas.Value = new decimal(new int[] {
-            2,
+            1,
             0,
             0,
             0});

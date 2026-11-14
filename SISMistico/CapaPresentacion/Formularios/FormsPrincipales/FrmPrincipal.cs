@@ -16,8 +16,6 @@ using System.Linq;
 using System.Windows.Forms;
 using CapaNegocio;
 using CapaPresentacion.Formularios.FormsNotas;
-using CapaPresentacion.Formularios.FormsMovimientos;
-using CapaPresentacion.Formularios.FormsEstadisticas;
 using CapaEntidades.Models;
 using System.Text;
 using System.Collections.Generic;
@@ -33,9 +31,41 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         OpcionesUsuario opcionesUsuario;
         private AlegraBackgroundWorker alegraWorker;
 
+        // Fondo elegante de Casa Grande, embebido como recurso. Zoom conserva la proporción; el color
+        // de la franja que pueda sobrar coincide con el de los bordes de la imagen.
+        private void ApplyMainBackground()
+        {
+            string resource = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceNames()
+                .FirstOrDefault(name => name.EndsWith("MainBackground.png", StringComparison.OrdinalIgnoreCase));
+            if (resource == null) return;
+            Bitmap background;
+            using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
+            using (var original = Image.FromStream(stream))
+                background = new Bitmap(original);
+            this.panel1.BackgroundImage = null;
+            AppWallpaper.Image = background;
+            this.panel1.BackColor = Color.FromArgb(244, 233, 220);
+            // Doble búfer para que el redibujado al cambiar de tamaño no parpadee.
+            typeof(Panel).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(this.panel1, true, null);
+            // Ajuste «cubrir»: llena todo el panel sin deformar la imagen y recorta lo que sobre por los bordes.
+            this.panel1.Paint += (s, e) =>
+            {
+                Rectangle area = this.panel1.ClientRectangle;
+                if (area.Width <= 0 || area.Height <= 0) return;
+                float scale = Math.Max((float)area.Width / background.Width, (float)area.Height / background.Height);
+                float width = background.Width * scale, height = background.Height * scale;
+                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                e.Graphics.DrawImage(background, (area.Width - width) / 2, (area.Height - height) / 2, width, height);
+            };
+            this.panel1.Resize += (s, e) => this.panel1.Invalidate();
+            this.panel1.Disposed += (s, e) => { AppWallpaper.Image = null; background.Dispose(); };
+        }
+
         public FrmPrincipal()
         {
             InitializeComponent();
+            this.ApplyMainBackground();
             this.Shown += (s,e) => alegraWorker = new AlegraBackgroundWorker();
             this.FormClosed += (s,e) => alegraWorker?.Dispose();
 
@@ -45,8 +75,10 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.lblMistico.DoubleClick += LblMistico_DoubleClick;
             this.btnEmpleados.Click += BtnEmpleados_Click;
             this.btnAdministracionAvanzada.Click += BtnAdministracionAvanzada_Click;
-            this.btnPlatos.Click += BtnPlatos_Click;
-            this.btnBebidas.Click += BtnBebidas_Click;
+            this.btnPlatos.Text = "Productos";
+            this.btnPlatos.Click += BtnProductos_Click;
+            this.btnBebidas.Text = "Acompañantes";
+            this.btnBebidas.Click += BtnEditarAcompanante_Click;
             this.btnClientes.Click += BtnClientes_Click;
             this.btnMesasPedidos.Click += BtnMesasPedidos_Click;
             this.CreateDeliveryButton();
@@ -57,65 +89,21 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.opcionesUsuario.btnFunciones.Click += BtnFunciones_Click;
             this.btnReservas.Click += BtnReservas_Click;
             this.btnAdministracion.Click += BtnAdministracion_Click;
+            this.BuildModernNavigation();
         }
 
         private void BtnAdministracion_Click(object sender, EventArgs e)
         {
-            MenuAdministracion menuAdmin = new MenuAdministracion();
-            menuAdmin.btnEstadisticasDiarias.Click += BtnEstadisticasDiarias_Click;
-            menuAdmin.btnObservarMovimientos.Click += BtnObservarMovimientos_Click;
-            menuAdmin.btnHistorialVentas.Click += BtnHistorialVentas_Click;
-            container = new PoperContainer(menuAdmin);
-            container.Show(this.btnAdministracion);
-        }
-
-        private void BtnHistorialVentas_Click(object sender, EventArgs e)
-        {
-            FrmObservarVentas frmObservarVentas = new FrmObservarVentas
+            var existing = Application.OpenForms.OfType<FrmObservarVentas>().FirstOrDefault();
+            if (existing != null)
             {
-                WindowState = FormWindowState.Maximized,
-            };
-            frmObservarVentas.Show();
-        }
-
-        private void BtnObservarMovimientos_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                FrmObservarMovimientos frm = new FrmObservarMovimientos();
-                frm.TopLevel = false;
-                frm.WindowState = FormWindowState.Maximized;
-                frm.MaximizeBox = false;
-                Form FormComprobado = this.ComprobarExistencia(frm);
-                if (FormComprobado != null)
-                {
-                    frm.Activate();
-                }
-                else
-                {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
-                    this.panel1.Controls.Add(frm);
-                    this.panel1.Tag = frm;
-                    frm.Show();
-                }
-                frm.BringToFront();
-                frm.Activate();
+                if (existing.WindowState == FormWindowState.Minimized)
+                    existing.WindowState = FormWindowState.Maximized;
+                existing.Activate();
+                return;
             }
-            catch (Exception ex)
-            {
-                Mensajes.MensajeErrorCompleto(this.Name, "BtnObservarMovimientos_Click",
-                    "Hubo un error con el menu observar movimientos", ex.Message);
-            }
-        }
-
-        private async void BtnEstadisticasDiarias_Click(object sender, EventArgs e)
-        {
-            FrmReporteDiario FrmReporteDiario = new FrmReporteDiario
-            {
-                WindowState = FormWindowState.Maximized
-            };
-            await FrmReporteDiario.LoadEstadistica(DateTime.Now, DateTime.Now);
-            FrmReporteDiario.Show();
+            var history = new FrmObservarVentas { WindowState = FormWindowState.Maximized };
+            history.Show(this);
         }
 
         private void BtnFunciones_Click(object sender, EventArgs e)
@@ -252,7 +240,9 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             {
                 FrmObservarMesas frm = FrmObservarMesas.GetInstancia();
                 frm.TopLevel = false;
-                frm.WindowState = FormWindowState.Maximized;
+                frm.WindowState = FormWindowState.Normal;
+                frm.FormBorderStyle = FormBorderStyle.None;
+                frm.Dock = DockStyle.Fill;
                 frm.MaximizeBox = false;
                 Form FormComprobado = this.ComprobarExistencia(frm);
                 if (FormComprobado != null)
@@ -261,7 +251,6 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 }
                 else
                 {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
                     this.panel1.Controls.Add(frm);
                     this.panel1.Tag = frm;
                     frm.Show();
@@ -282,7 +271,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         // y FrmPrincipal_Load decide segun el cargo si se muestra y donde.
         private void CreateDeliveryButton()
         {
-            this.btnDomicilios = new Button
+            this.btnDomicilios = new MainNavigationButton
             {
                 Name = "btnDomicilios",
                 Text = "Domicilios",
@@ -303,29 +292,15 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             this.panelBotones.Controls.Add(this.btnDomicilios);
         }
 
-        // DOMICILIARIO ve Domicilios en lugar de Mesas; ADMINISTRADOR ve las dos (Domicilios debajo de Mesas,
-        // y el resto del menu baja un lugar); los demas cargos siguen viendo solo Mesas.
+        // La distribucion visual se calcula segun los controles visibles; los permisos se conservan.
         private void ApplyDeliveryLayout(string cargo)
         {
-            if (cargo.Equals("DOMICILIARIO"))
-            {
-                this.btnMesasPedidos.Visible = false;
-                this.btnDomicilios.Visible = true;
-                this.btnDomicilios.Enabled = true;
-            }
-            else if (cargo.Equals("ADMINISTRADOR"))
-            {
-                int step = this.btnMesasPedidos.Height + 2;
-                int below = this.btnMesasPedidos.Bottom;
-                foreach (Control control in this.panelBotones.Controls)
-                {
-                    if (control != this.btnDomicilios && control.Top >= below)
-                        control.Top += step;
-                }
-                this.btnDomicilios.Top = this.btnMesasPedidos.Bottom + 2;
-                this.btnDomicilios.Visible = true;
-                this.btnDomicilios.Enabled = true;
-            }
+            bool delivery = cargo.Equals("DOMICILIARIO");
+            bool admin = cargo.Equals("ADMINISTRADOR");
+            this.btnMesasPedidos.Visible = !delivery;
+            this.btnDomicilios.Visible = delivery || admin;
+            this.btnDomicilios.Enabled = delivery || admin;
+            this.LayoutModernNavigation();
         }
 
         private void BtnDomicilios_Click(object sender, EventArgs e)
@@ -334,12 +309,14 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             {
                 FrmDeliveries frm = FrmDeliveries.GetInstance();
                 frm.TopLevel = false;
-                frm.WindowState = FormWindowState.Maximized;
+                // Embebido en el panel: sin borde ni barra de titulo, ocupando todo el panel
+                frm.WindowState = FormWindowState.Normal;
+                frm.FormBorderStyle = FormBorderStyle.None;
+                frm.Dock = DockStyle.Fill;
                 frm.MaximizeBox = false;
                 Form FormComprobado = this.ComprobarExistencia(frm);
                 if (FormComprobado == null)
                 {
-                    frm.FormBorderStyle = FormBorderStyle.Fixed3D;
                     this.panel1.Controls.Add(frm);
                     this.panel1.Tag = frm;
                     frm.Show();
@@ -360,6 +337,14 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             Point ptLowerLeft = new Point(btnSender.Width, btnSender.Height);
             ptLowerLeft = btnSender.PointToScreen(ptLowerLeft);
             this.MenuClientes.Show(ptLowerLeft);
+        }
+
+        private void BtnProductos_Click(object sender, EventArgs e)
+        {
+            var existing = Application.OpenForms.OfType<CapaPresentacion.Formularios.FormsProductos.FrmProductos>().FirstOrDefault();
+            if (existing != null) { existing.WindowState = FormWindowState.Maximized; existing.BringToFront(); existing.Activate(); return; }
+            var form = new CapaPresentacion.Formularios.FormsProductos.FrmProductos();
+            form.Show(this);
         }
 
         private void BtnBebidas_Click(object sender, EventArgs e)
@@ -895,7 +880,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         private void FrmPrincipal_Load(object sender, EventArgs e)
         {
             DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
-            this.btnUsuario.Text = datos.Nombre_empleado;
+            this.btnUsuario.Text = datos.Nombre_empleado; UpdateFloatingAccount();
             if (datos.Cargo_empleado.Equals("ADMINISTRADOR"))
             {
                 this.btnEmpleados.Enabled = true;

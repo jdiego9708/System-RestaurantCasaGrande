@@ -134,7 +134,8 @@ namespace CapaPresentacion.Api
             return true;
         }
 
-        private static void ImprimirPrecuenta(int idPedido)
+        // Internal: FrmPedido la usa para imprimir la factura de un domicilio recien creado.
+        internal static void ImprimirPrecuenta(int idPedido)
         {
             string rpta;
             DataTable detalle;

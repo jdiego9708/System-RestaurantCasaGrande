@@ -172,11 +172,25 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
 
     internal sealed class LoginStory : Control
     {
+        private readonly Image emblem;
+
         public LoginStory()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = LoginColors.Sage;
+            // Recurso integrado: el login no depende de la unidad J: del equipo de desarrollo.
+            using (var stream = typeof(LoginStory).Assembly.GetManifestResourceStream(
+                "CapaPresentacion.Resources.CasaGrandeLoginEmblem.png"))
+            using (var source = Image.FromStream(stream))
+                emblem = new Bitmap(source);
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) emblem.Dispose();
+            base.Dispose(disposing);
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -200,34 +214,21 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 g.DrawString("", small, ink, left + 50, 55);
                 g.DrawString("Sistema de restaurante", title, ink, new RectangleF(left - 2, 136, Width - left - 22, 130));
                 g.DrawString("Manizales, Caldas", body, muted, new RectangleF(left, 274, Width - left - 32, 58));
-                int size = Math.Min(Width - 96, 290);
-                int top = Math.Max(345, Height - size - 110);
-                Rectangle arch = new Rectangle((Width - size) / 2, top, size, size);
-                using (var archFill = new SolidBrush(Color.FromArgb(245, 242, 223)))
-                using (var archPath = Theme.RoundedPath(arch, size / 2)) g.FillPath(archFill, archPath);
-                using (var peach = new SolidBrush(LoginColors.Peach)) g.FillEllipse(peach, arch.Right - 86, arch.Top + 24, 104, 104);
-                Rectangle plate = new Rectangle(arch.X + 32, arch.Y + 60, size - 64, size - 64);
-                using (var shade = new SolidBrush(Color.FromArgb(24, 73, 100, 75))) g.FillEllipse(shade, plate.X + 3, plate.Y + 12, plate.Width, plate.Height);
-                using (var white = new SolidBrush(LoginColors.Paper)) g.FillEllipse(white, plate);
-                using (var rim = new Pen(LoginColors.Border, 1.5f)) g.DrawEllipse(rim, Rectangle.Inflate(plate, -18, -18));
-                using (var leaf = new Pen(LoginColors.Primary, 2f))
+                int size = Math.Min(320, Math.Min(Width - 96, Height - 416));
+                if (size > 0)
                 {
-                    int cx = plate.X + plate.Width / 2, cy = plate.Y + plate.Height / 2;
-                    g.DrawArc(leaf, cx - 18, cy - 20, 38, 40, 40, 250);
-                    g.DrawLine(leaf, cx - 10, cy + 13, cx + 12, cy - 14);
-                    g.DrawLine(leaf, cx - 9, cy + 5, cx - 9, cy - 8);
-                    g.DrawLine(leaf, cx - 1, cy - 3, cx + 11, cy - 3);
-                }
-                using (var line = new Pen(LoginColors.Primary, 2f))
-                {
-                    int x = arch.X + 16, y = plate.Y + 24;
-                    g.DrawLine(line, x, y, x, y + 102);
-                    g.DrawLine(line, x - 5, y, x - 5, y + 22);
-                    g.DrawLine(line, x + 5, y, x + 5, y + 22);
-                    g.DrawArc(line, x - 5, y + 17, 10, 10, 0, 180);
-                    x = arch.Right - 16;
-                    g.DrawLine(line, x, y, x, y + 102);
-                    g.DrawArc(line, x - 12, y, 12, 54, 90, 180);
+                    int top = 330 + Math.Max(0, (Height - 416 - size) / 2);
+                    float scale = Math.Min((float)size / emblem.Width, (float)size / emblem.Height);
+                    int width = Math.Max(1, (int)Math.Round(emblem.Width * scale));
+                    int height = Math.Max(1, (int)Math.Round(emblem.Height * scale));
+                    Rectangle imageBounds = new Rectangle((Width - width) / 2,
+                        top + (size - height) / 2, width, height);
+                    var state = g.Save();
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.DrawImage(emblem, imageBounds);
+                    g.Restore(state);
                 }
                 g.DrawString("SOFTWARE HOUSE 2026", caption, muted,
                     new RectangleF(left, Height - 54, Width - 60, 24));

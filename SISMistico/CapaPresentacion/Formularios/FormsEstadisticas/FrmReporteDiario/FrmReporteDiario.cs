@@ -18,7 +18,6 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
         public FrmReporteDiario()
         {
             InitializeComponent();
-            this.Load += FrmReporteDiario_Load;
             this.date1.ValueChanged += Date1_ValueChanged;
             this.date2.ValueChanged += Date2_ValueChanged;
             this.btnRefresh.Click += BtnRefresh_Click;
@@ -40,12 +39,22 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             this.date2.MinDate = date.Value;
         }
 
-        private void FrmReporteDiario_Load(object sender, EventArgs e)
+        public async Task LoadPeriodo(DateTime inicio, DateTime fin)
         {
-            this.reportViewer1 = new ReportViewer();
-            this.Controls.Add(this.reportViewer1);
-            this.reportViewer1.LocalReport.ReportEmbeddedResource =
-                "CapaPresentacion.ReportesFacturas.NominaEmpleado.rptNominaEmpleado.rdlc";
+            // Sin consultas intermedias mientras se sincronizan los selectores con el historial.
+            this.date2.ValueChanged -= Date2_ValueChanged;
+            try
+            {
+                this.date2.MinDate = DateTimePicker.MinimumDateTime;
+                this.date1.Value = inicio.Date;
+                this.date2.MinDate = inicio.Date;
+                this.date2.Value = fin.Date;
+            }
+            finally
+            {
+                this.date2.ValueChanged += Date2_ValueChanged;
+            }
+            await this.LoadEstadistica(inicio.Date, fin.Date);
         }
 
         public string InformacionEmpleado { get; set; }
@@ -83,11 +92,16 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
             DataTable dtPagos;
             bool isRango = false;
 
-            if (date1.ToString("yyyy-MM-dd") == date2.ToString("yyyy-MM-dd"))
+            if (date1.Date == date2.Date)
             {
                 isRango = false;
-                var result =
-                await NNomina.EstadisticasDiarias(datos.Turno.Id_turno, date1.ToString("yyyy-MM-dd"));
+                // La caja inicial pertenece al dia consultado, no al turno de la sesion actual.
+                var shift = await NTurnos.BuscarTurnoDelDia(date1.Date);
+                if (shift.rpta != "OK" || shift.dtTurnos == null)
+                    throw new InvalidOperationException("No se pudo consultar la base del dia. " + shift.rpta);
+                var result = shift.dtTurnos.Rows.Count > 0
+                    ? await NNomina.EstadisticasDiarias(Convert.ToInt32(shift.dtTurnos.Rows[0]["Id_turno"]), date1.ToString("yyyy-MM-dd"))
+                    : await NNomina.EstadisticasDiarias(date1.ToString("yyyy-MM-dd"), date2.ToString("yyyy-MM-dd"));
                 dtEstadistica = result.dtEstadistica;
                 dtDetalle = result.dtDetalle;
                 dtPagos = result.dtPagos;
@@ -112,7 +126,8 @@ namespace CapaPresentacion.Formularios.FormsEstadisticas
                 //else
                 //    resumenResultados.Append("Entre ").Append(date1.ToLongDateString() + " y ").Append(date2.ToLongDateString()).Append(" se registra la siguiente información:").Append(Environment.NewLine);
 
-                resumenResultados.Append("Caja inicial: ").Append(turno.Valor_inicial.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
+                if (!isRango)
+                    resumenResultados.Append("Caja inicial: ").Append(turno.Valor_inicial.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 
                 resumenResultados.Append("Total ingresos: ").Append(turno.Total_ingresos.ToString("C").Replace(",00", "").Replace(",00", "")).Append(Environment.NewLine);
 

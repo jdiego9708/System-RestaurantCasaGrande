@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Net.Mail;
 using System.Windows.Forms;
 using CapaNegocio.Alegra;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CapaPresentacion.Formularios.FormsVentas
 {
@@ -35,6 +37,14 @@ namespace CapaPresentacion.Formularios.FormsVentas
             Margin = new Padding(0, 0, 0, 8), Visible = false,
         };
         private string selectedRemoteId;
+        // Contacto de Alegra seleccionado tal como llegó: base para detectar qué campos modificó el usuario.
+        private Dictionary<string, object> selectedContact;
+        private readonly ComboBox department = new FiscalComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+        private readonly ComboBox municipality = new FiscalComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+        private readonly ModernCheckBox saveToAlegra = new ModernCheckBox { Text = "Guardar datos modificados en Alegra", AutoSize = true, Enabled = false };
+        private readonly ToolTip hints = new ToolTip();
+        private bool updatingRemote;
+        private Panel busyOverlay;
         private readonly Label error = new Label { AutoSize = true, ForeColor = Theme.Danger, MaximumSize = new Size(500, 0) };
         public Dictionary<string, string> FiscalData { get; private set; }
 
@@ -62,8 +72,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
             personType.SelectedIndex = 0;
             ModernTextBox lookupIdentification = new ModernTextBox();
             fields.Add("Identificación", lookupIdentification);
-            lookupIdentification.TextChanged += (s, e) => selectedRemoteId = null;
-            documentType.SelectedIndexChanged += (s, e) => selectedRemoteId = null;
+            lookupIdentification.TextChanged += (s, e) => ClearRemoteSelection();
+            documentType.SelectedIndexChanged += (s, e) => ClearRemoteSelection();
             personType.Width = 158;
             documentType.Width = 158;
             regime.Width = 158;
@@ -85,7 +95,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
             });
             AddField(fiscalTypesRow, "Régimen fiscal del receptor", regime, 168);
             content.Controls.Add(fiscalTypesRow);
-            var inputOrder = new[] { "Dígito de verificación (NIT)", "Nombre o razón social", "Primer nombre", "Segundo nombre", "Apellidos", "Correo electrónico", "Teléfono", "Dirección fiscal", "Departamento", "Municipio", "País" };
+            var inputOrder = new[] { "Dígito de verificación (NIT)", "Nombre o razón social", "Primer nombre", "Segundo nombre", "Apellidos", "Correo electrónico", "Teléfono", "Dirección fiscal", "País" };
             foreach (var field in inputOrder)
             {
                 ModernTextBox input = new ModernTextBox();
@@ -166,21 +176,24 @@ namespace CapaPresentacion.Formularios.FormsVentas
             {
                 Width = 500, Height = 68, WrapContents = false, Margin = Padding.Empty,
             };
-            AddField(locationRow, "Departamento", fields["Departamento"]);
-            AddField(locationRow, "Municipio", fields["Municipio"]);
+            // Departamento y municipio salen del catálogo de Alegra: el texto libre no se acepta.
+            department.Items.AddRange(AlegraPlaces.Departments.ToArray());
+            department.SelectedIndexChanged += (s, e) => FillMunicipalities();
+            AddField(locationRow, "Departamento", department);
+            AddField(locationRow, "Municipio", municipality);
             AddField(locationRow, "País", fields["País"]);
             foreach (Control control in locationRow.Controls) control.Width = 158;
             content.Controls.Add(locationRow);
             fields["Nombre o razón social"].Text = customerName;
             fields["Correo electrónico"].Text = email;
             fields["País"].Text = "Colombia";
-            fields["Departamento"].Text = "Caldas";
-            fields["Municipio"].Text = "Manizales";
+            SetPlace("Caldas", "Manizales");
             remoteContacts.CellContentClick += (s, e) =>
             {
                 if (e.RowIndex < 0 || e.ColumnIndex != remoteContacts.Columns["SelectContact"].Index) return;
                 var contact = remoteContacts.Rows[e.RowIndex].Tag as Dictionary<string, object>;
                 if (contact == null) return;
+                bool placeMatched = true;
                 var identification=contact.ContainsKey("identificationObject") ? contact["identificationObject"] as Dictionary<string,object> : null;
                 if(identification==null)return;
                 documentType.SelectedItem=AlegraWorkflow.Text(identification,"type");
@@ -197,12 +210,19 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 }
                 if(contact.ContainsKey("address") && contact["address"] is Dictionary<string,object> address)
                 {
-                    fields["Dirección fiscal"].Text=AlegraWorkflow.Text(address,"address");fields["Departamento"].Text=AlegraWorkflow.Text(address,"department");fields["Municipio"].Text=AlegraWorkflow.Text(address,"city");fields["País"].Text=AlegraWorkflow.Text(address,"country");
+                    fields["Dirección fiscal"].Text=AlegraWorkflow.Text(address,"address");
+                    string country=AlegraWorkflow.Text(address,"country");
+                    if(!string.IsNullOrWhiteSpace(country))fields["País"].Text=country;
+                    placeMatched=SetPlace(AlegraWorkflow.Text(address,"department"),AlegraWorkflow.Text(address,"city"));
                 }
+                else placeMatched=SetPlace(null,null);
                 selectedRemoteId=AlegraWorkflow.Text(contact,"id");
+                selectedContact=contact;
+                UpdateSaveToAlegraOption();
                 remoteContacts.Invalidate();
-                contactNotice.Text = "Cliente seleccionado: " + AlegraWorkflow.Text(contact, "name");
-                contactNotice.ForeColor = Theme.Success;
+                contactNotice.Text = "Cliente seleccionado: " + AlegraWorkflow.Text(contact, "name")
+                    + (placeMatched ? string.Empty : ". El departamento o municipio del contacto no coincide con el catálogo de Alegra: selecciónelos de la lista.");
+                contactNotice.ForeColor = placeMatched ? Theme.Success : Theme.Danger;
                 contactNotice.Visible = true;
                 error.Text = string.Empty;
             };
@@ -247,17 +267,26 @@ namespace CapaPresentacion.Formularios.FormsVentas
             FlowLayoutPanel actions = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 48, FlowDirection = FlowDirection.RightToLeft };
             ModernButton save = new ModernButton { Text = "Confirmar datos", Width = 180, Kind = ButtonKind.Success };
             ModernButton cancel = new ModernButton { Text = "Cancelar", Width = 120, Kind = ButtonKind.Outline };
-            save.Click += (s, e) => Save();
+            save.Click += async (s, e) => await SaveAsync();
             cancel.Click += (s, e) => { DialogResult = DialogResult.Cancel; Close(); };
             actions.Controls.Add(save);
             actions.Controls.Add(cancel);
+            // La casilla va justo encima de los botones. Orden de z: contenido, casilla, botones (los últimos se acoplan primero).
+            Panel optionRow = new Panel { Dock = DockStyle.Bottom, Height = 34 };
+            saveToAlegra.Location = new Point(0, 6);
+            optionRow.Controls.Add(saveToAlegra);
+            hints.SetToolTip(saveToAlegra, "Disponible al seleccionar un cliente de Alegra. Solo se actualizan los campos que modifique.");
             root.Controls.Add(content);
+            root.Controls.Add(optionRow);
             root.Controls.Add(actions);
             Controls.Add(root);
             CancelButton = cancel;
             personType.SelectedIndexChanged += (s, e) => UpdateRequiredLabels();
-            documentType.SelectedIndexChanged += (s, e) => UpdateRequiredLabels();
+            documentType.SelectedIndexChanged += (s, e) => { UpdateRequiredLabels(); UpdateCountryLock(); };
             UpdateRequiredLabels();
+            UpdateCountryLock();
+            // Mientras se actualiza el cliente en Alegra no se puede cerrar la ventana.
+            FormClosing += (s, e) => { if (updatingRemote && e.CloseReason == CloseReason.UserClosing) e.Cancel = true; };
             FormClosed += (s, e) => lifetime.Cancel();
         }
 
@@ -434,6 +463,52 @@ namespace CapaPresentacion.Formularios.FormsVentas
             combo.SelectedIndex = -1;
         }
 
+        // Al cambiar el documento o editar el Documento, el cliente deja de estar vinculado al contacto de Alegra.
+        private void ClearRemoteSelection()
+        {
+            selectedRemoteId = null;
+            selectedContact = null;
+            UpdateSaveToAlegraOption();
+        }
+
+        private void UpdateSaveToAlegraOption()
+        {
+            bool linked = !string.IsNullOrEmpty(selectedRemoteId) && selectedContact != null;
+            saveToAlegra.Enabled = linked;
+            if (!linked) saveToAlegra.Checked = false;
+        }
+
+        private bool IsForeignDocument()
+        {
+            return documentType.Text == "PP" || documentType.Text == "DIE" || documentType.Text == "FOREIGN_NIT";
+        }
+
+        // El país solo se captura con documento extranjero; en los demás casos es Colombia.
+        private void UpdateCountryLock()
+        {
+            bool foreign = IsForeignDocument();
+            fields["País"].Enabled = foreign;
+            if (!foreign) fields["País"].Text = AlegraPlaces.Country;
+        }
+
+        private void FillMunicipalities()
+        {
+            municipality.Items.Clear();
+            municipality.Items.AddRange(AlegraPlaces.Municipalities(department.Text).ToArray());
+            municipality.SelectedIndex = -1;
+        }
+
+        // Selecciona departamento y municipio con la grafía del catálogo. Devuelve false si el texto no coincide.
+        private bool SetPlace(string departmentText, string municipalityText)
+        {
+            string canonicalDepartment = AlegraPlaces.CanonicalDepartment(departmentText);
+            if (canonicalDepartment == null) { department.SelectedIndex = -1; return string.IsNullOrWhiteSpace(departmentText) && string.IsNullOrWhiteSpace(municipalityText); }
+            department.SelectedItem = canonicalDepartment;
+            string canonicalMunicipality = AlegraPlaces.CanonicalMunicipality(canonicalDepartment, municipalityText);
+            municipality.SelectedItem = canonicalMunicipality;
+            return canonicalMunicipality != null;
+        }
+
         private bool IsRequired(string key)
         {
             bool natural = (personType.SelectedItem as FiscalOption)?.Code == "PERSON_ENTITY";
@@ -454,10 +529,15 @@ namespace CapaPresentacion.Formularios.FormsVentas
             }
             foreach (var combo in new[] { personType, documentType, regime })
                 fieldLabels[combo].Text = Convert.ToString(fieldLabels[combo].Tag) + " *";
+            // Departamento y municipio son obligatorios salvo con documento extranjero.
+            string placeMark = IsForeignDocument() ? string.Empty : " *";
+            foreach (var combo in new[] { department, municipality })
+                fieldLabels[combo].Text = Convert.ToString(fieldLabels[combo].Tag) + placeMark;
         }
 
-        private void Save()
+        private async Task SaveAsync()
         {
+            if (updatingRemote) return;
             if (regime.SelectedIndex < 0) { error.Text = "Seleccione el régimen fiscal del receptor."; regime.Focus(); return; }
             foreach (var field in fields)
             {
@@ -470,6 +550,11 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     return;
                 }
             }
+            if (!IsForeignDocument())
+            {
+                if (department.SelectedIndex < 0) { error.Text = "Seleccione el departamento de la lista."; department.Focus(); return; }
+                if (municipality.SelectedIndex < 0) { error.Text = "Seleccione el municipio de la lista."; municipality.Focus(); return; }
+            }
             try { new MailAddress(fields["Correo electrónico"].Text.Trim()); }
             catch (FormatException) { error.Text = "Revise el correo electrónico."; return; }
             string id = fields["Identificación"].Text.Trim();
@@ -477,14 +562,100 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 && !System.Linq.Enumerable.All(id, char.IsDigit)) { error.Text = "La identificación debe contener solo números, sin puntos ni guiones."; return; }
             string dv = fields["Dígito de verificación (NIT)"].Text.Trim();
             if (documentType.Text == "NIT" && (dv.Length != 1 || !char.IsDigit(dv[0]))) { error.Text = "El dígito de verificación del NIT debe tener un número."; return; }
-            FiscalData = new Dictionary<string, string>();
-            foreach (var field in fields) FiscalData.Add(field.Key, field.Value.Text.Trim());
-            FiscalData.Add("identificationType", documentType.Text);
-            FiscalData.Add("kindOfPerson", Convert.ToString(personType.SelectedValue));
-            FiscalData.Add("regime", Convert.ToString(regime.SelectedValue));
-            if(!string.IsNullOrWhiteSpace(selectedRemoteId))FiscalData.Add("remoteClientId",selectedRemoteId);
+            var data = new Dictionary<string, string>();
+            foreach (var field in fields) data.Add(field.Key, field.Value.Text.Trim());
+            data.Add("Departamento", department.SelectedIndex < 0 ? string.Empty : department.Text);
+            data.Add("Municipio", municipality.SelectedIndex < 0 ? string.Empty : municipality.Text);
+            data.Add("identificationType", documentType.Text);
+            data.Add("kindOfPerson", Convert.ToString(personType.SelectedValue));
+            data.Add("regime", Convert.ToString(regime.SelectedValue));
+            if(!string.IsNullOrWhiteSpace(selectedRemoteId))data.Add("remoteClientId",selectedRemoteId);
+
+            // Con la casilla activa y un cliente de Alegra seleccionado, se persisten en Alegra SOLO los campos modificados.
+            if (saveToAlegra.Enabled && saveToAlegra.Checked && selectedContact != null)
+            {
+                var changes = AlegraWorkflow.ContactChanges(selectedContact, data);
+                if (changes.Count > 0 && !await UpdateRemoteContactAsync(changes)) return;
+                if (IsDisposed) return;
+            }
+            FiscalData = data;
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        // PUT /contacts/{id} con los campos modificados; mientras tanto se muestra un indicador de carga y la ventana no se cierra.
+        private async Task<bool> UpdateRemoteContactAsync(Dictionary<string, object> changes)
+        {
+            updatingRemote = true;
+            error.Text = string.Empty;
+            ShowBusy("Actualizando el cliente en Alegra…");
+            try
+            {
+                using (var api = new AlegraClient())
+                {
+                    AlegraResponse response = await api.UpdateContactAsync(selectedRemoteId,
+                        new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(changes), lifetime.Token);
+                    if (IsDisposed) return false;
+                    if (!response.Success)
+                    {
+                        error.Text = "Alegra no actualizó el cliente (HTTP " + response.StatusCode + "). " + ApiMessage(response.Json)
+                            + " Puede desmarcar la casilla para continuar sin modificar Alegra.";
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (OperationCanceledException) { if (!IsDisposed) error.Text = "Actualización cancelada o tiempo de espera agotado."; return false; }
+            catch (Exception ex)
+            {
+                if (!IsDisposed) error.Text = ex is InvalidOperationException || ex is ArgumentException ? ex.Message : "No se pudo actualizar el cliente en Alegra. Revise la conexión.";
+                return false;
+            }
+            finally
+            {
+                updatingRemote = false;
+                if (!IsDisposed)
+                {
+                    HideBusy();
+                    (error.Parent as ScrollableControl)?.ScrollControlIntoView(error);
+                }
+            }
+        }
+
+        private static string ApiMessage(string json)
+        {
+            try
+            {
+                var body = new System.Web.Script.Serialization.JavaScriptSerializer().DeserializeObject(json) as Dictionary<string, object>;
+                string message = body != null && body.ContainsKey("message") ? Convert.ToString(body["message"]) : string.Empty;
+                message = message.Replace("\r", " ").Replace("\n", " ");
+                return message.Length > 200 ? message.Substring(0, 200) : message;
+            }
+            catch { return string.Empty; }
+        }
+
+        // Capa opaca sobre toda la ventana con tarjeta centrada y barra animada.
+        private void ShowBusy(string text)
+        {
+            HideBusy();
+            busyOverlay = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Background };
+            var card = new ModernCard { Size = new Size(380, 140), AccentColor = Theme.Primary };
+            card.Controls.Add(new Label { Text = text, Dock = DockStyle.Top, Height = 55, TextAlign = ContentAlignment.MiddleCenter, Font = Theme.BodyBold });
+            card.Controls.Add(new ProgressBar { Dock = DockStyle.Bottom, Height = 8, Style = ProgressBarStyle.Marquee, MarqueeAnimationSpeed = 25 });
+            busyOverlay.Controls.Add(card);
+            Panel overlay = busyOverlay;
+            overlay.Resize += (s, e) => card.Location = new Point(Math.Max(0, (overlay.ClientSize.Width - card.Width) / 2), Math.Max(0, (overlay.ClientSize.Height - card.Height) / 2));
+            Controls.Add(overlay);
+            overlay.BringToFront();
+            card.Location = new Point(Math.Max(0, (ClientSize.Width - card.Width) / 2), Math.Max(0, (ClientSize.Height - card.Height) / 2));
+            overlay.Refresh();
+        }
+
+        private void HideBusy()
+        {
+            if (busyOverlay == null) return;
+            busyOverlay.Dispose();
+            busyOverlay = null;
         }
     }
 }

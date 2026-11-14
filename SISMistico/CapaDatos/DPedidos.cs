@@ -12,6 +12,93 @@ namespace CapaDatos
 {
     public class DPedidos
     {
+        /// <summary>
+        /// Numero de factura del dia del domicilio (1..N, empieza de nuevo cada dia). Si todavia no lo tiene lo asigna: el
+        /// siguiente del dia del pedido, bajo bloqueo para que dos equipos no repitan numero. Null si el pedido no es un
+        /// domicilio o si la base aun no tiene la numeracion (script 11): entonces la factura sale sin numero.
+        /// </summary>
+        public static int? GetOrAssignDeliveryNumber(int orderId)
+        {
+            const string query = @"
+DECLARE @n int = (SELECT DeliveryNumber FROM Pedidos WHERE Id_pedido = @OrderId AND Tipo_pedido = 'DOMICILIO');
+IF @n IS NULL AND EXISTS (SELECT 1 FROM Pedidos WHERE Id_pedido = @OrderId AND Tipo_pedido = 'DOMICILIO')
+BEGIN
+    SET XACT_ABORT ON;
+    BEGIN TRAN;
+    UPDATE p SET DeliveryNumber = ISNULL((SELECT MAX(x.DeliveryNumber) FROM Pedidos x WITH (UPDLOCK, HOLDLOCK)
+                                          WHERE x.Tipo_pedido = 'DOMICILIO' AND x.Fecha_pedido = p.Fecha_pedido), 0) + 1
+    FROM Pedidos p WHERE p.Id_pedido = @OrderId AND p.DeliveryNumber IS NULL;
+    COMMIT;
+    SET @n = (SELECT DeliveryNumber FROM Pedidos WHERE Id_pedido = @OrderId);
+END
+SELECT @n;";
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    using (SqlConnection con = new SqlConnection(Conexion.Cn))
+                    using (SqlCommand cmd = new SqlCommand(query, con))
+                    {
+                        cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+                        con.Open();
+                        object value = cmd.ExecuteScalar();
+                        return value == null || value == DBNull.Value ? (int?)null : Convert.ToInt32(value);
+                    }
+                }
+                catch (SqlException ex) when (ex.Number == 207)
+                {
+                    return null;
+                }
+                catch (SqlException ex) when ((ex.Number == 2627 || ex.Number == 2601) && attempt < 3)
+                {
+                    // Otro equipo tomo ese numero justo ahora: se reintenta con el siguiente.
+                }
+            }
+        }
+
+        /// <summary>Guarda la forma de pago elegida al tomar un domicilio. Devuelve "OK" o el motivo del error.</summary>
+        public static string SetPaymentMethod(int orderId, string method)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand("UPDATE Pedidos SET Payment_method = @Method WHERE Id_pedido = @OrderId", con))
+                {
+                    cmd.Parameters.Add("@Method", SqlDbType.VarChar, 20).Value = method;
+                    cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                    return "OK";
+                }
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        /// <summary>
+        /// Forma de pago guardada del pedido; cadena vacia si no tiene o si la columna aun no existe en la base
+        /// (script 09 sin aplicar): en ese caso el domicilio no se factura solo y se factura a mano.
+        /// </summary>
+        public static string GetPaymentMethod(int orderId)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(Conexion.Cn))
+                using (SqlCommand cmd = new SqlCommand("SELECT Payment_method FROM Pedidos WHERE Id_pedido = @OrderId", con))
+                {
+                    cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+                    con.Open();
+                    object value = cmd.ExecuteScalar();
+                    return value == null || value == DBNull.Value ? string.Empty : Convert.ToString(value).Trim();
+                }
+            }
+            catch (SqlException)
+            {
+                return string.Empty;
+            }
+        }
 
         #region MENSAJE SQL
         private void SqlCon_InfoMessage(object sender, SqlInfoMessageEventArgs e)

@@ -12,6 +12,7 @@ namespace CapaPresentacion.UI
     /// </summary>
     public class KpiCard : Control
     {
+        private static readonly Font ValueFont = new Font(Theme.Kpi.FontFamily, 20F, FontStyle.Bold);
         private string caption = string.Empty;
         private string value = "0";
         private IconChar icon = IconChar.None;
@@ -21,7 +22,7 @@ namespace CapaPresentacion.UI
         {
             this.SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer
                 | ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
-            this.Size = new Size(260, 92);
+            this.Size = new Size(260, 64);
             this.Margin = new Padding(Theme.Gap / 2);
         }
 
@@ -70,8 +71,8 @@ namespace CapaPresentacion.UI
             }
 
             // Circulo translucido con el icono.
-            int circle = this.Height - 36;
-            Rectangle circleBounds = new Rectangle(18, (this.Height - circle) / 2, circle, circle);
+            int circle = this.Height - 22;
+            Rectangle circleBounds = new Rectangle(14, (this.Height - circle) / 2, circle, circle);
             using (SolidBrush glass = new SolidBrush(Color.FromArgb(55, 255, 255, 255)))
                 g.FillEllipse(glass, circleBounds);
             if (this.icon != IconChar.None)
@@ -82,13 +83,14 @@ namespace CapaPresentacion.UI
                         circleBounds.Y + (circle - iconSize) / 2, iconSize, iconSize));
             }
 
-            int textX = circleBounds.Right + 16;
-            int textWidth = this.Width - textX - 12;
-            TextRenderer.DrawText(g, this.value, Theme.Kpi,
-                new Rectangle(textX, 6, textWidth, this.Height - 34), Color.White,
+            int textX = circleBounds.Right + 12;
+            int textWidth = this.Width - textX - 10;
+            // Version compacta: valor de 20 pt y titulo pequeno debajo, en unos 60 px de alto.
+            TextRenderer.DrawText(g, this.value, ValueFont,
+                new Rectangle(textX, 4, textWidth, this.Height - 26), Color.White,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(g, this.caption, Theme.BodyBold,
-                new Rectangle(textX, this.Height - 32, textWidth, 22), Color.FromArgb(235, 255, 255, 255),
+            TextRenderer.DrawText(g, this.caption, Theme.SmallBold,
+                new Rectangle(textX, this.Height - 24, textWidth, 18), Color.FromArgb(235, 255, 255, 255),
                 TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
         }
     }

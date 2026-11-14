@@ -170,6 +170,28 @@ namespace CapaDatos
         #endregion
 
         #region METODO BUSCAR TURNOS
+        public async Task<(string rpta, DataTable dtTurnos)> BuscarTurnoDelDia(DateTime fecha)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(Conexion.Cn))
+                using (var command = new SqlCommand(@"SELECT TOP (1) * FROM Turnos
+WHERE Fecha_turno >= @Fecha AND Fecha_turno < DATEADD(day, 1, @Fecha)
+ORDER BY Id_turno DESC;", connection))
+                {
+                    command.Parameters.Add("@Fecha", SqlDbType.Date).Value = fecha.Date;
+                    await connection.OpenAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        var records = new DataTable("Turnos");
+                        records.Load(reader);
+                        return ("OK", records);
+                    }
+                }
+            }
+            catch (Exception ex) { return (ex.Message, null); }
+        }
+
         public Task<(string rpta, DataTable dtTurnos)> BuscarTurnos(string tipo_busqueda, string texto_busqueda1,
             string texto_busqueda2)
         {
@@ -239,63 +261,37 @@ namespace CapaDatos
         #endregion
 
         #region METODO CAMBIAR BASE
-        public Task<string> InsertarBase(int id_turno, decimal base_nueva)
+        public async Task<string> InsertarBase(int id_turno, decimal base_nueva)
         {
-            string rpta = string.Empty;
-            SqlConnection SqlCon = new SqlConnection(Conexion.Cn);
+            if (id_turno <= 0 || base_nueva < 0 || base_nueva > 99999999999999999.99m
+                || decimal.Round(base_nueva, 2) != base_nueva)
+                return "La base debe ser un valor positivo o cero, con hasta dos decimales.";
             try
             {
-                SqlCon.InfoMessage += new SqlInfoMessageEventHandler(SqlCon_InfoMessage);
-                SqlCon.FireInfoMessageEventOnUserErrors = true;
-                SqlCon.Open();
-
-                SqlCommand SqlCmd = new SqlCommand()
+                using (var connection = new SqlConnection(Conexion.Cn))
                 {
-                    Connection = SqlCon,
-                    CommandText = "sp_Base_turno_u",
-                    CommandType = CommandType.StoredProcedure
-                };
-
-                SqlParameter Id_turno = new SqlParameter()
-                {
-                    ParameterName = "@Id_turno",
-                    SqlDbType = SqlDbType.Int,
-                    Value = id_turno,
-                };
-                SqlCmd.Parameters.Add(Id_turno);
-
-                SqlParameter Base_nueva = new SqlParameter()
-                {
-                    ParameterName = "@Base_nueva",
-                    SqlDbType = SqlDbType.Decimal,
-                    Value = base_nueva,
-                };
-                SqlCmd.Parameters.Add(Base_nueva);
-
-                rpta = SqlCmd.ExecuteNonQuery() >= 1 ? "OK" : "NO";
-
-                if (rpta != "OK")
-                {
-                    if (this.Mensaje_respuesta != null)
+                    await connection.OpenAsync();
+                    using (var transaction = connection.BeginTransaction())
+                    using (var command = new SqlCommand(@"UPDATE Turnos SET Valor_inicial = @Base
+WHERE Id_turno = @Id;", connection, transaction))
                     {
-                        rpta = this.Mensaje_respuesta;
+                        command.Parameters.Add("@Id", SqlDbType.Int).Value = id_turno;
+                        var amount = command.Parameters.Add("@Base", SqlDbType.Decimal);
+                        amount.Precision = 19;
+                        amount.Scale = 2;
+                        amount.Value = base_nueva;
+                        if (await command.ExecuteNonQueryAsync() != 1)
+                            return "No se encontro el turno para guardar la base.";
+                        command.CommandText = "SELECT Valor_inicial FROM Turnos WHERE Id_turno = @Id;";
+                        object persisted = await command.ExecuteScalarAsync();
+                        if (persisted == null || persisted == DBNull.Value || Convert.ToDecimal(persisted) != base_nueva)
+                            return "No se pudo confirmar el valor guardado de la base.";
+                        transaction.Commit();
+                        return "OK";
                     }
                 }
             }
-            catch (SqlException ex)
-            {
-                rpta = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                rpta = ex.Message;
-            }
-            finally
-            {
-                if (SqlCon.State == ConnectionState.Open)
-                    SqlCon.Close();
-            }
-            return Task.FromResult(rpta);
+            catch (Exception ex) { return ex.Message; }
         }
         #endregion
 

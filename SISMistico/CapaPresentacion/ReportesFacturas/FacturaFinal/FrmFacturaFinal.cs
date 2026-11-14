@@ -114,6 +114,20 @@ namespace CapaPresentacion
                     Convert.ToString(this.Id_pedido),
                     out this.TablaDetallePedido,
                     out DataTable dtDetallePlatosPedido, out rpta);
+
+                // El domicilio usa su propia precuenta: con datos de entrega y sin mensaje de propina.
+                if (this.TablaDatosPrincipales != null && this.TablaDatosPrincipales.Rows.Count > 0
+                    && this.TablaDatosPrincipales.Columns.Contains("Mesa")
+                    && "DOMICILIO".Equals(Convert.ToString(this.TablaDatosPrincipales.Rows[0]["Mesa"]),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    this.reportViewer1.LocalReport.ReportEmbeddedResource =
+                        "CapaPresentacion.ReportesFacturas.FacturaFinal.DeliveryPreBill.rdlc";
+                    ReportParameter[] extended = new ReportParameter[this.reportParameters.Length + 6];
+                    this.reportParameters.CopyTo(extended, 0);
+                    this.DeliveryParameters().CopyTo(extended, this.reportParameters.Length);
+                    this.reportParameters = extended;
+                }
             }
             catch (Exception ex)
             {
@@ -140,15 +154,24 @@ namespace CapaPresentacion
 
             this.Controls.Add(this.reportViewer1);
 
-            this.reportParameters = new ReportParameter[2];
             // En el reporte de la venta, Num_mesa trae "DOMICILIO" cuando el pedido es de domicilio.
             bool isDelivery = this.TablaDatosPrincipales != null && this.TablaDatosPrincipales.Rows.Count > 0
                 && this.TablaDatosPrincipales.Columns.Contains("Num_mesa")
                 && "DOMICILIO".Equals(Convert.ToString(this.TablaDatosPrincipales.Rows[0]["Num_mesa"]),
                     StringComparison.OrdinalIgnoreCase);
-            this.reportParameters[0] = new ReportParameter("Titulo",
-                isDelivery ? "Casa Grande - DOMICILIO" : "Restaurante Casa Grande");
-            this.reportParameters[1] = new ReportParameter("NumFactura", this.ComprobacionNumFacturas().ToString());
+            List<ReportParameter> parameters = new List<ReportParameter>
+            {
+                new ReportParameter("Titulo", isDelivery ? "DOMICILIO - FACTURA" : "Restaurante Casa Grande"),
+                new ReportParameter("NumFactura", this.ComprobacionNumFacturas().ToString()),
+            };
+            if (isDelivery)
+            {
+                // Factura propia del domicilio: con datos de entrega y sin mensaje de propina.
+                this.reportViewer1.LocalReport.ReportEmbeddedResource =
+                    "CapaPresentacion.ReportesFacturas.FacturaFinal.DeliveryInvoice.rdlc";
+                parameters.AddRange(this.DeliveryParameters());
+            }
+            this.reportParameters = parameters.ToArray();
 
             this.reportViewer1.LocalReport.SetParameters(this.reportParameters);
 
@@ -160,6 +183,33 @@ namespace CapaPresentacion
 
             ReportDataSource dsDetallePago = new ReportDataSource("DetallePago", this.TablaDetalleVenta);
             reportViewer1.LocalReport.DataSources.Add(dsDetallePago);
+        }
+
+        // Telefono, direccion, barrio y referencia de entrega del pedido para el reporte de domicilio.
+        private ReportParameter[] DeliveryParameters()
+        {
+            string phone = string.Empty, address = string.Empty, neighborhood = string.Empty, reference = string.Empty;
+            DataTable contact = NAddresses.GetDeliveryContact(this.Id_pedido);
+            if (contact != null && contact.Rows.Count > 0)
+            {
+                DataRow row = contact.Rows[0];
+                phone = Convert.ToString(row["Telefono"]).Trim();
+                address = Convert.ToString(row["Direccion"]).Trim();
+                neighborhood = Convert.ToString(row["Barrio"]).Trim();
+                reference = Convert.ToString(row["Referencia"]).Trim();
+            }
+            string paymentMethod = NPedido.GetPaymentMethod(this.Id_pedido);
+            // Numero de factura del dia de este domicilio (1..N): se asigna al crearlo y las reimpresiones lo conservan.
+            int? number = NPedido.GetOrAssignDeliveryNumber(this.Id_pedido);
+            return new[]
+            {
+                new ReportParameter("DeliveryPhone", phone),
+                new ReportParameter("DeliveryAddress", address),
+                new ReportParameter("DeliveryNeighborhood", neighborhood),
+                new ReportParameter("DeliveryReference", reference),
+                new ReportParameter("DeliveryPaymentMethod", paymentMethod),
+                new ReportParameter("DeliveryNumber", number.HasValue ? number.Value.ToString(CultureInfo.InvariantCulture) : string.Empty),
+            };
         }
 
         private static DataTable SelectSale(DataTable table, int saleId)

@@ -32,6 +32,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 }
             };
             this.poperContainer1 = new PoperContainer(opcionesPedido);
+            this.WirePriceEditing();
 
             this.datosUsuario = new DatosUsuario();
             this.poperContainer2 = new PoperContainer(datosUsuario);
@@ -349,11 +350,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
         {
             if (!this.opcionesPedido.ElectronicInvoice.Checked || this.IsPrecuenta) return null;
             if (electronicFiscalData == null) throw new InvalidOperationException("Complete los datos fiscales de la factura electrónica.");
+            var products = SnapshotRows(this.TablaDetalle);
+            // Precios editados en el grid: solo viajan a la factura de Alegra (items[].price de esa línea).
+            var edited = this.EditedPrices();
+            if (edited.Count > 0 && this.TablaDetalle != null)
+            {
+                string idColumn = this.TablaDetalle.Columns.Contains("Id_detalle_pedido") ? "Id_detalle_pedido" : this.TablaDetalle.Columns[0].ColumnName;
+                foreach (var product in products)
+                    if (product[idColumn] != null && edited.TryGetValue(Convert.ToInt32(product[idColumn], CultureInfo.InvariantCulture), out decimal custom))
+                        product["ElectronicPrice"] = custom;
+            }
             var snapshot = new Dictionary<string, object>
             {
                 { "version", 1 }, { "orderId", this.Id_pedido }, { "customerId", this.Id_cliente },
                 { "fiscal", electronicFiscalData }, { "saleValues", values.ToArray() },
-                { "products", SnapshotRows(this.TablaDetalle) }, { "payments", SnapshotRows(payments) },
+                { "products", products }, { "payments", SnapshotRows(payments) },
                 { "requestedAt", DateTime.UtcNow.ToString("o") }
             };
             // Solo se escribe cuando el usuario eligió facturar únicamente los productos vinculados.
@@ -448,6 +459,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 out tablaDetalle,
                 out DataTable dtDetallePlatosPedido, out rpta);
             this.TablaDetalle = tablaDetalle;
+            this.RemovePriceEditColumn();
             this.dgvPedido.DataSource = this.TablaDetalle;
 
             if (this.TablaDetalle != null & TablaDatosPrincipales != null)
@@ -455,11 +467,12 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 this.dgvPedido.Enabled = true;
                 string[] columnsHeaderText =
                 {
-                        "Id_detalle_pedido", "Id pedido", "Id tipo", "Tipo", "Nombre", "Precio", "Cantidad", "Total", "Observaciones"
+                        "Id_detalle_pedido", "Id pedido", "Id tipo", "Tipo", "Nombre", "Precio", "Cant", "Total", "Observaciones"
                     };
+                // Observaciones no se muestra en este detalle.
                 bool[] columnsVisible =
                 {
-                        false, false, false, true, true, true, true, true, true
+                        false, false, false, true, true, true, true, true, false
                     };
                 this.dgvPedido =
                     DatagridString.ChangeHeaderTextAndVisible(this.dgvPedido, columnsHeaderText, columnsVisible);

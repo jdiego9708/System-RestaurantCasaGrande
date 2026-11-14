@@ -37,6 +37,24 @@ COMMIT;", new SqlParameter("@json", SqlDbType.NVarChar,-1) { Value=json });
 SELECT 'PLATO' AS Tipo,Id_plato AS Id,Nombre_plato AS Nombre FROM dbo.Platos WHERE ISNULL(Estado,'ACTIVO')='ACTIVO'
 UNION ALL SELECT 'BEBIDA',Id_bebida,Nombre_bebida FROM dbo.Bebidas WHERE ISNULL(Estado,'ACTIVO')='ACTIVO' ORDER BY Tipo,Nombre");
 
+        public static void SaveProductMapping(string key, string mappingJson, string companyId)
+        {
+            // Actualiza únicamente este vínculo, sin sobrescribir otros cambios de configuración.
+            var result = Query(@"SET XACT_ABORT ON; BEGIN TRAN;
+UPDATE dbo.AlegraSettings WITH (UPDLOCK,SERIALIZABLE)
+SET ConfigurationJson=JSON_MODIFY(JSON_MODIFY(JSON_MODIFY(ConfigurationJson,
+    '$.Products',JSON_QUERY(COALESCE(JSON_QUERY(ConfigurationJson,'$.Products'),'{}'))),
+    @path,JSON_QUERY(@mapping)),'$.CompanyId',@company), UpdatedAt=SYSUTCDATETIME()
+OUTPUT inserted.CompanyKey
+WHERE CompanyKey='default' AND (NULLIF(JSON_VALUE(ConfigurationJson,'$.CompanyId'),'') IS NULL
+    OR JSON_VALUE(ConfigurationJson,'$.CompanyId')=@company);
+COMMIT;", new SqlParameter("@path", "$.Products.\"" + key + "\""),
+                new SqlParameter("@mapping", SqlDbType.NVarChar, -1) { Value = mappingJson },
+                new SqlParameter("@company", companyId));
+            if (result.Rows.Count != 1)
+                throw new InvalidOperationException("No se guardó el vínculo. Revisa la configuración de Alegra y la empresa conectada. El producto remoto se conserva; puedes volver a vincularlo.");
+        }
+
         public static DataTable GetRequest(int saleId) => Query(@"
 IF OBJECT_ID('dbo.AlegraInvoiceRequests') IS NOT NULL
 SELECT * FROM dbo.AlegraInvoiceRequests WHERE SaleId=@sale",new SqlParameter("@sale",saleId));

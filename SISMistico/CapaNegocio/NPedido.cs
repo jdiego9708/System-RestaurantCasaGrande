@@ -30,6 +30,15 @@ namespace CapaNegocio
 
         #endregion
 
+        #region FORMA DE PAGO DE DOMICILIOS
+        public static string SetPaymentMethod(int orderId, string method) => DPedidos.SetPaymentMethod(orderId, method);
+
+        public static string GetPaymentMethod(int orderId) => DPedidos.GetPaymentMethod(orderId);
+
+        /// <summary>Numero de factura del dia de un domicilio (lo asigna si falta); null si no aplica o no hay numeracion.</summary>
+        public static int? GetOrAssignDeliveryNumber(int orderId) => DPedidos.GetOrAssignDeliveryNumber(orderId);
+        #endregion
+
         #region CAMBIAR ESTADO PEDIDO
         public static string CambiarEstadoPedido(List<string> variables)
         {

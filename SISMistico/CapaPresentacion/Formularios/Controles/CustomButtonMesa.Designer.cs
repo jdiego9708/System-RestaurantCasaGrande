@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnMesa = new System.Windows.Forms.Button();
+            this.btnMesa = new TableCardButton(this);
             this.SuspendLayout();
             // 
             // btnMesa

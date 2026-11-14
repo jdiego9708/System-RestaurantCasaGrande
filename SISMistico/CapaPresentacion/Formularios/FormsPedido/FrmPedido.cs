@@ -20,6 +20,7 @@
         public FrmPedido()
         {
             InitializeComponent();
+            this.BuildCatalogPager();
             this.txtBusqueda.onKeyPress += TxtBusqueda_OnTextoKeyPress;
             this.btnPlatos.Click += BtnPlatos_Click;
             this.btnBebidas.Click += BtnBebidas_Click;
@@ -256,10 +257,32 @@
                     string rpta = "OK";
                     int id_pedido = 0;
 
+                    // Un domicilio nuevo pregunta como pagara el cliente: con eso se factura solo al cumplirse el tiempo.
+                    string paymentMethod = null;
+                    if (this.IsDomicilio && !this.IsEditar)
+                    {
+                        MensajeEspera.CloseForm();
+                        using (FormsDomicilios.FrmPaymentMethodDialog payment = new FormsDomicilios.FrmPaymentMethodDialog())
+                        {
+                            if (payment.ShowDialog(this) != DialogResult.OK)
+                                return;
+                            paymentMethod = payment.Method;
+                        }
+                        MensajeEspera.ShowWait("Cargando...");
+                    }
+
                     if (!this.IsEditar)
                     {
                         rpta = NPedido.InsertarPedido(pedido);
                         id_pedido = pedido.Id_pedido;
+                        if (rpta.Equals("OK") && this.IsDomicilio)
+                            NPedido.GetOrAssignDeliveryNumber(id_pedido);
+                        if (rpta.Equals("OK") && paymentMethod != null)
+                        {
+                            string saved = NPedido.SetPaymentMethod(id_pedido, paymentMethod);
+                            if (!saved.Equals("OK"))
+                                Mensajes.MensajeInformacion("No se pudo guardar la forma de pago; el domicilio no se facturará solo. " + saved);
+                        }
                     }
                     else
                     {
@@ -335,7 +358,13 @@
                         //    this.frmComandas.AsignarTablas();
                         //}
 
-                        if (this.chkPrintComandas.Checked)
+                        if (this.IsDomicilio)
+                        {
+                            // Un domicilio no imprime comandas: sale directo la precuenta titulada
+                            // "DOMICILIO - FACTURA". El pedido sigue PENDIENTE (imprimir no cambia su estado).
+                            CapaPresentacion.Api.ApiImpresion.ImprimirPrecuenta(id_pedido);
+                        }
+                        else if (this.chkPrintComandas.Checked)
                         {
                             string kind = this.IsDomicilio ? "DOMICILIO " : string.Empty;
                             if (dtBebidas.Rows.Count > 0)
@@ -717,11 +746,10 @@
             try
             {
                 DataTable dtPlatos = NPlatos.BuscarPlatos(tipo_busqueda, texto_busqueda, "ACTIVO", out string rpta);
-                this.panelResultados.clearDataSource();
+                // Solo se arma la lista de productos; las tarjetas las crea ShowCatalog, de 20 en 20.
+                List<ProductBinding> products = new List<ProductBinding>();
                 if (dtPlatos != null)
                 {
-                    this.panelResultados.BackgroundImage = null;
-                    List<UserControl> controls = new List<UserControl>();
                     foreach (DataRow row in dtPlatos.Rows)
                     {
                         CapaEntidades.Models.Platos plato = new CapaEntidades.Models.Platos(row);
@@ -737,33 +765,13 @@
                             Product = plato,
                             NombreImagen = plato.Imagen_plato,
                         };
-
-                        ProductoItem productoItem = new ProductoItem
-                        {
-                            Product = productBinding,
-                        };
-
-                        productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
-
-                        controls.Add(productoItem);
+                        products.Add(productBinding);
                     }
-                    this.panelResultados.AddArrayControl(controls);
-
-                    this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
-                    {
-                        IsBackground = true
-                    };
-                    this.threadLoadImages.SetApartmentState(ApartmentState.STA);
-                    this.threadLoadImages.Start();
                 }
-                else
-                {
-                    this.panelResultados.BackgroundImage = Resources.SIN_IMAGENES;
-                    this.panelResultados.BackgroundImageLayout = ImageLayout.Center;
+                this.ShowCatalog(products);
 
-                    if (!rpta.Equals("OK"))
-                        throw new Exception(rpta);
-                }
+                if (dtPlatos == null && !rpta.Equals("OK"))
+                    throw new Exception(rpta);
             }
             catch (Exception ex)
             {
@@ -778,11 +786,9 @@
             {
                 MensajeEspera.ShowWait("Cargando...");
                 DataTable dtBebidas = NBebidas.BuscarBebida(tipo_busqueda, texto_busqueda, "ACTIVO", out string rpta);
-                this.panelResultados.clearDataSource();
+                List<ProductBinding> products = new List<ProductBinding>();
                 if (dtBebidas != null)
                 {
-                    this.panelResultados.BackgroundImage = null;
-                    List<UserControl> controls = new List<UserControl>();
                     foreach (DataRow row in dtBebidas.Rows)
                     {
                         CapaEntidades.Models.Bebidas bebida = new CapaEntidades.Models.Bebidas(row);
@@ -798,37 +804,15 @@
                             Product = bebida,
                             NombreImagen = bebida.Imagen
                         };
-
-                        ProductoItem productoItem = new ProductoItem
-                        {
-                            Product = productBinding,
-                        };
-
-                        productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
-
-                        controls.Add(productoItem);
+                        products.Add(productBinding);
                     }
-                    this.panelResultados.AddArrayControl(controls);
-
-                    this.threadLoadImages = new Thread(new ThreadStart(() => LoadImages()))
-                    {
-                        IsBackground = true
-                    };
-                    this.threadLoadImages.SetApartmentState(ApartmentState.STA);
-                    this.threadLoadImages.Start();
                 }
-                else
-                {
-                    MensajeEspera.CloseForm();
-
-                    this.panelResultados.BackgroundImage = Resources.SIN_IMAGENES;
-                    this.panelResultados.BackgroundImageLayout = ImageLayout.Center;
-
-                    if (!rpta.Equals("OK"))
-                        throw new Exception(rpta);
-                }
+                this.ShowCatalog(products);
 
                 MensajeEspera.CloseForm();
+
+                if (dtBebidas == null && !rpta.Equals("OK"))
+                    throw new Exception(rpta);
             }
             catch (Exception ex)
             {
@@ -837,35 +821,6 @@
                 Mensajes.MensajeErrorCompleto(this.Name, "LoadBebidas(string tipo_busqueda, string texto_busqueda)",
                     "Hubo un error cargando las bebidas", ex.Message);
             }
-        }
-
-        private void LoadImages()
-        {
-            foreach (UserControl control in this.panelResultados.controlsUser)
-            {
-                if (control is ProductoItem product)
-                {
-                    Image img;
-                    string nombreimagen = product.Product.NombreImagen;
-                    if (!string.IsNullOrEmpty(nombreimagen))
-                    {
-                        img = Imagenes.ObtenerImagen("RUTAIMAGES", nombreimagen, out string ruta_destino);
-
-                        if (img == null)
-                            img = Resources.SIN_IMAGENES;
-
-                        product.ImageProduct = img;
-                    }
-                    else
-                    {
-                        img = Resources.SIN_IMAGENES;
-                        product.ImageProduct = img;
-                    }
-                }
-            }
-
-            if (this.threadLoadImages.IsAlive)
-                this.threadLoadImages.Interrupt();
         }
 
         private void LoadImagesProductsSelected()

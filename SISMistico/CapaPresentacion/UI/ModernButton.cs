@@ -39,8 +39,33 @@ namespace CapaPresentacion.UI
             set { this.shadow = value; this.Invalidate(); }
         }
 
+        private bool busy;
+        private int spinnerAngle;
+        private readonly Timer spinnerTimer = new Timer { Interval = 80 };
+
+        /// <summary>Muestra un indicador circular giratorio en lugar del icono mientras hay una operación en curso.</summary>
+        [DefaultValue(false)]
+        public bool Busy
+        {
+            get => this.busy;
+            set
+            {
+                if (this.busy == value) return;
+                this.busy = value;
+                if (value) this.spinnerTimer.Start(); else this.spinnerTimer.Stop();
+                this.Invalidate();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) this.spinnerTimer.Dispose();
+            base.Dispose(disposing);
+        }
+
         public ModernButton()
         {
+            this.spinnerTimer.Tick += (s, e) => { this.spinnerAngle = (this.spinnerAngle + 30) % 360; this.Invalidate(); };
             this.SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer
                 | ControlStyles.ResizeRedraw, true);
             this.FlatStyle = FlatStyle.Flat;
@@ -146,12 +171,20 @@ namespace CapaPresentacion.UI
             // Icono + texto centrados como un solo bloque.
             const int iconSize = 18;
             const int spacing = 8;
-            bool hasIcon = this.icon != IconChar.None;
+            bool hasIcon = this.busy || this.icon != IconChar.None;
             Size textSize = TextRenderer.MeasureText(g, this.Text, this.Font);
             int contentWidth = textSize.Width + (hasIcon ? iconSize + (this.Text.Length > 0 ? spacing : 0) : 0);
             int x = (this.Width - contentWidth) / 2;
 
-            if (hasIcon)
+            if (this.busy)
+            {
+                // Arco de 270° que gira; el hueco marca el sentido del giro.
+                Rectangle ring = new Rectangle(x + 2, (this.Height - iconSize) / 2 + 2, iconSize - 4, iconSize - 4);
+                using (Pen pen = new Pen(fore, 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                    g.DrawArc(pen, ring, this.spinnerAngle, 270);
+                x += iconSize + spacing;
+            }
+            else if (hasIcon)
             {
                 IconRenderer.Draw(this, g, this.icon, fore,
                     new Rectangle(x, (this.Height - iconSize) / 2, iconSize, iconSize));

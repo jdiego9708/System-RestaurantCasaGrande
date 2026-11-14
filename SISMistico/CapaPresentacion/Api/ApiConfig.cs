@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 
@@ -33,7 +33,16 @@ namespace CapaPresentacion.Api
         /// <summary>True si el instalador (o Cambiar-Codigo-Maestro.ps1) ya dejó el código maestro configurado.</summary>
         public static bool CodigoMaestroConfigurado
         {
-            get { return Leer("MasterCodeSalt", string.Empty).Length > 0 && Leer("MasterCodeHash", string.Empty).Length > 0; }
+            get
+            {
+                string salt = Leer("MasterCodeSalt", string.Empty);
+                string hash = Leer("MasterCodeHash", string.Empty);
+#if DEBUG
+                // Valor inicial exclusivo de desarrollo; nunca reemplaza una clave configurada.
+                if (salt.Length == 0 && hash.Length == 0) return true;
+#endif
+                return salt.Length > 0 && hash.Length > 0;
+            }
         }
 
         /// <summary>
@@ -46,6 +55,11 @@ namespace CapaPresentacion.Api
             foreach (char c in codigo)
                 if (c < '0' || c > '9') return false;
 
+#if DEBUG
+            if (Leer("MasterCodeSalt", string.Empty).Length == 0
+                && Leer("MasterCodeHash", string.Empty).Length == 0)
+                return codigo == "12345678";
+#endif
             string esperado = Leer("MasterCodeHash", string.Empty).ToLowerInvariant();
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(Leer("MasterCodeSalt", string.Empty) + codigo);
             string obtenido;

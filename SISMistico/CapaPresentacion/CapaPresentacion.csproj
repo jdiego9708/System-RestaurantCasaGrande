@@ -68,6 +68,7 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
@@ -110,6 +111,9 @@
     </Compile>
     <Compile Include="Formularios\Controles\CustomButtonMesa.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Formularios\Controles\CustomButtonMesa.Appearance.cs">
+      <DependentUpon>CustomButtonMesa.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\Controles\CustomButtonMesa.Designer.cs">
       <DependentUpon>CustomButtonMesa.cs</DependentUpon>
@@ -362,6 +366,9 @@
     <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Electronic.cs">
       <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.PriceEdit.cs">
+      <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\FrmFacturarPedido.Modern.cs">
       <DependentUpon>FrmFacturarPedido.cs</DependentUpon>
     </Compile>
@@ -371,11 +378,25 @@
     <Compile Include="UI\ModernButton.cs" />
     <Compile Include="UI\ModernCard.cs" />
     <Compile Include="UI\ModernTextBox.cs" />
+    <Compile Include="UI\ModernSelectionControls.cs" />
+    <Compile Include="Formularios\FormsProductos\FrmProductos.cs" />
+    <Compile Include="Formularios\FormsProductos\AlegraProductValidationCache.cs" />
+    <Compile Include="Formularios\FormsProductos\FrmProducto.cs" />
+    <Compile Include="Formularios\FormsProductos\AlegraProductGridActions.cs" />
+    <Compile Include="Formularios\FormsProductos\FrmAlegraSimilarProducts.cs" />
     <Compile Include="UI\Theme.cs" />
     <Compile Include="UI\AlegraLinkIndicator.cs" />
     <Compile Include="UI\ThemeExtensions.cs" />
     <Compile Include="Formularios\FormsDomicilios\FrmDeliveries.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliveryAutoBilling.cs" />
+    <Compile Include="Formularios\FormsDomicilios\RappiCard.cs" />
+    <Compile Include="Formularios\FormsDomicilios\RappiPanel.cs" />
+    <Compile Include="Formularios\FormsDomicilios\RappiTicketPrinter.cs" />
+    <Compile Include="Formularios\FormsDomicilios\FrmPaymentMethodDialog.cs" />
     <Compile Include="Formularios\FormsDomicilios\FrmDeliveryCustomer.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliveryCard.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliveryTiming.cs" />
+    <Compile Include="UI\CountdownRing.cs" />
     <Compile Include="Formularios\FormsPedido\DomicilioSmall.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -422,12 +443,19 @@
     <Compile Include="Formularios\FormsPedido\FrmObservarMesas.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmObservarMesas.Workspace.cs">
+      <DependentUpon>FrmObservarMesas.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formularios\FormsPedido\FrmObservarMesas.Designer.cs">
       <DependentUpon>FrmObservarMesas.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\FrmPedido.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Formularios\FormsPedido\FrmPedido.Catalog.cs">
+      <DependentUpon>FrmPedido.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\FormsPedido\ProductThumbnails.cs" />
     <Compile Include="Formularios\FormsPedido\FrmPedido.Designer.cs">
       <DependentUpon>FrmPedido.cs</DependentUpon>
     </Compile>
@@ -626,6 +654,9 @@
     <Compile Include="Api\ApiServer.cs" />
     <Compile Include="Api\ApiUi.cs" />
     <Compile Include="Servicios\ControladorImpresion.cs" />
+    <Compile Include="Servicios\BluetoothReceiptPrinter.cs" />
+    <Compile Include="Servicios\PrinterPaper.cs" />
+    <Compile Include="Servicios\ReceiptLayoutAdapter.cs" />
     <Compile Include="Servicios\TableCardText.cs" />
     <Compile Include="Servicios\FormCloseTracer.cs" />
     <Compile Include="Servicios\EnviarEmailErrores2.cs" />
@@ -640,6 +671,9 @@
     </Compile>
     <Compile Include="Formularios\FormsPrincipales\FrmPrincipal.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\FormsPrincipales\FrmPrincipal.Navigation.cs">
+      <DependentUpon>FrmPrincipal.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPrincipales\FrmPrincipal.Designer.cs">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
@@ -1047,6 +1081,15 @@
     <EmbeddedResource Include="ReportesFacturas\FacturaFinal\FacturaFinal.rdlc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\DeliveryPreBill.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\RappiTicket.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportesFacturas\FacturaFinal\DeliveryInvoice.rdlc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="ReportesFacturas\FacturaFinal\FrmFacturaFinal.resx">
       <DependentUpon>FrmFacturaFinal.cs</DependentUpon>
     </EmbeddedResource>
@@ -1109,6 +1152,10 @@
       <LastGenOutput>ConfigFacturas.Designer.cs</LastGenOutput>
     </None>
     <None Include="Resources\add2.png" />
+    <EmbeddedResource Include="Resources\MainBackground.png" />
+    <EmbeddedResource Include="Resources\CasaGrandeLoginEmblem.png">
+      <LogicalName>CapaPresentacion.Resources.CasaGrandeLoginEmblem.png</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\kghostview.png" />

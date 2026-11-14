@@ -70,10 +70,27 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 finally { this.electronicOnlyLinked = false; }
             }
 
-            using (var dialog = new FrmUnlinkedProductsDialog(unlinked, linkedCount, invoiceTotalText, saleTotalText))
+            Func<string> currentInvoiceTotal = () =>
+            {
+                this.electronicOnlyLinked = true;
+                try
+                {
+                    return AlegraInvoiceBuilder.ExpectedTotal(this.BuildElectronicRequest(values, payments), AlegraWorkflow.Settings())
+                        .ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO"));
+                }
+                finally { this.electronicOnlyLinked = false; }
+            };
+            using (var dialog = new FrmUnlinkedProductsDialog(unlinked, linkedCount, invoiceTotalText, saleTotalText,
+                this.TablaDetalle, currentInvoiceTotal))
             {
                 DialogResult answer = dialog.ShowDialog(this);
-                if (answer == DialogResult.Yes) { this.electronicOnlyLinked = true; return true; }
+                if (answer == DialogResult.Yes)
+                {
+                    var current = AlegraWorkflow.Settings();
+                    if (!AlegraInvoiceBuilder.AnyLinked(preview, current)) return false;
+                    this.electronicOnlyLinked = AlegraInvoiceBuilder.UnlinkedProducts(preview, current).Count > 0;
+                    return true;
+                }
                 if (answer == DialogResult.No)
                 {
                     // Desmarcar la casilla limpia también los datos fiscales capturados.

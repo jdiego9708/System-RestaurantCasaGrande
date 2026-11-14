@@ -52,6 +52,39 @@ namespace CapaNegocio.Alegra
             PostAsync("invoices", json, cancellationToken);
         public Task<AlegraResponse> CreateContactAsync(string json, CancellationToken cancellationToken) =>
             PostAsync("contacts", json, cancellationToken);
+
+        // PUT /contacts/{id}: el contrato usa el mismo cuerpo que la creación; aquí solo se envían los campos modificados.
+        public async Task<AlegraResponse> UpdateContactAsync(string id, string json, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Falta el ID del contacto de Alegra.");
+            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Falta el cuerpo de la solicitud.");
+            new JavaScriptSerializer().DeserializeObject(json);
+            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+            using (HttpResponseMessage response = await client.PutAsync("contacts/" + Uri.EscapeDataString(id), content, cancellationToken).ConfigureAwait(false))
+            {
+                return new AlegraResponse((int)response.StatusCode, await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            }
+        }
+        public Task<AlegraResponse> CreateItemAsync(string json, CancellationToken cancellationToken) =>
+            PostAsync("items", json, cancellationToken);
+        // PUT /items/{id}: el cuerpo lleva solo los campos a cambiar.
+        public async Task<AlegraResponse> UpdateItemAsync(string id, string json, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Falta el ID del producto de Alegra.");
+            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Falta el cuerpo de la solicitud.");
+            new JavaScriptSerializer().DeserializeObject(json);
+            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+            using (HttpResponseMessage response = await client.PutAsync("items/" + Uri.EscapeDataString(id), content, cancellationToken).ConfigureAwait(false))
+            {
+                return new AlegraResponse((int)response.StatusCode, await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            }
+        }
+        public Task<string> FindItemsAsync(string name, CancellationToken token) =>
+            GetAsync("items?name=" + Uri.EscapeDataString(name) + "&limit=30", token);
+        public Task<string> FindItemsByReferenceAsync(string reference, CancellationToken token) =>
+            GetAsync("items?reference=" + Uri.EscapeDataString(reference) + "&limit=30", token);
+        public Task<string> GetItemOrNullAsync(string id, CancellationToken token) =>
+            GetAsync("items/" + Uri.EscapeDataString(id), token, true);
         public Task<AlegraResponse> StampInvoiceAsync(string id, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Falta el ID de la factura.");
@@ -102,10 +135,11 @@ namespace CapaNegocio.Alegra
             return start;
         }
 
-        private async Task<string> GetAsync(string path, CancellationToken cancellationToken)
+        private async Task<string> GetAsync(string path, CancellationToken cancellationToken, bool allowNotFound = false)
         {
             using (HttpResponseMessage response = await client.GetAsync(path, cancellationToken).ConfigureAwait(false))
             {
+                if (allowNotFound && response.StatusCode == HttpStatusCode.NotFound) return null;
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                     throw new InvalidOperationException("Alegra rechazó la autenticación (401). Revise correo y token.");
                 if (response.StatusCode == HttpStatusCode.Forbidden)

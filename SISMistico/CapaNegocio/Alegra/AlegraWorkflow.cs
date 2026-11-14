@@ -164,7 +164,7 @@ WHERE SaleId=@sale AND Status='ACCEPTED'",
                         var result=results==null ? null : results.OfType<Dictionary<string,object>>().FirstOrDefault(item=>Text(item,"id")==remote);
                         if (result==null || (!Text(result,"success").Equals("True",StringComparison.OrdinalIgnoreCase) && Text(result,"code")!="3226"))
                         {
-                            DAlegra.Update(requestId,token,"NEEDS_REVIEW",remote,number,emission,"Alegra no confirmó la emisión de este ID. HTTP "+stamped.StatusCode+".");
+                            DAlegra.Update(requestId,token,"NEEDS_REVIEW",remote,number,emission,"Alegra no confirmó la emisión de este ID. HTTP "+stamped.StatusCode+". "+StampDetail(stampBody,result));
                             return null;
                         }
                         string stampEmission = Emission(result);
@@ -189,6 +189,24 @@ WHERE SaleId=@sale AND Status='ACCEPTED'",
             return null;
         }
 
+        // Motivo textual que devuelve Alegra al fallar el timbrado, para no perderlo en el aviso al usuario.
+        private static string StampDetail(Dictionary<string,object> body,Dictionary<string,object> result)
+        {
+            string text=string.Empty;
+            foreach (var source in new[]{result,body})
+            {
+                if (source==null) continue;
+                foreach (string key in new[]{"message","error","code"})
+                    if (source.ContainsKey(key) && source[key]!=null)
+                    {
+                        // Los arreglos y objetos se serializan para que el motivo sea legible.
+                        string value=source[key] is string ? (string)source[key] : Json.Serialize(source[key]);
+                        if (!string.IsNullOrWhiteSpace(value)) text+=key+": "+value+" ";
+                    }
+            }
+            return text.Length>400 ? text.Substring(0,400) : text.Trim();
+        }
+
         public static bool Matches(Dictionary<string,object> contact,Dictionary<string,object> fiscal)
         {
             var id=contact.ContainsKey("identificationObject") ? contact["identificationObject"] as Dictionary<string,object> : null;
@@ -201,6 +219,38 @@ WHERE SaleId=@sale AND Status='ACCEPTED'",
             foreach (string key in new[]{"emission_status","emissionStatus","legalStatus"}) if (!string.IsNullOrWhiteSpace(Text(stamp,key))) return Text(stamp,key);
             return string.Empty;
         }
+        // Solo los campos que el usuario modificó respecto al contacto de Alegra seleccionado, para el PUT /contacts/{id}.
+        // Los grupos que Alegra recibe como objeto (nombre, dirección, identificación) se envían completos si cambia
+        // alguna de sus partes; los demás campos del contacto no se tocan. El número y el tipo de documento no se cambian.
+        public static Dictionary<string,object> ContactChanges(Dictionary<string,object> original,Dictionary<string,string> fiscal)
+        {
+            if (original==null) throw new ArgumentNullException(nameof(original));
+            if (fiscal==null) throw new ArgumentNullException(nameof(fiscal));
+            Func<string,string> form=key=>fiscal.ContainsKey(key)?(fiscal[key]??string.Empty).Trim():string.Empty;
+            Func<string,string,bool> differs=(before,after)=>!string.Equals((before??string.Empty).Trim(),(after??string.Empty).Trim(),StringComparison.Ordinal);
+            var identification=original.ContainsKey("identificationObject") ? original["identificationObject"] as Dictionary<string,object> : null;
+            var names=original.ContainsKey("nameObject") ? original["nameObject"] as Dictionary<string,object> : null;
+            var address=original.ContainsKey("address") ? original["address"] as Dictionary<string,object> : null;
+            var changes=new Dictionary<string,object>();
+            bool kindChanged=differs(Text(original,"kindOfPerson"),form("kindOfPerson"));
+            if (kindChanged) changes["kindOfPerson"]=form("kindOfPerson");
+            if (differs(Text(original,"regime"),form("regime"))) changes["regime"]=form("regime");
+            if (form("identificationType")=="NIT" && differs(Text(identification,"dv"),form("Dígito de verificación (NIT)")))
+                changes["identificationObject"]=new {number=Text(identification,"number"),type=Text(identification,"type"),dv=form("Dígito de verificación (NIT)")};
+            if (form("kindOfPerson")=="PERSON_ENTITY")
+            {
+                if (kindChanged || differs(Text(names,"firstName"),form("Primer nombre")) || differs(Text(names,"secondName"),form("Segundo nombre")) || differs(Text(names,"lastName"),form("Apellidos")))
+                    changes["nameObject"]=new {firstName=form("Primer nombre"),secondName=form("Segundo nombre"),lastName=form("Apellidos")};
+            }
+            else if (kindChanged || differs(Text(original,"name"),form("Nombre o razón social"))) changes["name"]=form("Nombre o razón social");
+            if (differs(Text(original,"email"),form("Correo electrónico"))) changes["email"]=form("Correo electrónico");
+            if (differs(Text(original,"phonePrimary"),form("Teléfono"))) changes["phonePrimary"]=form("Teléfono");
+            if (differs(Text(address,"address"),form("Dirección fiscal")) || differs(Text(address,"department"),form("Departamento"))
+                || differs(Text(address,"city"),form("Municipio")) || differs(Text(address,"country"),form("País")))
+                changes["address"]=new {address=form("Dirección fiscal"),city=form("Municipio"),department=form("Departamento"),country=form("País")};
+            return changes;
+        }
+
         public static Dictionary<string,object> BuildContact(Dictionary<string,object> fiscal)
         {
             var result=new Dictionary<string,object> {

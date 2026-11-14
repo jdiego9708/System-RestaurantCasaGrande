@@ -29,20 +29,20 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmPrincipal));
-            this.panelBotones = new System.Windows.Forms.Panel();
-            this.btnAdministracion = new System.Windows.Forms.Button();
-            this.btnReservas = new System.Windows.Forms.Button();
+            this.panelBotones = new MainNavigationPanel(false);
+            this.btnAdministracion = new MainNavigationButton();
+            this.btnReservas = new MainNavigationButton();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnInsumos = new System.Windows.Forms.Button();
+            this.btnInsumos = new MainNavigationButton();
             this.lblMistico = new System.Windows.Forms.Label();
-            this.btnMesasPedidos = new System.Windows.Forms.Button();
-            this.btnBebidas = new System.Windows.Forms.Button();
-            this.btnPlatos = new System.Windows.Forms.Button();
-            this.btnClientes = new System.Windows.Forms.Button();
-            this.btnEmpleados = new System.Windows.Forms.Button();
-            this.panelBarraSuperior = new System.Windows.Forms.Panel();
-            this.btnUsuario = new System.Windows.Forms.Button();
-            this.btnAdministracionAvanzada = new System.Windows.Forms.Button();
+            this.btnMesasPedidos = new MainNavigationButton();
+            this.btnBebidas = new MainNavigationButton();
+            this.btnPlatos = new MainNavigationButton();
+            this.btnClientes = new MainNavigationButton();
+            this.btnEmpleados = new MainNavigationButton();
+            this.panelBarraSuperior = new MainNavigationPanel(true);
+            this.btnUsuario = new MainNavigationButton();
+            this.btnAdministracionAvanzada = new MainNavigationButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panelBotones.SuspendLayout();
             this.panelBarraSuperior.SuspendLayout();

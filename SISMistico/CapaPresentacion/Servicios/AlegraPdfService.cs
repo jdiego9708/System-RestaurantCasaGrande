@@ -42,8 +42,16 @@ namespace CapaPresentacion
             return downloaded;
         }
 
-        public static async Task<string> RenderForPrintAsync(int saleId, CancellationToken token, bool refresh=false)
+        // Impresora a la que se enviará la factura: la configurada o la predeterminada de Windows.
+        public static string TargetPrinter(AlegraInvoiceConfiguration settings)
         {
+            return string.IsNullOrWhiteSpace(settings.PrinterName) ? new System.Drawing.Printing.PrinterSettings().PrinterName : settings.PrinterName;
+        }
+
+        // El PDF se genera para el papel de la impresora conectada en este momento (58 u 80 mm); si no se indica, se detecta.
+        public static async Task<string> RenderForPrintAsync(int saleId, CancellationToken token, bool refresh=false, PrinterPaperInfo paper=null)
+        {
+            paper = paper ?? PrinterPaper.Detect(TargetPrinter(AlegraWorkflow.Settings()));
             string official = await DownloadAsync(saleId,token,refresh).ConfigureAwait(false);
             var row = AlegraWorkflow.Request(saleId).Rows[0];
             var settings = AlegraWorkflow.Settings();
@@ -52,8 +60,9 @@ namespace CapaPresentacion
                 var company = AlegraWorkflow.Object(await api.GetCompanyAsync(token).ConfigureAwait(false));
                 if (AlegraWorkflow.CompanyIdentity(company) != settings.CompanyId)
                     throw new InvalidOperationException("La credencial de impresion pertenece a otra empresa.");
-                string file=Path.Combine(Path.GetDirectoryName(official),saleId+"-80mm.pdf");
-                return await RenderReviewAsync(api,Convert.ToString(row["RemoteId"]),file,token,true,official).ConfigureAwait(false);
+                // El nombre incluye el ancho: cambiar de impresora no reutiliza un PDF hecho para otro papel.
+                string file=Path.Combine(Path.GetDirectoryName(official),saleId+"-"+paper.Label+".pdf");
+                return await RenderReviewAsync(api,Convert.ToString(row["RemoteId"]),file,token,true,official,paper.RendererMm).ConfigureAwait(false);
             }
         }
 
@@ -138,7 +147,7 @@ namespace CapaPresentacion
 
         // Renderiza desde el XML real; receipt=true usa los datos de validacion del PDF oficial.
         // La descarga oficial y la representacion termica se conservan como archivos separados.
-        private static async Task<string> RenderReviewAsync(AlegraClient api,string id,string file,CancellationToken token,bool receipt=false,string official=null)
+        private static async Task<string> RenderReviewAsync(AlegraClient api,string id,string file,CancellationToken token,bool receipt=false,string official=null,double paperMm=72)
         {
             string script=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Alegra","Render-AlegraFiscalRepresentation.py");
             string renderer = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Alegra","Tools","Renderer","CasaGrandeFiscalPdf.exe");
@@ -171,7 +180,8 @@ namespace CapaPresentacion
             string tempPdf=Path.Combine(Path.GetDirectoryName(file),Guid.NewGuid().ToString("N")+".pdf");
             string arguments=(File.Exists(renderer) ? "" : "\""+script+"\" ")
                 + "\""+xmlPath+"\" \""+jsonPath+"\" \""+tempPdf+"\""
-                + (receipt ? " --receipt --official-pdf \""+official+"\"" : "");
+                + (receipt ? " --receipt --official-pdf \""+official+"\"" : "")
+                + " --paper-mm "+paperMm.ToString("0.#",System.Globalization.CultureInfo.InvariantCulture);
             try
             {
                 using(var process=Process.Start(new ProcessStartInfo {FileName=File.Exists(renderer) ? renderer : "python",Arguments=arguments,UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,RedirectStandardOutput=true,RedirectStandardError=true}))
@@ -207,12 +217,14 @@ namespace CapaPresentacion
         {
             var settings=AlegraWorkflow.Settings();
             string executable = PrinterExecutable(settings.PdfPrinterExecutable);
-            string printer = string.IsNullOrWhiteSpace(settings.PrinterName) ? new System.Drawing.Printing.PrinterSettings().PrinterName : settings.PrinterName;
+            string printer = TargetPrinter(settings);
             if(!File.Exists(executable)||!Path.GetFileName(executable).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Configure SumatraPDF para imprimir el PDF de Alegra.");
             if(string.IsNullOrWhiteSpace(printer)||printer.Contains("\"")||printer.Contains("\r")||printer.Contains("\n"))
                 throw new InvalidOperationException("Configure una impresora térmica válida.");
-            string file=await RenderForPrintAsync(saleId,token,reprint).ConfigureAwait(false);
+            // Papel de la impresora conectada ahora mismo (58 u 80 mm): el PDF se genera a su ancho.
+            PrinterPaperInfo paper=PrinterPaper.Detect(printer);
+            string file=await RenderForPrintAsync(saleId,token,reprint,paper).ConfigureAwait(false);
             if(Path.GetFileName(file).EndsWith("-revision.pdf",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Alegra no proporcionó su PDF. La representación de revisión debe abrirse y revisarse manualmente; no se imprimirá automáticamente.");
             var printerSettings = new System.Drawing.Printing.PrinterSettings { PrinterName=printer };
@@ -225,6 +237,31 @@ namespace CapaPresentacion
             }
             catch (OperationCanceledException) { AlegraWorkflow.MarkPrint(saleId,"CANCELLED");throw; }
             catch { AlegraWorkflow.MarkPrint(saleId,"UNKNOWN");throw; }
+        }
+
+        // Imprime la representación (al ancho del papel de la impresora, 58 u 80 mm) de cualquier factura aceptada de la
+        // cuenta Alegra, incluso las creadas fuera de Casa Grande. No toca el estado de impresión de las ventas locales.
+        public static async Task PrintRemoteAsync(string remoteId,CancellationToken token)
+        {
+            if(string.IsNullOrWhiteSpace(remoteId))throw new ArgumentException("Seleccione una factura de Alegra.");
+            var settings=AlegraWorkflow.Settings();
+            string executable=PrinterExecutable(settings.PdfPrinterExecutable);
+            string printer=TargetPrinter(settings);
+            if(!File.Exists(executable)||!Path.GetFileName(executable).Equals("SumatraPDF.exe",StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Configure SumatraPDF para imprimir la factura.");
+            if(string.IsNullOrWhiteSpace(printer)||printer.IndexOfAny(new[]{'\"','\r','\n'})>=0)
+                throw new InvalidOperationException("Configure una impresora térmica válida.");
+            if(!new System.Drawing.Printing.PrinterSettings {PrinterName=printer}.IsValid)
+                throw new InvalidOperationException("Seleccione una impresora instalada en Windows.");
+            string cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"CasaGrande","Alegra","RemotePDF");
+            Directory.CreateDirectory(cache);
+            // El PDF oficial es obligatorio: aporta la fecha de validación y los datos del software.
+            string official=await DownloadDocumentAsync(remoteId,Path.Combine(cache,remoteId+"-electronica.pdf"),token,true).ConfigureAwait(false);
+            PrinterPaperInfo paper=PrinterPaper.Detect(printer);
+            string file;
+            using(var api=new AlegraClient(new HttpClientHandler {AllowAutoRedirect=false}, AlegraCredentials.FromEmissionEnvironment()))
+                file=await RenderReviewAsync(api,remoteId,Path.Combine(cache,remoteId+"-"+paper.Label+".pdf"),token,true,official,paper.RendererMm).ConfigureAwait(false);
+            await PrintFileAsync(file,executable,printer,token).ConfigureAwait(false);
         }
 
         public static string PrinterExecutable(string configured)

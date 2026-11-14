@@ -326,17 +326,22 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             this.dgvPedido.Dock = DockStyle.Fill;
             this.dgvPedido.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            // El nombre se muestra completo: la fila crece las líneas que haga falta.
+            this.dgvPedido.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            this.dgvPedido.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            this.EnsurePriceEditColumn();
 
             foreach (DataGridViewColumn column in this.dgvPedido.Columns)
             {
-                if (!column.Visible) continue;
+                if (!column.Visible || column.Name == EditPriceColumn) continue;
 
                 switch (column.HeaderText)
                 {
                     case "Nombre":
-                    case "Observaciones":
                         column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        column.FillWeight = column.HeaderText == "Nombre" ? 160 : 100;
+                        column.FillWeight = 160;
+                        column.MinimumWidth = 150;
+                        column.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
                         break;
                     case "Precio":
                     case "Total":
@@ -347,7 +352,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                         if (column.HeaderText == "Total")
                             column.DefaultCellStyle.Font = Theme.BodyBold;
                         break;
-                    case "Cantidad":
+                    case "Cant":
                         column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                         column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                         column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;

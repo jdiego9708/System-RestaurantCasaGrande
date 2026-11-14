@@ -34,6 +34,12 @@ namespace CapaNegocio
 
         #region BUSCAR EGRESOS
 
+        public static Task<(string rpta, DataTable dtEgresos)> BuscarEgresos(DateTime fechaInicio, DateTime fechaFin)
+        {
+            return new DEgresos().BuscarEgreso(fechaInicio, fechaFin);
+        }
+
+
         public static async Task<(string rpta, DataTable dtEgresos)> BuscarEgresos(string tipo_busqueda, string texto_busqueda)
         {
             DEgresos DEgresos = new DEgresos();

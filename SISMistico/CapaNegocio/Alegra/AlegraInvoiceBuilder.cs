@@ -141,8 +141,19 @@ namespace CapaNegocio.Alegra
                     excluded.Add(Convert.ToString(row["Nombre"]));
                     continue;
                 }
-                items.Add(Item(mapping, gross[index], Number(row["Cantidad"]), Convert.ToString(row["Nombre"])));
-                includedGross += gross[index];
+                // Precio personalizado para esta factura (editado en Facturar pedido): Alegra admite un
+                // items[].price propio por línea sin tocar el precio del producto en el catálogo. Es el precio
+                // unitario con impuestos de la venta; no entra en el reparto del total, así que el total de la
+                // factura puede diferir del de la venta y los pagos se reparten en proporción (como en una parcial).
+                decimal lineGross = gross[index];
+                if (row.ContainsKey("ElectronicPrice") && row["ElectronicPrice"] != null)
+                {
+                    decimal customPrice = Number(row["ElectronicPrice"]);
+                    if (customPrice <= 0) throw new InvalidOperationException("El precio de la factura debe ser mayor que cero: " + Convert.ToString(row["Nombre"]) + ".");
+                    lineGross = customPrice * Number(row["Cantidad"]);
+                }
+                items.Add(Item(mapping, lineGross, Number(row["Cantidad"]), Convert.ToString(row["Nombre"])));
+                includedGross += lineGross;
             }
             if (items.Count == 0) throw new InvalidOperationException("Ningún producto de la venta está vinculado con Alegra.");
             if (packaging > 0) items.Add(Item(config.PackagingItem, packaging, 1, "Desechables"));

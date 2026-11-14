@@ -1,115 +1,192 @@
+using CapaNegocio.Alegra;
+using CapaPresentacion.Formularios.FormsProductos;
 using CapaPresentacion.UI;
 using FontAwesome.Sharp;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CapaPresentacion.Formularios.FormsPedido
 {
-    // Aviso previo a guardar la venta: hay productos sin vínculo con Alegra. El usuario decide qué hacer.
-    //   Yes    = enviar a Alegra solo los productos vinculados (solo si hay al menos uno vinculado)
-    //   No     = no enviar esta venta a Alegra; se factura solo en local
-    //   Cancel = volver a la venta sin guardar nada
     public sealed class FrmUnlinkedProductsDialog : Form
     {
-        public FrmUnlinkedProductsDialog(IList<string> unlinked, int linkedCount, string invoiceTotalText, string saleTotalText)
+        private readonly DataGridView grid = new DataGridView();
+        private readonly Label explanation = new Label();
+        private readonly Label status = new Label();
+        private readonly Badge counter = new Badge { Kind = BadgeKind.Warning, Width = 235, Height = 30, Margin = new Padding(8, 0, 0, 0) };
+        // Antigüedad de la validación con Alegra de la que se toman los datos (caché compartida de la aplicación).
+        private readonly Badge cacheAge = new Badge { Kind = BadgeKind.Neutral, Width = 250, Height = 30, Margin = Padding.Empty };
+        private readonly System.Windows.Forms.Timer cacheAgeTimer = new System.Windows.Forms.Timer { Interval = 60000 };
+        private AlegraProductValidationCache validationCache;
+        private readonly ModernButton send = new ModernButton { Kind = ButtonKind.Success, Icon = IconChar.PaperPlane, Width = 240 };
+        private readonly ModernButton local = new ModernButton { Text = "No enviar a Alegra", Kind = ButtonKind.Neutral, Width = 205 };
+        private readonly ModernButton back = new ModernButton { Text = "Volver", Kind = ButtonKind.Outline, Width = 125 };
+        private readonly DataTable rows = new DataTable();
+        private readonly Func<string> totalCalculator;
+        private readonly string saleTotal;
+        private readonly int initialLinked;
+        private readonly string initialInvoiceTotal;
+        private readonly AlegraProductGridActions actions;
+        private bool busy;
+
+        public FrmUnlinkedProductsDialog(IList<string> unlinked, int linkedCount, string invoiceTotalText,
+            string saleTotalText, DataTable products = null, Func<string> totalCalculator = null)
         {
-            bool anyLinked = linkedCount > 0;
-            Text = "Productos sin vincular con Alegra";
-            StartPosition = FormStartPosition.CenterParent;
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ShowInTaskbar = false;
-            ClientSize = new Size(840, 520);
-            BackColor = Theme.Background;
-            Font = Theme.Body;
-            Padding = new Padding(Theme.Gap * 2);
-
-            Label title = new Label
+            this.totalCalculator = totalCalculator;
+            saleTotal = saleTotalText; initialLinked = linkedCount; initialInvoiceTotal = invoiceTotalText;
+            Text = "Productos de la factura · Alegra"; StartPosition = FormStartPosition.CenterParent;
+            ClientSize = new Size(1180, 650); MinimumSize = new Size(960, 570);
+            MinimizeBox = false; ShowInTaskbar = false; BackColor = Theme.Background; Font = Theme.Body;
+            AutoScaleMode = AutoScaleMode.Font; FrmProductos.ApplyWindowIcon(this);
+            var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(24), ColumnCount = 1, RowCount = 5 };
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            var header = new Panel { Dock = DockStyle.Fill };
+            header.Controls.Add(new Label { Text = "Completa los productos de tu factura", Font = Theme.Title,
+                ForeColor = Theme.TextPrimary, AutoSize = true });
+            header.Controls.Add(new Label { Text = "Pulsa Agregar a Alegra, ajusta precio e impuesto y guarda desde la misma fila.",
+                ForeColor = Theme.TextMuted, AutoSize = true, Top = 43 });
+            root.Controls.Add(header, 0, 0);
+            var info = new Panel { Dock = DockStyle.Fill };
+            var badges = new FlowLayoutPanel { Dock = DockStyle.Right, AutoSize = true, WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight, Margin = Padding.Empty, Padding = Padding.Empty };
+            badges.Controls.Add(cacheAge); badges.Controls.Add(counter);
+            explanation.Dock = DockStyle.Fill; explanation.ForeColor = Theme.TextMuted;
+            explanation.Padding = new Padding(0, 5, 16, 0);
+            info.Controls.Add(explanation); info.Controls.Add(badges); root.Controls.Add(info, 0, 1);
+            var card = new ModernCard { Dock = DockStyle.Fill, Padding = new Padding(14) };
+            grid.Dock = DockStyle.Fill; grid.AutoGenerateColumns = false; grid.StyleModernGrid();
+            grid.AllowUserToDeleteRows = false; grid.RowTemplate.Height = 54; grid.ColumnHeadersHeight = 46;
+            Column("Nombre", "PRODUCTO", 30, 170); Column("Tipo", "TIPO", 10, 85);
+            Column("Precio", "PRECIO DE VENTA", 17, 145); Column("EstadoAlegra", "ESTADO", 20, 140);
+            grid.Columns["Precio"].DefaultCellStyle.Format = "C2";
+            grid.Columns["Precio"].DefaultCellStyle.FormatProvider = CultureInfo.GetCultureInfo("es-CO");
+            grid.Columns["Precio"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            grid.UseBadgeColumn("ESTADO", value => value == "Vinculado" ? BadgeKind.Success : BadgeKind.Warning);
+            rows.Columns.Add("Id", typeof(int)); rows.Columns.Add("Tipo"); rows.Columns.Add("Nombre");
+            rows.Columns.Add("Precio", typeof(decimal)); rows.Columns.Add("EstadoAlegra"); rows.Columns.Add("VinculadoAlegra", typeof(bool));
+            var settings = AlegraWorkflow.Settings();
+            if (products != null)
             {
-                Text = anyLinked ? "Hay productos que no están en Alegra" : "Ningún producto de esta venta está en Alegra",
-                Font = Theme.Heading,
-                ForeColor = anyLinked ? Theme.TextPrimary : Theme.Danger,
-                Dock = DockStyle.Top,
-                Height = 34,
-            };
-
-            Label explanation = new Label
+                var seen = new HashSet<string>();
+                foreach (DataRow product in products.Rows)
+                {
+                    string kind = Convert.ToString(product["Tipo"]); int id = Convert.ToInt32(product["Id_tipo"]);
+                    string key = kind + ":" + id.ToString(CultureInfo.InvariantCulture);
+                    if (!seen.Add(key) || settings.Products.ContainsKey(key)) continue;
+                    rows.Rows.Add(id, kind, product["Nombre"], product["Precio"], "Sin vincular", false);
+                }
+            }
+            else foreach (string name in unlinked) rows.Rows.Add(0, "", name, 0m, "Sin vincular", false);
+            // La caché de validación (la misma que puebla el catálogo de Productos) evita consultar Alegra por cada fila:
+            // trae existencia, producto exacto y similares. Los productos que no estén en ella se consultan en vivo como antes.
+            if (products != null)
             {
-                Dock = DockStyle.Top,
-                Height = 118,
-                ForeColor = Theme.TextMuted,
-                Text = anyLinked
-                    ? "Vinculados: " + linkedCount + "   ·   Sin vincular: " + unlinked.Count + Environment.NewLine
-                        + "Puede enviar a Alegra solo los productos vinculados: la factura electrónica será por "
-                        + invoiceTotalText + " (la venta es de " + saleTotalText + "). La factura local queda completa, "
-                        + "sin cambios. Consulte con su contador si esa factura parcial es válida para esta venta."
-                    : "NO SE ENVIARÁ A ALEGRA. SE FACTURARÁ SOLO EN LOCAL." + Environment.NewLine
-                        + "Vinculados: 0   ·   Sin vincular: " + unlinked.Count + Environment.NewLine
-                        + "Vincule los productos en la configuración de Alegra si quiere facturarlos electrónicamente.",
-            };
-
-            ListBox list = new ListBox
+                try { validationCache = AlegraProductValidationCache.Shared(); validationCache.Restore(rows); }
+                catch (Exception ex) { cacheError = "No se pudo leer la caché de Alegra: " + ex.Message; }
+            }
+            grid.DataSource = rows;
+            actions = new AlegraProductGridActions(grid, message => status.Text = message, SetBusy, RefreshLinks, SaveLinkedToCache);
+            if (products == null) { grid.Columns["AgregarAlegra"].Visible = false; grid.Columns["ImpuestoNuevoAlegra"].Visible = false; }
+            card.Controls.Add(grid); root.Controls.Add(card, 0, 2);
+            status.Dock = DockStyle.Fill; status.ForeColor = Theme.TextMuted; status.Font = Theme.Small;
+            status.Padding = new Padding(3, 8, 0, 0); root.Controls.Add(status, 0, 3);
+            var footer = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink, FlowDirection = FlowDirection.RightToLeft,
+                Padding = new Padding(0, 10, 0, 0), Margin = Padding.Empty, WrapContents = true };
+            foreach (var button in new[] { send, local, back })
+            { button.Height = 46; button.Margin = new Padding(8, 0, 0, 6); footer.Controls.Add(button); }
+            send.Click += (s, e) => Finish(DialogResult.Yes);
+            local.Click += (s, e) => Finish(DialogResult.No);
+            back.Click += (s, e) => Finish(DialogResult.Cancel);
+            root.Controls.Add(footer, 0, 4); Controls.Add(root); CancelButton = back;
+            RefreshCacheAge();
+            cacheAgeTimer.Tick += (s, e) => RefreshCacheAge();
+            cacheAgeTimer.Start();
+            RefreshSummary(settings);
+            Shown += async (s, e) =>
             {
-                Dock = DockStyle.Fill,
-                BorderStyle = BorderStyle.FixedSingle,
-                IntegralHeight = false,
-                SelectionMode = SelectionMode.None,
-                BackColor = Theme.Surface,
+                SetBusy(true);
+                try { if (products != null) await actions.LoadTaxesAsync(); }
+                finally { SetBusy(false); }
             };
-            foreach (string name in unlinked) list.Items.Add(name);
-
-            Label listCaption = new Label
-            {
-                Text = "Sin vincular (" + unlinked.Count + "):",
-                Font = Theme.BodyBold,
-                Dock = DockStyle.Top,
-                Height = 26,
-            };
-
-            // Volver a la izquierda; a la derecha «No enviar a Alegra» y, a su lado, el botón dinámico.
-            Panel buttons = new Panel { Dock = DockStyle.Bottom, Height = 64, Padding = new Padding(0, Theme.Gap, 0, 0) };
-
-            ModernButton back = NewButton("Volver", ButtonKind.Outline, IconChar.ArrowLeft, 140, DialogResult.Cancel);
-            back.Dock = DockStyle.Left;
-
-            FlowLayoutPanel right = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Right,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlowDirection = FlowDirection.RightToLeft,
-                WrapContents = false,
-            };
-            // Se añade primero el dinámico: con RightToLeft queda en el extremo derecho.
-            ModernButton dynamic = anyLinked
-                ? NewButton("Enviar a Alegra parcial", ButtonKind.Success, IconChar.PaperPlane, 250, DialogResult.Yes)
-                // Sin nada vinculado no hay qué enviar: la continuación factura solo en local.
-                : NewButton("Continuar: no se envía a Alegra, solo local", ButtonKind.Success, IconChar.Receipt, 380, DialogResult.No);
-            right.Controls.Add(dynamic);
-            right.Controls.Add(NewButton("No enviar a Alegra", ButtonKind.Neutral, IconChar.Ban, 210, DialogResult.No));
-
-            buttons.Controls.Add(right);
-            buttons.Controls.Add(back);
-
-            Panel listHost = new Panel { Dock = DockStyle.Fill };
-            listHost.Controls.Add(list);
-            listHost.Controls.Add(listCaption);
-
-            Controls.Add(listHost);
-            Controls.Add(buttons);
-            Controls.Add(explanation);
-            Controls.Add(title);
-            CancelButton = back;
+            FormClosing += (s, e) => { if (busy) e.Cancel = true; };
+            FormClosed += (s, e) => { cacheAgeTimer.Dispose(); actions.Dispose(); rows.Dispose(); };
         }
 
-        private ModernButton NewButton(string text, ButtonKind kind, IconChar icon, int width, DialogResult result)
+        private string cacheError = "";
+
+        private void RefreshCacheAge()
         {
-            ModernButton button = new ModernButton { Text = text, Kind = kind, Icon = icon, Width = width, Height = 48 };
-            button.Click += (s, e) => { DialogResult = result; Close(); };
-            return button;
+            DateTime? validatedAt = validationCache == null ? (DateTime?)null : validationCache.ValidatedAtUtc;
+            cacheAge.Text = AlegraProductValidationCache.AgeText(validatedAt);
+            cacheAge.Kind = AlegraProductValidationCache.AgeKind(validatedAt);
         }
+
+        // Un producto vinculado desde esta ventana queda también en la caché compartida (sin cambiar su fecha).
+        private void SaveLinkedToCache(DataRow row)
+        {
+            try { if (validationCache != null) validationCache.Merge(new[] { row }); }
+            catch (Exception ex) { status.Text = "Producto vinculado. No se pudo actualizar la caché de Alegra: " + ex.Message; }
+        }
+
+        private void Column(string property, string caption, int weight, int minimum)
+        {
+            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = property, DataPropertyName = property,
+                HeaderText = caption, ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                FillWeight = weight, MinimumWidth = minimum });
+        }
+
+        private void SetBusy(bool value)
+        { busy = value; send.Enabled = local.Enabled = back.Enabled = !value; grid.Enabled = !value; if (!value) send.Enabled = CanSend(); }
+
+        private bool CanSend()
+        { return initialLinked > 0 || rows.Rows.Cast<DataRow>().Any(row => Convert.ToBoolean(row["VinculadoAlegra"])); }
+
+        private Task RefreshLinks()
+        {
+            RefreshSummary(AlegraWorkflow.Settings());
+            return Task.CompletedTask;
+        }
+
+        private void RefreshSummary(AlegraInvoiceConfiguration settings)
+        {
+            int pending = 0;
+            foreach (DataRow row in rows.Rows)
+            {
+                string key = Convert.ToString(row["Tipo"]) + ":" + Convert.ToString(row["Id"], CultureInfo.InvariantCulture);
+                bool linked = settings.Products.ContainsKey(key);
+                row["VinculadoAlegra"] = linked; row["EstadoAlegra"] = linked ? "Vinculado" : "Sin vincular";
+                if (!linked) pending++;
+            }
+            counter.Text = pending == 0 ? "Todos vinculados" : pending + " pendientes de vincular";
+            counter.Kind = pending == 0 ? BadgeKind.Success : BadgeKind.Warning;
+            send.Text = pending == 0 ? "Enviar factura completa" : "Enviar a Alegra parcial";
+            send.Enabled = !busy && CanSend();
+            string amount = initialInvoiceTotal;
+            if (totalCalculator != null && CanSend())
+            {
+                try { amount = totalCalculator(); }
+                catch { amount = "el total de los productos vinculados"; }
+            }
+            explanation.Text = pending == 0
+                ? "Todos los productos están vinculados. Puedes continuar con la factura electrónica completa."
+                : CanSend() ? "Factura electrónica parcial: " + amount + ". Total de la venta: " + saleTotal + ".\nAgrega los pendientes para enviar la factura completa, o continúa solo con los vinculados."
+                : "Todavía no hay productos vinculados para esta factura.\nAgrégalos a Alegra o elige No enviar a Alegra para facturar solo en local.";
+            status.Text = string.IsNullOrEmpty(cacheError)
+                ? "Pulsa Agregar a Alegra para editar Precio Alegra (sin impuesto) y elegir el impuesto. Después pulsa Guardar."
+                : cacheError;
+        }
+
+        private void Finish(DialogResult result)
+        { if (busy) return; DialogResult = result; Close(); }
     }
 }

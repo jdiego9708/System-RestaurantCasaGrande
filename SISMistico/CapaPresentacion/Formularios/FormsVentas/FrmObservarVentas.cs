@@ -1,9 +1,16 @@
 ﻿using CapaNegocio;
+using CapaEntidades.Models;
+using CapaPresentacion.Formularios.FormsIngresos;
+using CapaPresentacion.Formularios.FormsEgresos;
+using CapaPresentacion.Formularios.FormsEstadisticas;
+using CapaPresentacion.ReportesFacturas.IngresosTurno;
+using CapaPresentacion.ReportesFacturas.GastosTurno;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using CapaPresentacion.UI;
 using System.Windows.Forms;
 
@@ -13,16 +20,78 @@ namespace CapaPresentacion.Formularios.FormsVentas
     {
         PoperContainer containerResumen;
         ResumenVenta resumenVenta;
+        private FrmAlegraInvoices alegraWindow;
+        private const int PageSize = 100;
+        private DataTable allResults;
+        private int currentPage;
+        private bool bindingPage;
+        private readonly Button firstPageButton = new Button();
+        private readonly Button previousPageButton = new Button();
+        private readonly Button nextPageButton = new Button();
+        private readonly Button lastPageButton = new Button();
+        private readonly Label pageHint = new Label();
+        private readonly TableLayoutPanel resultsToolbar = new TableLayoutPanel();
+        private int ResultCount => allResults == null ? 0 : allResults.DefaultView.Count;
+        private int PageCount => Math.Max(1, (ResultCount + PageSize - 1) / PageSize);
+        private const string RowNumberColumn = "ResultRowNumber";
+        private readonly Dictionary<int, int> rowNumbers = new Dictionary<int, int>();
+        private const string PrintReceiptColumn = "PrintCashReceipt";
+        private int hoveredPrintRow = -1;
+        private bool printingCashReceipt;
+        private bool deleteAccountsAuthorized;
+        private bool showingIncome;
+        private bool showingExpenses;
+        private DateTime cashQueryStart;
+        private DateTime cashQueryEnd;
+        // Cuarta vista del listado: ventas por Rappi (leidas de las facturas PDF). Se comporta como los ingresos y egresos:
+        // sin doble clic de detalle ni eliminacion de cuentas.
+        private bool showingRappi;
+        private DateTime rappiQueryStart;
+        private DateTime rappiQueryEnd;
+        private bool ShowingCash => showingIncome || showingExpenses || showingRappi;
         private readonly SalesDashboard dashboard = new SalesDashboard();
         private readonly SalesColumnFilters textFilters;
         private readonly Label resultsHint = new Label();
+        private readonly ModernButton newMovementButton = new ModernButton();
+        private readonly ModernButton reportButton = new ModernButton();
+        private readonly ModernButton baseButton = new ModernButton();
+        private ToolStripDropDown basePopup;
+        private Label currentBaseLabel;
+        private Label baseDayLabel;
+        private Label baseStatusLabel;
+        private ModernTextBox newBaseInput;
+        private ModernButton saveBaseButton;
+        private Turno baseShift;
+        private bool baseBusy;
+        private readonly SalesEmptyState emptySales = new SalesEmptyState();
         private static readonly CultureInfo SalesCulture = CultureInfo.GetCultureInfo("es-CO");
 
         public FrmObservarVentas()
         {
             InitializeComponent();
             this.BuildModernLayout();
-            this.textFilters = new SalesColumnFilters(this.dgvVentas, UpdateSalesSummary);
+            this.textFilters = new SalesColumnFilters(this.dgvVentas, ApplyResultFilters, () => allResults);
+            this.dashboard.IncomeRequested += (s, e) =>
+            {
+                if (this.btnBuscar.Enabled) BuscarMovimientos(false);
+            };
+            this.dashboard.ExpensesRequested += (s, e) =>
+            {
+                if (this.btnBuscar.Enabled) BuscarMovimientos(true);
+            };
+            this.dashboard.RappiRequested += (s, e) =>
+            {
+                if (this.btnBuscar.Enabled) BuscarRappi();
+            };
+            this.dashboard.SalesRequested += (s, e) =>
+            {
+                if (!this.btnBuscar.Enabled) return;
+                showingIncome = false;
+                showingExpenses = false;
+                showingRappi = false;
+                dashboard.SelectCash(false, false);
+                BuscarVentas("VENTA FECHAS", "");
+            };
             this.Load += FrmObservarVentas_Load;
             this.date1.ValueChanged += Date1_ValueChanged;
             this.btnBuscar.Click += BtnBuscar_Click;
@@ -32,9 +101,20 @@ namespace CapaPresentacion.Formularios.FormsVentas
             this.chkEliminarCuentas.Click += ChkEliminarCuentas_Click;
             this.dgvVentas.CellContentClick += DgvVentas_CellContentClick;
             this.btnEliminarCuentas.Click += BtnEliminarCuentas_Click;
-            this.dgvVentas.DataBindingComplete += (s, e) => { StyleSalesColumns(); UpdateSalesSummary(); };
-            this.dgvVentas.RowsRemoved += (s, e) => UpdateSalesSummary();
+            this.dgvVentas.DataBindingComplete += (s, e) =>
+            {
+                if (!bindingPage) { StyleSalesColumns(); UpdateSalesSummary(); }
+            };
+            this.dgvVentas.ColumnHeaderMouseClick += SortResultColumn;
             this.dgvVentas.CellFormatting += FormatSalesCell;
+            this.dgvVentas.CellPainting += PaintCashPrintButton;
+            this.dgvVentas.CellMouseEnter += (s, e) =>
+            {
+                bool printCell = ShowingCash && e.RowIndex >= 0 && e.ColumnIndex >= 0
+                    && this.dgvVentas.Columns[e.ColumnIndex].Name == PrintReceiptColumn;
+                SetPrintHover(printCell ? e.RowIndex : -1);
+            };
+            this.dgvVentas.CellMouseLeave += (s, e) => SetPrintHover(-1);
         }
 
         private void BuildModernLayout()
@@ -64,13 +144,16 @@ namespace CapaPresentacion.Formularios.FormsVentas
             Panel toolbarViewport = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
             TableLayoutPanel toolbar = new TableLayoutPanel
             {
-                Dock = DockStyle.Top, Height = 60, ColumnCount = 5, RowCount = 1,
-                MinimumSize = new Size(1180, 60), Margin = Padding.Empty,
+                Dock = DockStyle.Top, Height = 60, ColumnCount = 8, RowCount = 1,
+                MinimumSize = new Size(1320, 60), Margin = Padding.Empty,
             };
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 146));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 154));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 174));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 194));
             toolbar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             int dateColumn = 0;
@@ -82,12 +165,27 @@ namespace CapaPresentacion.Formularios.FormsVentas
             }
             ConfigureToolbarButton(this.btnBuscar, "Buscar", ButtonKind.Primary, FontAwesome.Sharp.IconChar.Search);
             ConfigureToolbarButton(this.btnOtrasOpciones, "Otras opciones", ButtonKind.Outline, FontAwesome.Sharp.IconChar.ChevronDown);
+            ConfigureToolbarButton(this.dashboard.ChartsButton, "Gr\u00e1ficas", ButtonKind.Outline, FontAwesome.Sharp.IconChar.ChevronDown);
+            ConfigureToolbarButton(reportButton, "Ver reporte", ButtonKind.Outline, FontAwesome.Sharp.IconChar.FileInvoice);
+            reportButton.Click += OpenDailyReport;
+            ConfigureToolbarButton(baseButton, "Cambiar base", ButtonKind.Outline, FontAwesome.Sharp.IconChar.ChevronDown);
+            baseButton.Click += OpenBasePopup;
             ModernButton invoices = new ModernButton();
             ConfigureToolbarButton(invoices, "Facturas Alegra", ButtonKind.Success, FontAwesome.Sharp.IconChar.FileInvoice);
-            invoices.Click += (s, e) => { var window = new FrmAlegraInvoices(); window.Show(this); };
+            // Ventana independiente (sin propietario ni modal): se reutiliza si ya está abierta.
+            invoices.Click += (s, e) =>
+            {
+                if (alegraWindow == null || alegraWindow.IsDisposed) alegraWindow = new FrmAlegraInvoices();
+                if (!alegraWindow.Visible) alegraWindow.Show();
+                if (alegraWindow.WindowState == FormWindowState.Minimized) alegraWindow.WindowState = FormWindowState.Normal;
+                alegraWindow.Activate();
+            };
             toolbar.Controls.Add(this.btnBuscar, 2, 0);
-            toolbar.Controls.Add(this.btnOtrasOpciones, 3, 0);
-            toolbar.Controls.Add(invoices, 4, 0);
+            toolbar.Controls.Add(reportButton, 3, 0);
+            toolbar.Controls.Add(baseButton, 4, 0);
+            toolbar.Controls.Add(this.btnOtrasOpciones, 5, 0);
+            toolbar.Controls.Add(this.dashboard.ChartsButton, 6, 0);
+            toolbar.Controls.Add(invoices, 7, 0);
             toolbarViewport.Controls.Add(toolbar);
             filters.Controls.Add(toolbarViewport);
             filters.SizeChanged += (s, e) =>
@@ -108,13 +206,40 @@ namespace CapaPresentacion.Formularios.FormsVentas
             this.btnEliminarCuentas.TextAlign = ContentAlignment.MiddleCenter;
 
             ModernCard table = new ModernCard { Dock = DockStyle.Fill };
-            resultsHint.Dock = DockStyle.Top;
-            resultsHint.Height = 32;
+            resultsToolbar.Dock = DockStyle.Top;
+            resultsToolbar.Height = 28;
+            resultsToolbar.ColumnCount = 2;
+            resultsToolbar.RowCount = 1;
+            resultsToolbar.Margin = Padding.Empty;
+            resultsToolbar.Padding = new Padding(0, 2, 0, 4);
+            resultsToolbar.BackColor = Color.Transparent;
+            resultsToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            resultsToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            resultsToolbar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            resultsHint.Dock = DockStyle.Fill;
+            resultsHint.TextAlign = ContentAlignment.MiddleLeft;
+            resultsHint.AutoEllipsis = true;
             resultsHint.StyleLabel(LabelKind.Caption);
+            newMovementButton.Kind = ButtonKind.Primary;
+            newMovementButton.Icon = FontAwesome.Sharp.IconChar.Plus;
+            newMovementButton.Shadow = false;
+            newMovementButton.CornerRadius = 10;
+            newMovementButton.Dock = DockStyle.Fill;
+            newMovementButton.Width = 174;
+            newMovementButton.MinimumSize = new Size(174, 32);
+            newMovementButton.Margin = new Padding(12, 0, 0, 0);
+            newMovementButton.Font = Theme.BodyBold;
+            newMovementButton.Visible = false;
+            newMovementButton.Click += NewMovement_Click;
+            resultsToolbar.Controls.Add(resultsHint, 0, 0);
+            resultsToolbar.Controls.Add(newMovementButton, 1, 0);
             this.dgvVentas.Parent = table;
             this.dgvVentas.Dock = DockStyle.Fill;
-            table.Controls.Add(resultsHint);
+            table.Controls.Add(resultsToolbar);
+            table.Controls.Add(BuildPager());
             this.StyleSalesGrid();
+            this.dgvVentas.Controls.Add(emptySales);
+            this.dgvVentas.Layout += (s, e) => PositionEmptySales();
             root.Controls.Add(table);
             table.BringToFront();
             root.Controls.Add(this.dashboard);
@@ -188,12 +313,19 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void StyleSalesColumns()
         {
+            if (showingRappi) { StyleRappiColumns(); return; }
+            if (ShowingCash) { StyleCashColumns(); return; }
             foreach (DataGridViewColumn column in this.dgvVentas.Columns)
             {
                 column.MinimumWidth = 80;
                 column.Width = 124;
                 column.DefaultCellStyle.FormatProvider = SalesCulture;
                 string name = column.DataPropertyName.Length > 0 ? column.DataPropertyName : column.Name;
+                if (name == "Id_venta" || name == "Id_pedido" || name == "Bono_cupon" || name == "Observaciones"
+                    || name == "Id_cliente" || name == "Id_mesa" || name == "Id_empleado")
+                    column.Visible = false;
+                if (column.DataPropertyName.Length > 0)
+                    column.SortMode = DataGridViewColumnSortMode.Programmatic;
                 switch (name)
                 {
                     case "Factura_electronica":
@@ -214,7 +346,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                         column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; break;
                     case "Tipo_pedido":
                         column.HeaderText = "Tipo";
-                        column.Visible = true;
+                        column.Visible = false;
                         column.Width = 136;
                         column.DefaultCellStyle.Font = Theme.BodyBold;
                         break;
@@ -250,10 +382,19 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 if (this.dgvVentas.Columns.Contains(name))
                     this.dgvVentas.Columns[name].DisplayIndex = this.dgvVentas.Columns.Count - 1;
             }
+            EnsureRowNumberColumn();
         }
 
         private void FormatSalesCell(object sender, DataGridViewCellFormattingEventArgs e)
         {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0
+                && this.dgvVentas.Columns[e.ColumnIndex].Name == RowNumberColumn)
+            {
+                e.Value = rowNumbers.TryGetValue(e.RowIndex, out int number) ? number.ToString(SalesCulture) : "";
+                e.FormattingApplied = true;
+                return;
+            }
+            if (ShowingCash) return;
             if (e.ColumnIndex < 0 || e.RowIndex < 0) return;
             string electronicInvoice = Convert.ToString(SalesCell(this.dgvVentas.Rows[e.RowIndex], "Factura_electronica")).Trim();
             bool hasElectronicInvoice = electronicInvoice.Equals("SI", StringComparison.OrdinalIgnoreCase)
@@ -331,27 +472,284 @@ namespace CapaPresentacion.Formularios.FormsVentas
             style.SelectionForeColor = Theme.TextPrimary;
         }
 
+        private IEnumerable<DataRowView> FilteredResults()
+        {
+            return allResults == null ? Enumerable.Empty<DataRowView>() : allResults.DefaultView.Cast<DataRowView>();
+        }
+
+        private static object ResultCell(DataRowView row, string name)
+        {
+            return row.DataView.Table.Columns.Contains(name) ? row[name] : null;
+        }
+
+        private static decimal ResultAmount(DataRowView row, string name)
+        {
+            object value = ResultCell(row, name);
+            return value == null || value == DBNull.Value ? 0 : Convert.ToDecimal(value, SalesCulture);
+        }
+
+        private Control BuildPager()
+        {
+            var footer = new Panel
+            {
+                Dock = DockStyle.Bottom, Height = 34,
+                Padding = new Padding(0, 3, 0, 0), BackColor = Color.Transparent,
+            };
+            var pager = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.LeftToRight, WrapContents = false,
+                Margin = Padding.Empty, Padding = Padding.Empty, BackColor = Color.Transparent,
+            };
+            pageHint.AutoSize = true;
+            pageHint.MinimumSize = new Size(0, 28);
+            pageHint.TextAlign = ContentAlignment.MiddleRight;
+            pageHint.Font = Theme.Small;
+            pageHint.ForeColor = Theme.TextMuted;
+            pageHint.Margin = new Padding(0, 0, 10, 0);
+            pager.Controls.Add(pageHint);
+            if (this.components == null) this.components = new System.ComponentModel.Container();
+            var hints = new ToolTip(this.components);
+            Button[] buttons = { firstPageButton, previousPageButton, nextPageButton, lastPageButton };
+            string[] symbols = { "\u00ab", "\u2039", "\u203a", "\u00bb" };
+            string[] labels = { "Primera", "Anterior", "Siguiente", "\u00daltima" };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                buttons[i].Text = symbols[i];
+                buttons[i].AccessibleName = labels[i] + " p\u00e1gina";
+                hints.SetToolTip(buttons[i], buttons[i].AccessibleName);
+                buttons[i].Size = new Size(28, 28);
+                buttons[i].Margin = new Padding(1, 0, 1, 0);
+                buttons[i].Padding = Padding.Empty;
+                buttons[i].FlatStyle = FlatStyle.Flat;
+                buttons[i].FlatAppearance.BorderSize = 0;
+                buttons[i].FlatAppearance.MouseOverBackColor = Theme.SurfaceAlt;
+                buttons[i].FlatAppearance.MouseDownBackColor = Theme.Border;
+                buttons[i].BackColor = Theme.Surface;
+                buttons[i].ForeColor = Theme.TextMuted;
+                buttons[i].Font = Theme.Heading;
+                buttons[i].Cursor = Cursors.Hand;
+                buttons[i].UseVisualStyleBackColor = false;
+                pager.Controls.Add(buttons[i]);
+            }
+            firstPageButton.Click += (s, e) => ShowPage(0);
+            previousPageButton.Click += (s, e) => ShowPage(currentPage - 1);
+            nextPageButton.Click += (s, e) => ShowPage(currentPage + 1);
+            lastPageButton.Click += (s, e) => ShowPage(PageCount - 1);
+            footer.Controls.Add(pager);
+            UpdatePager();
+            return footer;
+        }
+
+        private void UpdatePager()
+        {
+            int total = ResultCount;
+            int from = total == 0 ? 0 : currentPage * PageSize + 1;
+            int to = Math.Min(total, (currentPage + 1) * PageSize);
+            pageHint.Text = from.ToString("N0", SalesCulture) + "\u2013" + to.ToString("N0", SalesCulture)
+                + " de " + total.ToString("N0", SalesCulture) + "  \u00b7  " + (currentPage + 1) + " / " + PageCount;
+            pageHint.AccessibleName = "P\u00e1gina " + (currentPage + 1) + " de " + PageCount
+                + ". Registros " + from + " a " + to + " de " + total + ".";
+            bool ready = this.btnBuscar.Enabled && !printingCashReceipt;
+            firstPageButton.Enabled = previousPageButton.Enabled = ready && currentPage > 0;
+            nextPageButton.Enabled = lastPageButton.Enabled = ready && currentPage + 1 < PageCount;
+        }
+
+        private void BindResults(DataTable records)
+        {
+            allResults = records;
+            currentPage = 0;
+            bindingPage = true;
+            try
+            {
+                this.dgvVentas.DataSource = null;
+                this.dgvVentas.Columns.Clear();
+                this.chkEliminarCuentas.Checked = false;
+                this.btnEliminarCuentas.Visible = false;
+            }
+            finally { bindingPage = false; }
+            ShowPage(0, true);
+        }
+
+        private void ApplyResultFilters()
+        {
+            ShowPage(0, true);
+        }
+
+        private void ShowPage(int page, bool refreshSummary = false)
+        {
+            currentPage = Math.Max(0, Math.Min(page, PageCount - 1));
+            bindingPage = true;
+            this.dgvVentas.SuspendLayout();
+            try
+            {
+                DataTable slice = allResults == null ? null : allResults.Clone();
+                if (slice != null)
+                {
+                    int start = currentPage * PageSize;
+                    for (int i = start; i < Math.Min(start + PageSize, ResultCount); i++)
+                        slice.ImportRow(allResults.DefaultView[i].Row);
+                }
+                // Las selecciones de eliminacion pertenecen solo a la pagina visible.
+                if (this.dgvVentas.Columns.Contains("chkEliminar"))
+                    foreach (DataGridViewRow row in this.dgvVentas.Rows) row.Cells["chkEliminar"].Value = false;
+                this.dgvVentas.DataSource = slice;
+                SetPrintHover(-1);
+                StyleSalesColumns();
+            }
+            finally
+            {
+                bindingPage = false;
+                this.dgvVentas.ResumeLayout();
+            }
+            if (refreshSummary) UpdateSalesSummary();
+            else UpdateRowNumbers();
+            UpdatePager();
+        }
+
+        private void SortResultColumn(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.Button != MouseButtons.Left || allResults == null || !this.btnBuscar.Enabled) return;
+            var column = this.dgvVentas.Columns[e.ColumnIndex];
+            string name = column.DataPropertyName;
+            if (!allResults.Columns.Contains(name)) return;
+            // Las columnas de texto conservan su menu de filtro y orden global.
+            if (allResults.Columns[name].DataType == typeof(string) && name != "Hora_venta" && name != "Fecha_venta") return;
+            bool descending = column.HeaderCell.SortGlyphDirection != SortOrder.Descending;
+            allResults.DefaultView.Sort = SalesColumnFilterState.ColumnName(name) + (descending ? " DESC" : " ASC");
+            ShowPage(0);
+            foreach (DataGridViewColumn other in this.dgvVentas.Columns) other.HeaderCell.SortGlyphDirection = SortOrder.None;
+            column.HeaderCell.SortGlyphDirection = descending ? SortOrder.Descending : SortOrder.Ascending;
+        }
+
+        private void EnsureRowNumberColumn()
+        {
+            if (!this.dgvVentas.Columns.Contains(RowNumberColumn))
+            {
+                this.dgvVentas.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    Name = RowNumberColumn, HeaderText = "N\u00b0", ReadOnly = true,
+                    SortMode = DataGridViewColumnSortMode.NotSortable,
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                });
+            }
+            DataGridViewColumn column = this.dgvVentas.Columns[RowNumberColumn];
+            column.Visible = true;
+            column.DisplayIndex = 0;
+            column.MinimumWidth = 52;
+            column.Width = Math.Max(52, TextRenderer.MeasureText(
+                ResultCount.ToString(SalesCulture), Theme.Small).Width + 24);
+            column.HeaderCell.ToolTipText = "Consecutivo de todos los resultados de la consulta";
+            column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            column.HeaderCell.Style.Padding = Padding.Empty;
+            column.DefaultCellStyle = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                Padding = Padding.Empty, ForeColor = Theme.TextMuted, Font = Theme.Small,
+            };
+        }
+
+        private void UpdateRowNumbers()
+        {
+            EnsureRowNumberColumn();
+            rowNumbers.Clear();
+            int number = currentPage * PageSize;
+            foreach (DataGridViewRow row in this.dgvVentas.Rows)
+                if (!row.IsNewRow && row.Visible) rowNumbers[row.Index] = ++number;
+            this.dgvVentas.InvalidateColumn(this.dgvVentas.Columns[RowNumberColumn].Index);
+        }
+
         private void UpdateSalesSummary()
         {
+            UpdateMovementAction();
+            if (showingRappi) { UpdateRappiSummary(); return; }
+            if (ShowingCash) { UpdateCashSummary(); return; }
+            UpdateRowNumbers();
             SalesMetrics metrics = new SalesMetrics();
-            foreach (DataGridViewRow row in this.dgvVentas.Rows)
+            foreach (DataRowView row in FilteredResults())
             {
-                if (row.IsNewRow || !row.Visible) continue;
-                string hourText = Convert.ToString(SalesCell(row, "Hora_venta"));
+                string hourText = Convert.ToString(ResultCell(row, "Hora_venta"));
                 int hour = -1;
                 if (TimeSpan.TryParse(hourText, out TimeSpan time) && time >= TimeSpan.Zero && time < TimeSpan.FromDays(1))
                     hour = time.Hours;
                 else if (DateTime.TryParse(hourText, out DateTime date)) hour = date.Hour;
-                metrics.Add(SalesAmount(row, "Total_final"), SalesAmount(row, "Subtotal"),
-                    SalesAmount(row, "Descuento"), SalesAmount(row, "Propina"),
-                    Convert.ToString(SalesCell(row, "Tipo_pedido")), hour);
+                metrics.Add(ResultAmount(row, "Total_final"), ResultAmount(row, "Subtotal"),
+                    ResultAmount(row, "Descuento"), ResultAmount(row, "Propina"),
+                    Convert.ToString(ResultCell(row, "Tipo_pedido")), hour);
             }
             this.dashboard.UpdateMetrics(metrics);
+            emptySales.RecordName = "ventas";
+            emptySales.HasQuery = this.dgvVentas.DataSource != null;
+            emptySales.Visible = metrics.Count == 0;
+            PositionEmptySales();
+            emptySales.Invalidate();
             string filterHint = this.textFilters != null && this.textFilters.ActiveCount > 0
                 ? " | " + this.textFilters.ActiveCount + " filtros de columna activos" : "";
             resultsHint.Text = this.dgvVentas.DataSource == null ? "Selecciona el per\u00edodo y pulsa Buscar."
                 : metrics.Count == 0 ? "No hay ventas para los filtros seleccionados." + filterHint
-                : metrics.Count.ToString("N0", SalesCulture) + " ventas en la consulta \u00b7 Indicadores sobre estas filas \u00b7 Importes en COP \u00b7 Doble clic para ver factura" + filterHint;
+                : metrics.Count.ToString("N0", SalesCulture) + " ventas en la consulta \u00b7 Indicadores de todos los resultados \u00b7 Importes en COP \u00b7 Doble clic para ver factura" + filterHint;
+        }
+
+        private void PositionEmptySales()
+        {
+            // Mantener accesibles los encabezados y los filtros de columna.
+            Rectangle bounds = this.dgvVentas.ClientRectangle;
+            int top = this.dgvVentas.ColumnHeadersVisible && this.dgvVentas.Columns.Count > 0
+                ? this.dgvVentas.ColumnHeadersHeight + 1 : 1;
+            int right = 1;
+            int bottom = 1;
+            foreach (Control control in this.dgvVentas.Controls)
+            {
+                if (!control.Visible) continue;
+                if (control is VScrollBar) right += control.Width;
+                if (control is HScrollBar) bottom += control.Height;
+            }
+            Rectangle body = new Rectangle(1, top, Math.Max(0, bounds.Width - right - 1),
+                Math.Max(0, bounds.Height - top - bottom));
+            if (emptySales.Bounds != body) emptySales.Bounds = body;
+            if (emptySales.Visible) emptySales.BringToFront();
+        }
+
+        private sealed class SalesEmptyState : Control
+        {
+            public bool HasQuery { get; set; }
+            public string RecordName { get; set; } = "ventas";
+
+            public SalesEmptyState()
+            {
+                SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint
+                    | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                BackColor = Theme.Surface;
+                TabStop = false;
+                AccessibleRole = AccessibleRole.StaticText;
+                AccessibleName = "No se encontraron resultados. Verifica las fechas y los filtros de columna.";
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                if (Width < 80 || Height < 80) return;
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                int contentWidth = Math.Min(460, Math.Max(1, Width - 40));
+                int x = (Width - contentWidth) / 2;
+                int y = Math.Max(8, (Height - 202) / 2);
+                Rectangle circle = new Rectangle((Width - 76) / 2, y, 76, 76);
+                using (SolidBrush background = new SolidBrush(Theme.Lighten(Theme.Primary, 0.94f)))
+                    e.Graphics.FillEllipse(background, circle);
+                using (Pen border = new Pen(Theme.Lighten(Theme.Primary, 0.85f)))
+                    e.Graphics.DrawEllipse(border, circle);
+                IconRenderer.Draw(this, e.Graphics, FontAwesome.Sharp.IconChar.Search,
+                    Theme.Primary, new Rectangle(circle.X + 22, circle.Y + 22, 32, 32));
+                TextRenderer.DrawText(e.Graphics, HasQuery ? "No se encontraron resultados" : "Consulta tus ventas",
+                    Theme.Heading, new Rectangle(x, y + 94, contentWidth, 28), Theme.TextPrimary,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                string message = HasQuery
+                    ? "Verifica el rango de fechas y los filtros de columna.\nPrueba con otros criterios para encontrar " + "tus " + RecordName + "."
+                    : "Selecciona el rango de fechas y pulsa Buscar\npara ver las ventas de ese per\u00edodo.";
+                TextRenderer.DrawText(e.Graphics, message, Theme.Body,
+                    new Rectangle(x, y + 132, contentWidth, 64), Theme.TextMuted,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.WordBreak);
+            }
         }
 
         private object SalesCell(DataGridViewRow row, string column)
@@ -365,8 +763,85 @@ namespace CapaPresentacion.Formularios.FormsVentas
             return value == null || value == DBNull.Value ? 0 : Convert.ToDecimal(value, SalesCulture);
         }
 
+        private bool AuthorizeAccountDeletion()
+        {
+            using (var authorization = new AccountDeletionAuthorization())
+                return authorization.ShowDialog(this) == DialogResult.OK;
+        }
+
+        private sealed class AccountDeletionAuthorization : Form
+        {
+            public AccountDeletionAuthorization()
+            {
+                Text = "Autorizar eliminaci\u00f3n de cuentas";
+                ClientSize = new Size(460, 280);
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                StartPosition = FormStartPosition.CenterParent;
+                MaximizeBox = false;
+                MinimizeBox = false;
+                ShowInTaskbar = false;
+                BackColor = Theme.Background;
+                Font = Theme.Body;
+                var title = new Label
+                {
+                    Text = "Autorizaci\u00f3n requerida", Font = Theme.Heading,
+                    Location = new Point(24, 24), Size = new Size(412, 28),
+                };
+                var description = new Label
+                {
+                    Text = "Introduce la clave maestra configurada para\neliminar cuentas del historial de ventas.",
+                    ForeColor = Theme.TextMuted, Location = new Point(24, 60), Size = new Size(412, 48),
+                };
+                var code = new TextBox
+                {
+                    UseSystemPasswordChar = true, MaxLength = 8, Font = Theme.Heading,
+                    Location = new Point(24, 120), Size = new Size(412, 30),
+                    AccessibleName = "Clave maestra de ocho d\u00edgitos",
+                };
+                code.KeyPress += (sender, args) =>
+                {
+                    if (!char.IsControl(args.KeyChar) && (args.KeyChar < '0' || args.KeyChar > '9')) args.Handled = true;
+                };
+                var error = new Label
+                {
+                    ForeColor = Theme.Danger, Location = new Point(24, 157), Size = new Size(412, 42),
+                };
+                var cancel = new ModernButton
+                {
+                    Text = "Cancelar", Kind = ButtonKind.Outline, DialogResult = DialogResult.Cancel,
+                    Location = new Point(24, 216), Size = new Size(150, 40), Shadow = false,
+                };
+                var accept = new ModernButton
+                {
+                    Text = "Autorizar", Kind = ButtonKind.Primary,
+                    Location = new Point(286, 216), Size = new Size(150, 40), Shadow = false,
+                };
+                accept.Click += (sender, args) =>
+                {
+                    if (!Api.ApiConfig.CodigoMaestroConfigurado)
+                        error.Text = "La clave maestra no est\u00e1 configurada en este equipo.";
+                    else if (!Api.ApiConfig.CodigoMaestroValido(code.Text))
+                        error.Text = "La clave maestra no es correcta. Int\u00e9ntalo de nuevo.";
+                    else
+                    {
+                        code.Clear();
+                        DialogResult = DialogResult.OK;
+                        Close();
+                        return;
+                    }
+                    code.Clear();
+                    code.Focus();
+                };
+                Controls.AddRange(new Control[] { title, description, code, error, cancel, accept });
+                AcceptButton = accept;
+                CancelButton = cancel;
+                Shown += (sender, args) => code.Focus();
+            }
+        }
+
         private void BtnEliminarCuentas_Click(object sender, EventArgs e)
         {
+            if (ShowingCash) return;
             if (this.dgvVentas.Rows.Count > 0 & this.chkEliminarCuentas.Checked)
             {
                 List<DataGridViewRow> Rows = new List<DataGridViewRow>();
@@ -384,24 +859,30 @@ namespace CapaPresentacion.Formularios.FormsVentas
                         "Eliminar", "Cancelar", out DialogResult dialog);
                     if (dialog == DialogResult.Yes)
                     {
+                        // Cada autorizacion permite una sola operacion de eliminacion.
+                        if (!deleteAccountsAuthorized && !AuthorizeAccountDeletion()) return;
+                        deleteAccountsAuthorized = false;
                         string rpta = "";
                         foreach (DataGridViewRow row2 in Rows)
                         {
                             int id_venta = Convert.ToInt32(row2.Cells["Id_venta"].Value);
                             rpta = NVentas.InactivarVenta(id_venta);
-                            if (!rpta.Equals("OK"))
-                                break;
+                            if (!rpta.Equals("OK")) break;
+                            if (allResults != null)
+                            {
+                                var original = allResults.Rows.Cast<DataRow>().FirstOrDefault(
+                                    item => Convert.ToInt32(item["Id_venta"]) == id_venta);
+                                if (original != null) allResults.Rows.Remove(original);
+                            }
                         }
+                        ShowPage(currentPage, true);
 
                         if (rpta.Equals("OK"))
                         {
                             Mensajes.MensajeOkForm("Se eliminaron las ventas correctamente");
-                            foreach (DataGridViewRow row in this.dgvVentas.Rows)
-                            {
-                                if (Rows.Contains(row))
-                                    this.dgvVentas.Rows.Remove(row);
-                            }
                             this.chkEliminarCuentas.Checked = false;
+                            this.btnEliminarCuentas.Visible = false;
+                            if (this.dgvVentas.Columns.Contains("chkEliminar")) this.dgvVentas.Columns.Remove("chkEliminar");
 
                         }
                         else
@@ -420,6 +901,16 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void DgvVentas_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (ShowingCash)
+            {
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 0
+                    && this.dgvVentas.Columns[e.ColumnIndex].Name == PrintReceiptColumn)
+                {
+                    if (showingRappi) PrintRappiTicket(this.dgvVentas.Rows[e.RowIndex]);
+                    else PrintCashReceipt(this.dgvVentas.Rows[e.RowIndex]);
+                }
+                return;
+            }
             try
             {
                 if (this.chkEliminarCuentas.Checked)
@@ -448,6 +939,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void ChkEliminarCuentas_Click(object sender, EventArgs e)
         {
+            if (ShowingCash) return;
             if (this.dgvVentas.DataSource != null)
             {
                 CheckBox chk = (CheckBox)sender;
@@ -456,8 +948,9 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     DataGridViewCheckBoxColumn chkColumn = new DataGridViewCheckBoxColumn();
                     chkColumn.Name = "chkEliminar";
                     chkColumn.HeaderText = "Eliminar";
-                    chkColumn.DisplayIndex = 0;
                     this.dgvVentas.Columns.Add(chkColumn);
+                    chkColumn.DisplayIndex = this.dgvVentas.Columns.Contains(RowNumberColumn) ? 1 : 0;
+                    EnsureRowNumberColumn();
                     this.btnEliminarCuentas.Visible = true;
                 }
                 else
@@ -494,8 +987,22 @@ namespace CapaPresentacion.Formularios.FormsVentas
             };
             deleteAccounts.Click += (s, args) =>
             {
-                this.gbOpciones.Visible = !this.gbOpciones.Visible;
-                if (!this.gbOpciones.Visible) this.chkEliminarCuentas.Checked = false;
+                if (ShowingCash) return;
+                if (!this.gbOpciones.Visible)
+                {
+                    if (!AuthorizeAccountDeletion()) return;
+                    deleteAccountsAuthorized = true;
+                    this.gbOpciones.Visible = true;
+                }
+                else
+                {
+                    deleteAccountsAuthorized = false;
+                    this.gbOpciones.Visible = false;
+                    this.chkEliminarCuentas.Checked = false;
+                    this.btnEliminarCuentas.Visible = false;
+                    if (this.dgvVentas.Columns.Contains("chkEliminar"))
+                        this.dgvVentas.Columns.Remove("chkEliminar");
+                }
             };
             ToolStripMenuItem alegra = new ToolStripMenuItem("Configurar Alegra")
             {
@@ -515,12 +1022,17 @@ namespace CapaPresentacion.Formularios.FormsVentas
             if (this.components == null) this.components = new System.ComponentModel.Container();
             this.components.Add(menu);
             this.btnOtrasOpciones.ContextMenuStrip = menu;
-            menu.Opening += (s, args) => deleteAccounts.Checked = this.gbOpciones.Visible;
+            menu.Opening += (s, args) =>
+            {
+                deleteAccounts.Checked = this.gbOpciones.Visible;
+                deleteAccounts.Enabled = !ShowingCash;
+            };
             menu.Show(this.btnOtrasOpciones, new Point(5, this.btnOtrasOpciones.Height));
         }
 
         private void DgvVentas_DoubleClick(object sender, MouseEventArgs e)
         {
+            if (ShowingCash) return;
             try
             {
                 if (this.dgvVentas.HitTest(e.X, e.Y).RowIndex < 0) return;
@@ -549,15 +1061,533 @@ namespace CapaPresentacion.Formularios.FormsVentas
             }
         }
 
-        private void BtnBuscar_Click(object sender, EventArgs e)
+        private void UpdateMovementAction()
         {
-            this.BuscarVentas("VENTA FECHAS", "");
+            UpdatePager();
+            resultsToolbar.Height = ShowingCash ? 40 : 28;
+            newMovementButton.Visible = showingIncome || showingExpenses;
+            newMovementButton.Text = showingExpenses ? "Nuevo egreso" : "Nuevo ingreso";
+            newMovementButton.AccessibleName = newMovementButton.Text;
+            newMovementButton.Enabled = this.btnBuscar.Enabled && !printingCashReceipt;
         }
 
-        private void BuscarVentas(string tipo_busqueda, string texto_busqueda)
+        private void NewMovement_Click(object sender, EventArgs e)
         {
+            if (!ShowingCash || !this.btnBuscar.Enabled || printingCashReceipt) return;
+            bool expenses = showingExpenses;
+            bool saved = false;
+            newMovementButton.Enabled = false;
             try
             {
+                if (expenses)
+                {
+                    using (var editor = new FrmNuevoEgreso { StartPosition = FormStartPosition.CenterParent })
+                    {
+                        editor.OnEgresoSuccess += (s, args) => saved = true;
+                        editor.ShowDialog(this);
+                    }
+                }
+                else
+                {
+                    using (var editor = new FrmNuevoIngreso { StartPosition = FormStartPosition.CenterParent })
+                    {
+                        editor.OnIngresoSuccess += (s, args) => saved = true;
+                        editor.ShowDialog(this);
+                    }
+                }
+                // Mantener el rango elegido al refrescar tras el registro y su impresion habitual.
+                if (saved && !this.IsDisposed) BuscarMovimientos(expenses);
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "NewMovement_Click",
+                    "No se pudo abrir el formulario del movimiento", ex.Message);
+            }
+            finally
+            {
+                if (!this.IsDisposed) UpdateMovementAction();
+            }
+        }
+
+        private async void OpenBasePopup(object sender, EventArgs e)
+        {
+            if (baseBusy) return;
+            if (basePopup == null) BuildBasePopup();
+            if (basePopup.Visible) { basePopup.Close(); return; }
+            basePopup.Show(baseButton, new Point(0, baseButton.Height + 6));
+            try { await LoadCurrentBase(); }
+            catch (Exception ex) { ShowBaseError(ex.Message); }
+        }
+
+        private void BuildBasePopup()
+        {
+            var panel = new Panel { Size = new Size(354, 284), BackColor = Theme.Surface };
+            var title = new Label
+            {
+                Text = "Base de caja", Font = Theme.Heading, ForeColor = Theme.TextPrimary,
+                Location = new Point(18, 16), Size = new Size(318, 28),
+            };
+            baseDayLabel = new Label
+            {
+                Font = Theme.Small, ForeColor = Theme.TextMuted,
+                Location = new Point(18, 48), Size = new Size(318, 24),
+            };
+            currentBaseLabel = new Label
+            {
+                Text = "Consultando base...", Font = Theme.BodyBold, ForeColor = Theme.TextPrimary,
+                Location = new Point(18, 80), Size = new Size(318, 28),
+            };
+            var caption = new Label
+            {
+                Text = "Nueva base (COP)", Font = Theme.Small, ForeColor = Theme.TextMuted,
+                Location = new Point(18, 120), Size = new Size(318, 20),
+            };
+            newBaseInput = new ModernTextBox
+            {
+                Icon = FontAwesome.Sharp.IconChar.DollarSign,
+                PlaceholderText = "Ej. 150.000", MaxLength = 22,
+                Location = new Point(18, 145), Size = new Size(318, 42),
+                AccessibleName = "Nueva base en pesos colombianos",
+                AccessibleDescription = "Valor en pesos enteros. Usa punto para separar los miles.",
+            };
+            newBaseInput.KeyPress += (s, e) =>
+            {
+                if (!char.IsControl(e.KeyChar) && (e.KeyChar < '0' || e.KeyChar > '9')
+                    && e.KeyChar != '.') e.Handled = true;
+            };
+            newBaseInput.Leave += (s, e) =>
+            {
+                if (TryReadNewBase(out decimal amount)) newBaseInput.Text = amount.ToString("N0", SalesCulture);
+            };
+            newBaseInput.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode != Keys.Enter) return;
+                e.SuppressKeyPress = true;
+                saveBaseButton.PerformClick();
+            };
+            baseStatusLabel = new Label
+            {
+                Font = Theme.Small, ForeColor = Theme.TextMuted,
+                Location = new Point(18, 193), Size = new Size(318, 34),
+            };
+            saveBaseButton = new ModernButton
+            {
+                Text = "Guardar base", Kind = ButtonKind.Primary, Shadow = false, CornerRadius = 10,
+                Location = new Point(18, 232), Size = new Size(318, 36), Enabled = false,
+            };
+            saveBaseButton.Click += SaveCurrentBase;
+            panel.Controls.AddRange(new Control[] { title, baseDayLabel, currentBaseLabel, caption,
+                newBaseInput, baseStatusLabel, saveBaseButton });
+            var host = new ToolStripControlHost(panel)
+            {
+                AutoSize = false, Size = panel.Size, Margin = Padding.Empty, Padding = Padding.Empty,
+            };
+            basePopup = new ToolStripDropDown
+            {
+                Padding = Padding.Empty, BackColor = Theme.Surface, DropShadowEnabled = true,
+            };
+            basePopup.Items.Add(host);
+            if (this.components == null) this.components = new System.ComponentModel.Container();
+            this.components.Add(basePopup);
+            basePopup.SizeChanged += (s, e) =>
+            {
+                using (var path = Theme.RoundedPath(basePopup.ClientRectangle, 12))
+                {
+                    Region previous = basePopup.Region;
+                    basePopup.Region = new Region(path);
+                    previous?.Dispose();
+                }
+            };
+        }
+
+        private async System.Threading.Tasks.Task LoadCurrentBase()
+        {
+            baseBusy = true;
+            saveBaseButton.Enabled = false;
+            newBaseInput.Enabled = false;
+            baseShift = null;
+            try
+            {
+                DateTime day = DateTime.Today;
+                baseDayLabel.Text = "Hoy, " + day.ToString("dd MMM yyyy", SalesCulture);
+                currentBaseLabel.Text = "Consultando base...";
+                baseStatusLabel.Text = "";
+                baseStatusLabel.ForeColor = Theme.TextMuted;
+                var result = await NTurnos.BuscarTurnoDelDia(day);
+                if (this.IsDisposed) return;
+                if (result.rpta != "OK" || result.dtTurnos == null)
+                    throw new InvalidOperationException("No se pudo consultar la base. " + result.rpta);
+                if (result.dtTurnos.Rows.Count == 0)
+                {
+                    currentBaseLabel.Text = "No hay un turno registrado para hoy.";
+                    baseStatusLabel.Text = "Inicia un turno para poder guardar su base.";
+                    return;
+                }
+                baseShift = new Turno(result.dtTurnos.Rows[0]);
+                currentBaseLabel.Text = "Base actual: " + baseShift.Valor_inicial.ToString("C0", SalesCulture);
+                newBaseInput.Text = baseShift.Valor_inicial.ToString("N0", SalesCulture);
+                newBaseInput.HasError = false;
+                newBaseInput.Enabled = true;
+                saveBaseButton.Enabled = true;
+                baseButton.AccessibleDescription = currentBaseLabel.Text;
+            }
+            finally { baseBusy = false; }
+        }
+
+        private void ShowBaseError(string message)
+        {
+            if (this.IsDisposed) return;
+            baseStatusLabel.ForeColor = Theme.Danger;
+            baseStatusLabel.Text = message;
+        }
+
+        private bool TryReadNewBase(out decimal amount)
+        {
+            amount = 0;
+            string text = newBaseInput.Text.Trim();
+            // Validar tambien el pegado y evitar interpretar puntos decimales como miles.
+            return System.Text.RegularExpressions.Regex.IsMatch(text,
+                    @"^(?:[0-9]+|[0-9]{1,3}(?:\.[0-9]{3})+)$")
+                && decimal.TryParse(text, NumberStyles.Number, SalesCulture, out amount)
+                && amount >= 0 && amount <= 99999999999999999.99m;
+        }
+
+        private async void SaveCurrentBase(object sender, EventArgs e)
+        {
+            if (baseBusy || baseShift == null) return;
+            if (!TryReadNewBase(out decimal amount))
+            {
+                newBaseInput.HasError = true;
+                ShowBaseError("Ingresa un valor en pesos enteros. Ejemplo: 150.000.");
+                newBaseInput.Focus();
+                return;
+            }
+            if (baseShift.Fecha_turno.Date != DateTime.Today)
+            {
+                try { await LoadCurrentBase(); }
+                catch (Exception ex) { ShowBaseError(ex.Message); }
+                return;
+            }
+            baseBusy = true;
+            saveBaseButton.Enabled = false;
+            newBaseInput.Enabled = false;
+            try
+            {
+                int shiftId = baseShift.Id_turno;
+                string response = await NTurnos.InsertarBase(shiftId, amount);
+                if (this.IsDisposed) return;
+                if (response != "OK") throw new InvalidOperationException(response);
+                // Una nueva lectura confirma la persistencia fuera de la transaccion de escritura.
+                await LoadCurrentBase();
+                if (this.IsDisposed) return;
+                if (baseShift == null || baseShift.Id_turno != shiftId || baseShift.Valor_inicial != amount)
+                    throw new InvalidOperationException("La base cambio durante la operacion. Revisa el valor actual.");
+                var session = DatosInicioSesion.GetInstancia();
+                if (session.Turno != null && session.Turno.Id_turno == shiftId)
+                    session.Turno.Valor_inicial = amount;
+                baseStatusLabel.ForeColor = Theme.Success;
+                baseStatusLabel.Text = "Base guardada y confirmada en la base de datos.";
+            }
+            catch (Exception ex) { ShowBaseError(ex.Message); }
+            finally
+            {
+                baseBusy = false;
+                if (!this.IsDisposed)
+                {
+                    saveBaseButton.Enabled = baseShift != null;
+                    newBaseInput.Enabled = baseShift != null;
+                }
+            }
+        }
+
+        private async void OpenDailyReport(object sender, EventArgs e)
+        {
+            if (!this.btnBuscar.Enabled || printingCashReceipt) return;
+            reportButton.Enabled = false;
+            FrmReporteDiario report = null;
+            try
+            {
+                DateTime start = this.date1.Value.Date;
+                DateTime end = this.date2.Value.Date;
+                report = new FrmReporteDiario { WindowState = FormWindowState.Maximized };
+                report.Show(this);
+                await report.LoadPeriodo(start, end);
+            }
+            catch (Exception ex)
+            {
+                if (report != null && !report.IsDisposed) report.Close();
+                MensajeEspera.CloseForm();
+                Mensajes.MensajeErrorCompleto(this.Name, "OpenDailyReport",
+                    "No se pudo abrir el reporte diario", ex.Message);
+            }
+            finally
+            {
+                if (!this.IsDisposed) reportButton.Enabled = true;
+            }
+        }
+
+        private void BtnBuscar_Click(object sender, EventArgs e)
+        {
+            if (showingRappi) BuscarRappi();
+            else if (ShowingCash) BuscarMovimientos(showingExpenses);
+            else this.BuscarVentas("VENTA FECHAS", "");
+        }
+
+        private async void BuscarMovimientos(bool expenses)
+        {
+            deleteAccountsAuthorized = false;
+            this.btnBuscar.Enabled = false;
+            UpdateMovementAction();
+            try
+            {
+                DateTime start = this.date1.Value.Date;
+                DateTime end = this.date2.Value.Date;
+                if (start > end)
+                {
+                    Mensajes.MensajeErrorForm("La fecha inicial no puede ser posterior a la fecha final.");
+                    return;
+                }
+                this.dashboard.UpdateCashTotals(null, null);
+                // Actualizar ambos KPIs con la misma captura del rango, incluso al cambiar de vista.
+                var incomeTask = NIngresos.BuscarIngresos("RANGO FECHAS",
+                    start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), end.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+                var expensesTask = NEgresos.BuscarEgresos(start, end);
+                await System.Threading.Tasks.Task.WhenAll(incomeTask, expensesTask);
+                if (this.IsDisposed) return;
+                var income = await incomeTask;
+                var expense = await expensesTask;
+                this.dashboard.UpdateCashTotals(
+                    SumCashRecords(income.rpta == "OK" ? income.dtIngresos : null, "Valor_ingreso"),
+                    SumCashRecords(expense.rpta == "OK" ? expense.dtEgresos : null, "Valor_egreso"));
+                DataTable records = expenses ? expense.dtEgresos : income.dtIngresos;
+                string response = expenses ? expense.rpta : income.rpta;
+                if (response != "OK" || records == null)
+                {
+                    Mensajes.MensajeErrorForm("No se pudieron consultar los " + (expenses ? "egresos. " : "ingresos. ") + response);
+                    return;
+                }
+                if (income.rpta != "OK" || expense.rpta != "OK")
+                    Mensajes.MensajeErrorForm("No se pudo actualizar uno de los totales del per\u00edodo. "
+                        + (income.rpta != "OK" ? income.rpta : expense.rpta));
+                cashQueryStart = start;
+                cashQueryEnd = end;
+                showingIncome = !expenses;
+                showingExpenses = expenses;
+                showingRappi = false;
+                RefreshRappiKpi(start, end);
+                dashboard.SelectCash(showingIncome, showingExpenses);
+                this.gbOpciones.Visible = false;
+                this.chkEliminarCuentas.Checked = false;
+                this.btnEliminarCuentas.Visible = false;
+                this.btnResumen.Enabled = false;
+                BindResults(records);
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "BuscarMovimientos", "Hubo un error al buscar los " + (expenses ? "egresos" : "ingresos"), ex.Message);
+            }
+            finally
+            {
+                if (!this.IsDisposed)
+                {
+                    this.btnBuscar.Enabled = true;
+                    UpdateMovementAction();
+                }
+            }
+        }
+
+        private void StyleCashColumns()
+        {
+            string suffix = showingExpenses ? "egreso" : "ingreso";
+            string[] names = { "Fecha_" + suffix, "Descripcion_" + suffix, "Valor_" + suffix, "Nombre_empleado", "Estado_" + suffix };
+            string[] captions = { "Fecha", "Descripci\u00f3n del " + suffix, "Valor del " + suffix, "Registrado por", "Estado" };
+            foreach (DataGridViewColumn column in this.dgvVentas.Columns)
+            {
+                int index = Array.IndexOf(names, column.DataPropertyName);
+                column.Visible = index >= 0;
+                if (index < 0) continue;
+                column.HeaderText = captions[index];
+                column.DefaultCellStyle.FormatProvider = SalesCulture;
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                column.MinimumWidth = index == 1 ? 200 : 130;
+                column.FillWeight = index == 1 ? 240 : 100;
+                column.SortMode = DataGridViewColumnSortMode.Programmatic;
+                if (index == 0) column.DefaultCellStyle.Format = "dd MMM yyyy";
+                if (index == 2)
+                {
+                    column.DefaultCellStyle.Format = "C0";
+                    column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    column.DefaultCellStyle.Font = Theme.BodyBold;
+                    column.DefaultCellStyle.ForeColor = Theme.Darken(showingExpenses ? Theme.Danger : Theme.Success, 0.25f);
+                }
+            }
+            for (int i = 0; i < names.Length; i++)
+                if (this.dgvVentas.Columns.Contains(names[i])) this.dgvVentas.Columns[names[i]].DisplayIndex = i;
+            EnsurePrintColumn("Reimprimir comprobante", "Reimprimir comprobante (1 copia)");
+            EnsureRowNumberColumn();
+            this.textFilters?.ConfigureColumns();
+        }
+
+        // Columna final con el icono de impresora (ingresos, egresos y ventas de Rappi la comparten).
+        private void EnsurePrintColumn(string headerTip, string cellTip)
+        {
+            if (!this.dgvVentas.Columns.Contains(PrintReceiptColumn))
+            {
+                var print = new DataGridViewButtonColumn
+                {
+                    Name = PrintReceiptColumn, HeaderText = "", Text = "",
+                    UseColumnTextForButtonValue = true, FlatStyle = FlatStyle.Flat,
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    Width = 48, MinimumWidth = 48, Resizable = DataGridViewTriState.False,
+                    SortMode = DataGridViewColumnSortMode.NotSortable,
+                    DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleCenter, Padding = Padding.Empty,
+                    },
+                };
+                this.dgvVentas.Columns.Add(print);
+            }
+            DataGridViewColumn column = this.dgvVentas.Columns[PrintReceiptColumn];
+            column.HeaderCell.ToolTipText = headerTip;
+            column.CellTemplate.ToolTipText = cellTip;
+            column.Visible = true;
+            column.DisplayIndex = this.dgvVentas.Columns.Count - 1;
+        }
+
+        private void SetPrintHover(int rowIndex)
+        {
+            int previous = hoveredPrintRow;
+            hoveredPrintRow = rowIndex;
+            this.dgvVentas.Cursor = rowIndex >= 0 ? Cursors.Hand : Cursors.Default;
+            if (!this.dgvVentas.Columns.Contains(PrintReceiptColumn)) return;
+            int columnIndex = this.dgvVentas.Columns[PrintReceiptColumn].Index;
+            if (previous >= 0 && previous < this.dgvVentas.Rows.Count)
+                this.dgvVentas.InvalidateCell(columnIndex, previous);
+            if (rowIndex >= 0 && rowIndex < this.dgvVentas.Rows.Count)
+                this.dgvVentas.InvalidateCell(columnIndex, rowIndex);
+        }
+
+        private void PaintCashPrintButton(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (!ShowingCash || e.RowIndex < 0 || e.ColumnIndex < 0
+                || this.dgvVentas.Columns[e.ColumnIndex].Name != PrintReceiptColumn) return;
+            e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.SelectionBackground);
+            bool hovered = e.RowIndex == hoveredPrintRow && !printingCashReceipt;
+            Rectangle button = new Rectangle(e.CellBounds.Left + (e.CellBounds.Width - 28) / 2,
+                e.CellBounds.Top + (e.CellBounds.Height - 28) / 2, 28, 28);
+            if (hovered)
+            {
+                var state = e.Graphics.Save();
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using (var fill = new SolidBrush(Theme.Lighten(Theme.Primary, 0.92f)))
+                    e.Graphics.FillEllipse(fill, button);
+                e.Graphics.Restore(state);
+            }
+            bool selected = (e.State & DataGridViewElementStates.Selected) != 0;
+            Color color = hovered ? Theme.Primary : selected ? e.CellStyle.SelectionForeColor : Theme.TextMuted;
+            IconRenderer.Draw(this.dgvVentas, e.Graphics, FontAwesome.Sharp.IconChar.Print, color,
+                new Rectangle(button.X + 6, button.Y + 6, 16, 16));
+            if ((e.PaintParts & DataGridViewPaintParts.Focus) != 0)
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.Focus);
+            e.Handled = true;
+        }
+
+        private void PrintCashReceipt(DataGridViewRow row)
+        {
+            if (printingCashReceipt || !this.btnBuscar.Enabled || row.IsNewRow) return;
+            printingCashReceipt = true;
+            this.btnBuscar.Enabled = false;
+            UpdateMovementAction();
+            try
+            {
+                string kind = showingExpenses ? "egreso" : "ingreso";
+                // Los datos pertenecen al registro original, no al empleado de la sesion actual.
+                string employee = "Nombre de quien genera el " + kind + " "
+                    + Convert.ToString(SalesCell(row, "Nombre_empleado")) + Environment.NewLine
+                    + "Identificaci\u00f3n " + Convert.ToString(SalesCell(row, "Identificacion_empleado")) + Environment.NewLine;
+                string concept = "Concepto/Observaciones del " + kind + ":" + Environment.NewLine
+                    + Convert.ToString(SalesCell(row, "Descripcion_" + kind)) + Environment.NewLine;
+                string value = Convert.ToDecimal(SalesCell(row, "Valor_" + kind)).ToString("C0", SalesCulture);
+                // La fecha almacenada es de tipo date; no se conserva la hora original.
+                string date = Convert.ToDateTime(SalesCell(row, "Fecha_" + kind)).ToString("D", SalesCulture);
+                string note = "Reimpresi\u00f3n del comprobante #" + Convert.ToString(SalesCell(row, "Id_" + kind));
+                if (showingExpenses)
+                {
+                    using (var receipt = new FrmReporteGastos
+                    {
+                        FechaHora = date, InformacionEmpleado = employee, InformacionGasto = concept,
+                        Valor_gasto = value, Observaciones = note,
+                    })
+                    {
+                        receipt.ObtenerReporte();
+                        receipt.ImprimirFactura(1);
+                    }
+                }
+                else
+                {
+                    using (var receipt = new FrmReporteIngresos
+                    {
+                        FechaHora = date, InformacionEmpleado = employee, InformacionIngreso = concept,
+                        Valor_ingreso = value, Observaciones = note,
+                    })
+                    {
+                        receipt.ObtenerReporte();
+                        receipt.ImprimirFactura(1);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "PrintCashReceipt",
+                    "No se pudo reimprimir el comprobante", ex.Message);
+            }
+            finally
+            {
+                printingCashReceipt = false;
+                if (!this.IsDisposed)
+                {
+                    this.btnBuscar.Enabled = true;
+                    UpdateMovementAction();
+                    this.dgvVentas.Invalidate();
+                }
+            }
+        }
+
+        private void UpdateCashSummary()
+        {
+            UpdateMovementAction();
+            UpdateRowNumbers();
+            int count = 0;
+            decimal total = 0;
+            foreach (DataRowView row in FilteredResults())
+            {
+                count++;
+                total += ResultAmount(row, showingExpenses ? "Valor_egreso" : "Valor_ingreso");
+            }
+            emptySales.HasQuery = this.dgvVentas.DataSource != null;
+            emptySales.RecordName = showingExpenses ? "egresos" : "ingresos";
+            emptySales.Visible = count == 0;
+            PositionEmptySales();
+            emptySales.Invalidate();
+            string filters = this.textFilters != null && this.textFilters.ActiveCount > 0
+                ? " | " + this.textFilters.ActiveCount + " filtros de columna activos" : "";
+            string recordName = showingExpenses ? "egresos" : "ingresos";
+            string period = " \u00b7 Del " + cashQueryStart.ToString("dd/MM/yyyy") + " al " + cashQueryEnd.ToString("dd/MM/yyyy");
+            resultsHint.Text = count == 0 ? "No hay " + recordName + " para los filtros seleccionados." + period + filters
+                : count.ToString("N0", SalesCulture) + " " + recordName + " \u00b7 Total: " + total.ToString("C0", SalesCulture) + period + " \u00b7 COP" + filters;
+        }
+
+        private async void BuscarVentas(string tipo_busqueda, string texto_busqueda)
+        {
+            deleteAccountsAuthorized = false;
+            this.btnBuscar.Enabled = false;
+            UpdateMovementAction();
+            this.dashboard.UpdateCashTotals(null, null);
+            try
+            {
+                DateTime start = this.date1.Value.Date;
+                DateTime end = this.date2.Value.Date;
                 string fecha1 = this.date1.Value.ToShortDateString();
                 string fecha2 = this.date2.Value.ToShortDateString();
                 string hora1 = this.ListaHora1.SelectedValue.ToString();
@@ -565,23 +1595,26 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
                 DataTable tablaVenta =
                     NVentas.BuscarVenta(tipo_busqueda, texto_busqueda, fecha1, fecha2, hora1, hora2);
-                this.dgvVentas.DataSource = tablaVenta;
+                BindResults(tablaVenta);
+                RefreshRappiKpi(start, end);
+                // Mismas fuentes y sumas que el Reporte diario; no incluyen ventas ni n\u00f3mina.
+                string from = start.ToString("yyyy-MM-dd");
+                string to = end.ToString("yyyy-MM-dd");
+                var incomeTask = NIngresos.BuscarIngresos("RANGO FECHAS", from, to);
+                var expensesTask = NEgresos.BuscarEgresos(start, end);
+                await System.Threading.Tasks.Task.WhenAll(incomeTask, expensesTask);
+                if (this.IsDisposed) return;
+                var income = await incomeTask;
+                var expenses = await expensesTask;
+                this.dashboard.UpdateCashTotals(SumCashRecords(income.rpta == "OK" ? income.dtIngresos : null, "Valor_ingreso"),
+                    SumCashRecords(expenses.rpta == "OK" ? expenses.dtEgresos : null, "Valor_egreso"));
+                if (income.rpta != "OK" || expenses.rpta != "OK" || income.dtIngresos == null || expenses.dtEgresos == null)
+                    Mensajes.MensajeErrorForm("No se pudieron consultar los ingresos o egresos del per\u00edodo. "
+                        + income.rpta + " " + expenses.rpta);
+
                 if (tablaVenta != null)
                 {
                     this.btnResumen.Enabled = true;
-                    string[] columns_header =
-                    {
-                        "Id venta", "Id pedido", "Fecha", "Hora", "Total parcial", "Propina", "Subtotal",
-                        "Descuento", "Bono o cupón", "Total", "Observaciones", "Id cliente", "Nombre cliente",
-                        "Id mesa", "Mesa", "Id empleado", "Empleado"
-                    };
-                    bool[] columns_visible =
-                    {
-                        false, false, true, true, true, true, true, true,
-                        false, true, false, false, true, false, true, false, true
-                    };
-                    this.dgvVentas =
-                        DatagridString.ChangeHeaderTextAndVisible(this.dgvVentas, columns_header, columns_visible);
                     this.StyleSalesColumns();
 
                     //this.dgvVentas.Columns["Hora_venta"].DefaultCellStyle.Format = "HH:mm";
@@ -598,6 +1631,182 @@ namespace CapaPresentacion.Formularios.FormsVentas
             {
                 Mensajes.MensajeErrorCompleto(this.Name, "BuscarVentas", "Hubo un error al buscar una venta", ex.Message);
             }
+            finally
+            {
+                if (!this.IsDisposed)
+                {
+                    this.btnBuscar.Enabled = true;
+                    UpdateMovementAction();
+                }
+            }
+        }
+
+        // El indicador de Rappi cuenta las ventas leidas de las facturas PDF en el mismo periodo de la consulta.
+        private void RefreshRappiKpi(DateTime start, DateTime end)
+        {
+            try
+            {
+                DataTable orders = NRappiOrders.ListRange(start, end);
+                this.dashboard.UpdateRappi(orders.Rows.Count, SumCashRecords(orders, "Total"));
+            }
+            catch (Exception)
+            {
+                // Sin la tabla de Rappi (script 10 sin aplicar) o sin conexion: el indicador queda sin datos y no estorba.
+                this.dashboard.UpdateRappi(null, null);
+            }
+        }
+
+        private void BuscarRappi()
+        {
+            deleteAccountsAuthorized = false;
+            this.btnBuscar.Enabled = false;
+            UpdateMovementAction();
+            try
+            {
+                DateTime start = this.date1.Value.Date;
+                DateTime end = this.date2.Value.Date;
+                if (start > end)
+                {
+                    Mensajes.MensajeErrorForm("La fecha inicial no puede ser posterior a la fecha final.");
+                    return;
+                }
+                DataTable records = NRappiOrders.ListRange(start, end);
+                rappiQueryStart = start;
+                rappiQueryEnd = end;
+                showingIncome = false;
+                showingExpenses = false;
+                showingRappi = true;
+                dashboard.SelectRappi();
+                this.gbOpciones.Visible = false;
+                this.chkEliminarCuentas.Checked = false;
+                this.btnEliminarCuentas.Visible = false;
+                this.btnResumen.Enabled = false;
+                BindResults(records);
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "BuscarRappi",
+                    "Hubo un error al consultar las ventas de Rappi. Revise que la base tenga la tabla RappiOrders (script 10).", ex.Message);
+            }
+            finally
+            {
+                if (!this.IsDisposed)
+                {
+                    this.btnBuscar.Enabled = true;
+                    UpdateMovementAction();
+                }
+            }
+        }
+
+        // Datos basicos de cada venta de Rappi: fecha, hora, orden, cliente, telefono, forma de pago y total a cobrar.
+        private void StyleRappiColumns()
+        {
+            string[] names = { "OrderDate", "OrderTime", "ExternalId", "CustomerName", "Phone", "PaymentMethod", "Total" };
+            string[] captions = { "Fecha", "Hora", "Orden de Rappi", "Cliente", "Tel\u00e9fono", "Forma de pago", "Valor del pedido" };
+            foreach (DataGridViewColumn column in this.dgvVentas.Columns)
+            {
+                int index = Array.IndexOf(names, column.DataPropertyName);
+                column.Visible = index >= 0;
+                if (index < 0) continue;
+                column.HeaderText = captions[index];
+                column.DefaultCellStyle.FormatProvider = SalesCulture;
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                column.MinimumWidth = index == 3 ? 180 : 110;
+                column.FillWeight = index == 3 ? 200 : 100;
+                column.SortMode = DataGridViewColumnSortMode.Programmatic;
+                if (index == 0) column.DefaultCellStyle.Format = "dd MMM yyyy";
+                if (index == 1)
+                {
+                    // Igual que la hora del listado de ventas ("04:07 PM"), sin depender de la cultura de Windows.
+                    column.DefaultCellStyle.Format = "hh:mm tt";
+                    column.DefaultCellStyle.FormatProvider = CultureInfo.InvariantCulture;
+                }
+                if (index == 6)
+                {
+                    column.DefaultCellStyle.Format = "C0";
+                    column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    column.DefaultCellStyle.Font = Theme.BodyBold;
+                    column.DefaultCellStyle.ForeColor = Theme.Darken(Theme.Rappi, 0.25f);
+                }
+            }
+            for (int i = 0; i < names.Length; i++)
+                if (this.dgvVentas.Columns.Contains(names[i])) this.dgvVentas.Columns[names[i]].DisplayIndex = i;
+            EnsurePrintColumn("Reimprimir la orden de Rappi", "Reimprimir la orden de Rappi (1 copia)");
+            EnsureRowNumberColumn();
+            this.textFilters?.ConfigureColumns();
+        }
+
+        // Reimprime la orden como ticket termico a partir de lo guardado de su factura PDF (el PDF original es de
+        // tamano carta y en un rollo de 58 u 80 mm quedaria ilegible).
+        private void PrintRappiTicket(DataGridViewRow row)
+        {
+            if (printingCashReceipt || !this.btnBuscar.Enabled || row.IsNewRow) return;
+            printingCashReceipt = true;
+            this.btnBuscar.Enabled = false;
+            UpdateMovementAction();
+            try
+            {
+                string externalId = Convert.ToString(SalesCell(row, "ExternalId"));
+                RappiOrder order = NRappiOrders.GetByExternalId(externalId);
+                if (order == null)
+                {
+                    Mensajes.MensajeInformacion("No se encontr\u00f3 la orden de Rappi " + externalId + " en la base.", "Entendido");
+                    return;
+                }
+                MensajeEspera.ShowWait("Imprimiendo...");
+                try { CapaPresentacion.Formularios.FormsDomicilios.RappiTicketPrinter.Print(order); }
+                finally { MensajeEspera.CloseForm(); }
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto(this.Name, "PrintRappiTicket",
+                    "No se pudo reimprimir la orden de Rappi", ex.Message);
+            }
+            finally
+            {
+                printingCashReceipt = false;
+                if (!this.IsDisposed)
+                {
+                    this.btnBuscar.Enabled = true;
+                    UpdateMovementAction();
+                    this.dgvVentas.Invalidate();
+                }
+            }
+        }
+
+        private void UpdateRappiSummary()
+        {
+            UpdateMovementAction();
+            UpdateRowNumbers();
+            int count = 0;
+            decimal total = 0;
+            foreach (DataRowView row in FilteredResults())
+            {
+                count++;
+                total += ResultAmount(row, "Total");
+            }
+            this.dashboard.UpdateRappi(count, total);
+            emptySales.HasQuery = this.dgvVentas.DataSource != null;
+            emptySales.RecordName = "ventas de Rappi";
+            emptySales.Visible = count == 0;
+            PositionEmptySales();
+            emptySales.Invalidate();
+            string filters = this.textFilters != null && this.textFilters.ActiveCount > 0
+                ? " | " + this.textFilters.ActiveCount + " filtros de columna activos" : "";
+            string period = " \u00b7 Del " + rappiQueryStart.ToString("dd/MM/yyyy") + " al " + rappiQueryEnd.ToString("dd/MM/yyyy");
+            resultsHint.Text = count == 0 ? "No hay ventas de Rappi para los filtros seleccionados." + period + filters
+                : count.ToString("N0", SalesCulture) + (count == 1 ? " venta" : " ventas") + " de Rappi \u00b7 Total: "
+                    + total.ToString("C0", SalesCulture) + period + " \u00b7 COP" + filters;
+        }
+
+        private static decimal? SumCashRecords(DataTable table, string column)
+        {
+            if (table == null) return null;
+            decimal total = 0;
+            foreach (DataRow row in table.Rows)
+                if (!row.IsNull(column)) total += Convert.ToDecimal(row[column]);
+            return total;
         }
 
         private void Horas()
@@ -656,7 +1865,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private void Date1_ValueChanged(object sender, EventArgs e)
         {
             DateTimePicker date = (DateTimePicker)sender;
-            this.date2.MinDate = date.Value;
+            this.date2.MinDate = date.Value.Date;
         }
 
         private void FrmObservarVentas_Load(object sender, EventArgs e)
@@ -668,6 +1877,9 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 ConfiguracionDatagridview.ConfigurationGrid(this.dgvVentas);
             this.StyleSalesGrid();
             this.Horas();
+            this.date1.Value = DateTime.Today;
+            this.date2.Value = DateTime.Today;
+            this.BuscarVentas("VENTA FECHAS", "");
         }
 
     }

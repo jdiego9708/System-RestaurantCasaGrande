@@ -270,6 +270,39 @@ namespace CapaDatos
         #endregion
 
         #region METODO BUSCAR EGRESOS
+        // Rango tipado e inclusivo: coincide con SUM(Valor_egreso) del Reporte diario.
+        public async Task<(string rpta, DataTable dtEgresos)> BuscarEgreso(DateTime fechaInicio, DateTime fechaFin)
+        {
+            if (fechaInicio.Date > fechaFin.Date)
+                return ("La fecha inicial no puede ser posterior a la fecha final.", null);
+            const string query = @"SELECT eg.*, em.Nombre_empleado, em.Identificacion_empleado
+FROM Egresos eg
+LEFT JOIN Empleados em ON em.Id_empleado = eg.Id_empleado
+WHERE eg.Fecha_egreso >= @FechaInicio
+  AND eg.Fecha_egreso < DATEADD(day, 1, @FechaFin)
+ORDER BY eg.Fecha_egreso, eg.Id_egreso;";
+            try
+            {
+                using (var connection = new SqlConnection(Conexion.Cn))
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@FechaInicio", SqlDbType.Date).Value = fechaInicio.Date;
+                    command.Parameters.Add("@FechaFin", SqlDbType.Date).Value = fechaFin.Date;
+                    await connection.OpenAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        var records = new DataTable("Egresos");
+                        records.Load(reader);
+                        return ("OK", records);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return (ex.Message, null);
+            }
+        }
+
         public async Task<(string rpta, DataTable dtEgresos)> BuscarEgreso(string tipo_busqueda, string texto_busqueda)
         {
             string rpta = "OK";

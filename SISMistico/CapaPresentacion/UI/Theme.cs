@@ -40,6 +40,9 @@ namespace CapaPresentacion.UI
         public static readonly Font Body = new Font(Family, 10F);
         public static readonly Font BodyBold = new Font(Family, 10F, FontStyle.Bold);
         public static readonly Font Small = new Font(Family, 9F);
+        public static readonly Font SmallBold = new Font(Family, 9F, FontStyle.Bold);
+        /// <summary>Rotulos diminutos en mayusculas (unidad de un contador, pie de un indicador).</summary>
+        public static readonly Font Tiny = new Font(Family, 7.5F, FontStyle.Bold);
         public static readonly Font Kpi = new Font(Family, 30F, FontStyle.Bold);
         public static readonly Font Button = new Font(Family, 10.5F, FontStyle.Bold);
         #endregion

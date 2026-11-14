@@ -677,7 +677,7 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
                 {
                     ParameterName = "@Fecha1",
                     SqlDbType = SqlDbType.Date,
-                    Value = FechaInicio.ToString("yyyy-MM-dd")
+                    Value = FechaInicio.Date
                 };
                 SqlCmd.Parameters.Add(Fecha1);
 
@@ -686,7 +686,7 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
                 {
                     ParameterName = "@Fecha2",
                     SqlDbType = SqlDbType.Date,
-                    Value = FechaFin.ToString("yyyy-MM-dd")
+                    Value = FechaFin.Date
                 };
                 SqlCmd.Parameters.Add(Fecha2);
 
@@ -705,6 +705,26 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
                     Value = hora2
                 };
                 SqlCmd.Parameters.Add(Hora2);
+
+                if (string.Equals(tipo_busqueda.Trim(), "VENTA FECHAS", StringComparison.OrdinalIgnoreCase))
+                {
+                    // El procedimiento heredado aplica TOP 50 y filtra por fecha del pedido.
+                    // El historial necesita todas las ventas del rango, por su fecha de venta.
+                    // Tipo_pedido se incluye aqui para evitar una lista SQL con miles de parametros.
+                    SqlCmd.CommandType = CommandType.Text;
+                    SqlCmd.CommandText = @"SELECT ve.Id_venta, ve.Id_pedido, ve.Fecha_venta,
+CONVERT(varchar(5), ve.Hora_venta) AS Hora_venta,
+ve.Total_parcial, ve.Propina, ve.Subtotal, ve.Descuento, ve.Bono_cupon, ve.Total_final,
+ve.Observaciones, pe.Id_cliente, cl.Nombre_cliente, pe.Id_mesa, me.Num_mesa,
+pe.Id_empleado, em.Nombre_empleado, pe.Tipo_pedido
+FROM Ventas ve
+LEFT JOIN Pedidos pe ON pe.Id_pedido = ve.Id_pedido
+LEFT JOIN Clientes cl ON cl.Id_cliente = pe.Id_cliente
+LEFT JOIN Mesas me ON me.Id_mesa = pe.Id_mesa
+LEFT JOIN Empleados em ON em.Id_empleado = pe.Id_empleado
+WHERE ve.Fecha_venta >= @Fecha1 AND ve.Fecha_venta < DATEADD(day, 1, @Fecha2)
+ORDER BY ve.Fecha_venta DESC, ve.Hora_venta DESC, ve.Id_venta DESC;";
+                }
 
                 SqlDataAdapter SqlData= new SqlDataAdapter(SqlCmd);
                 SqlData.Fill(DtResultado);

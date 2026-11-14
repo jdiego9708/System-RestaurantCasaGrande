@@ -26,6 +26,31 @@ namespace CapaDatos
             return result;
         }
 
+        /// <summary>
+        /// Datos de entrega de un pedido para la factura de domicilio: telefono, direccion, barrio y referencia.
+        /// Usa la direccion elegida en el pedido y, si no tiene, la del cliente (domicilios antiguos).
+        /// </summary>
+        public static DataTable GetDeliveryContact(int orderId)
+        {
+            const string query = @"
+SELECT COALESCE(NULLIF(a.Telefono_contacto, ''), c.Telefono_cliente) AS Telefono,
+       CASE WHEN a.Id_direccion IS NOT NULL THEN a.Direccion ELSE c.Direccion_cliente END AS Direccion,
+       a.Barrio AS Barrio,
+       CASE WHEN a.Id_direccion IS NOT NULL THEN a.Referencia ELSE c.Referencia_ubicacion END AS Referencia
+FROM Pedidos p
+LEFT JOIN Clientes c ON c.Id_cliente = p.Id_cliente
+LEFT JOIN Domicilios a ON a.Id_direccion = p.Id_direccion
+WHERE p.Id_pedido = @OrderId;";
+            using (SqlConnection con = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+                DataTable table = new DataTable();
+                new SqlDataAdapter(cmd).Fill(table);
+                return table;
+            }
+        }
+
         /// <summary>Una direccion por Id aunque este inactiva (un pedido viejo puede apuntar a ella). Null si no existe.</summary>
         public static CustomerAddress Get(int addressId)
         {

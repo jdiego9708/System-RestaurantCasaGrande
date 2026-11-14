@@ -11,6 +11,8 @@ namespace CapaNegocio
 
         public static CustomerAddress Get(int addressId) => DAddresses.Get(addressId);
 
+        public static System.Data.DataTable GetDeliveryContact(int orderId) => DAddresses.GetDeliveryContact(orderId);
+
         /// <summary>Valida lo minimo y guarda. Devuelve "OK" o el motivo del rechazo.</summary>
         public static string Save(CustomerAddress address)
         {

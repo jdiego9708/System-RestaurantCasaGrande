@@ -16,14 +16,18 @@ namespace CapaPresentacion.Formularios
         public CustomButtonMesa()
         {
             InitializeComponent();
-            this.btnMesa.MouseEnter += BtnMesa_MouseEnter;
-            this.btnMesa.MouseLeave += BtnMesa_MouseLeave;
+            this.BackColor = Color.Transparent; // deja ver el wallpaper alrededor de la tarjeta redondeada
+            this.Padding = Padding.Empty;
+            this.btnMesa.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            this.btnMesa.Dock = DockStyle.Fill;
+            this.Size = new Size(232, 208);
             this.Load += CustomButtonMesa_Load;
             this.btnMesa.MouseDown += ButtonMouseDown_Click;
         }
 
         #region EVENTOS
 
+        public event EventHandler VisualStateChanged;
         public event EventHandler OnBtnCambiarMesaClick;
         public event EventHandler OnBtnCancelarPedidoClick;
         public event EventHandler OnBtnEditarPedidoClick;
@@ -134,6 +138,22 @@ namespace CapaPresentacion.Formularios
                 this.Id_pedido.ToString(), this.Estado_mesa, this.Id_mesa.ToString()
             });
 
+            this.ApplyColor();
+        }
+
+        /// <summary>
+        /// Asigna estado y pedido solo en memoria (sin escribir en la base de datos). Lo usa la carga masiva de mesas,
+        /// que sincroniza el estado en segundo plano para no bloquear la interfaz con una escritura por mesa.
+        /// </summary>
+        public void ApplyState(string estado, int id_pedido)
+        {
+            this.Id_pedido = id_pedido;
+            this.Estado_mesa = estado;
+            this.ApplyColor();
+        }
+
+        private void ApplyColor()
+        {
             if (this.Estado_mesa.Equals("DISPONIBLE"))
             {
                 this.btnMesa.BackColor = Color.LightGreen;
@@ -170,6 +190,8 @@ namespace CapaPresentacion.Formularios
 
             this.Details = TableCardText.Detail(this.Estado_mesa, row);
             this.btnMesa.Text = this.Texto + Environment.NewLine + this.Details;
+            this.btnMesa.Invalidate();
+            this.VisualStateChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void CustomButtonMesa_Load(object sender, EventArgs e)
@@ -189,22 +211,6 @@ namespace CapaPresentacion.Formularios
             {
                 this.btnMesa.BackColor = Color.DarkOrange;
             }
-        }
-
-        private void BtnMesa_MouseLeave(object sender, EventArgs e)
-        {
-            Button btn = (Button)sender;
-            btn.Font =
-                new Font("Segoe UI", 12F, FontStyle.Regular,
-                GraphicsUnit.Point, ((byte)(0)));
-        }
-
-        private void BtnMesa_MouseEnter(object sender, EventArgs e)
-        {
-            Button btn = (Button)sender;
-            btn.Font =
-                new Font("Segoe UI", 14F, FontStyle.Bold,
-                GraphicsUnit.Point, ((byte)(0)));
         }
 
         private string texto;

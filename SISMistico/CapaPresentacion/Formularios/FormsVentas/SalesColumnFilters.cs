@@ -36,15 +36,17 @@ namespace CapaPresentacion.Formularios.FormsVentas
     {
         private readonly DataGridView grid;
         private readonly Action changed;
+        private readonly Func<DataTable> sourceProvider;
         private readonly SalesColumnFilterState state = new SalesColumnFilterState();
         private DataTable source;
         private ToolStripDropDown popup;
         public int ActiveCount => state.Selected.Count;
 
-        public SalesColumnFilters(DataGridView grid, Action changed)
+        public SalesColumnFilters(DataGridView grid, Action changed, Func<DataTable> sourceProvider = null)
         {
             this.grid = grid;
             this.changed = changed;
+            this.sourceProvider = sourceProvider;
             grid.ColumnHeaderMouseClick += OpenFilter;
             grid.CellPainting += PaintHeader;
             grid.DataSourceChanged += SourceChanged;
@@ -56,7 +58,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void SourceChanged(object sender, EventArgs e)
         {
-            DataTable next = grid.DataSource as DataTable;
+            DataTable next = sourceProvider != null ? sourceProvider() : grid.DataSource as DataTable;
             if (ReferenceEquals(source, next)) return;
             source = next;
             state.Selected.Clear();
@@ -83,7 +85,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void SourceChangedIfNeeded()
         {
-            if (!ReferenceEquals(source, grid.DataSource as DataTable)) SourceChanged(grid, EventArgs.Empty);
+            DataTable next = sourceProvider != null ? sourceProvider() : grid.DataSource as DataTable;
+            if (!ReferenceEquals(source, next)) SourceChanged(grid, EventArgs.Empty);
         }
 
         private bool IsTextColumn(DataGridViewColumn column)
@@ -134,6 +137,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 source.DefaultView.Sort = SalesColumnFilterState.ColumnName(key) + (panel.SortDescending ? " DESC" : " ASC");
                 foreach (DataGridViewColumn other in grid.Columns) other.HeaderCell.SortGlyphDirection = SortOrder.None;
                 column.HeaderCell.SortGlyphDirection = panel.SortDescending ? SortOrder.Descending : SortOrder.Ascending;
+                changed();
                 popup.Close();
             };
             popup.SizeChanged += (s, args) =>

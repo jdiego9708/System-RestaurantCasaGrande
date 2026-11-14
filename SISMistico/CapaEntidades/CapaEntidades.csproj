@@ -46,6 +46,7 @@
     <Compile Include="Helpers\ModelHelperSearch.cs" />
     <Compile Include="Helpers\ValidationType.cs" />
     <Compile Include="Models\Detalle_ingredientes_pedido.cs" />
+    <Compile Include="Models\RappiOrder.cs" />
     <Compile Include="Models\Detalle_pedido.cs" />
     <Compile Include="Models\Ingredientes.cs" />
     <Compile Include="Models\Mesas.cs" />

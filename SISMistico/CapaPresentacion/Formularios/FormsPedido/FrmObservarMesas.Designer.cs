@@ -38,8 +38,8 @@
             this.panel3 = new System.Windows.Forms.Panel();
             this.panelDispositivos = new System.Windows.Forms.Panel();
             this.lblDispositivos = new System.Windows.Forms.Label();
-            this.btnDomicilio = new System.Windows.Forms.Button();
-            this.btnCargar = new System.Windows.Forms.Button();
+            this.btnDomicilio = new TableFilterButton();
+            this.btnCargar = new TableFilterButton();
             this.SuspendLayout();
             // 
             // panelMesas

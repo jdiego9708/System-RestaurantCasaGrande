@@ -36,6 +36,39 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
+    <Reference Include="UglyToad.PdfPig, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Core, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.DocumentLayoutAnalysis, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.DocumentLayoutAnalysis.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Fonts, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.Fonts.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokenization, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.Tokenization.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokens, Version=0.1.11.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.11\lib\net462\UglyToad.PdfPig.Tokens.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.0\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,9 +82,17 @@
     <Compile Include="Alegra\AlegraCredentials.cs" />
     <Compile Include="Alegra\AlegraClient.cs" />
     <Compile Include="Alegra\AlegraAllocation.cs" />
+    <Compile Include="Alegra\AlegraPlaces.cs" />
+    <EmbeddedResource Include="Alegra\ColombiaPlaces.txt" />
     <Compile Include="Alegra\AlegraInvoiceBuilder.cs" />
     <Compile Include="Alegra\AlegraWorkflow.cs" />
+    <Compile Include="Alegra\AlegraProductValidation.cs" />
+    <Compile Include="Alegra\AlegraProductRegistration.cs" />
+    <Compile Include="Alegra\AlegraSimilarProducts.cs" />
     <Compile Include="NAddresses.cs" />
+    <Compile Include="NRappiOrders.cs" />
+    <Compile Include="Rappi\RappiImporter.cs" />
+    <Compile Include="Rappi\RappiInvoiceParser.cs" />
     <Compile Include="NClientes.cs" />
     <Compile Include="NTurnos.cs" />
     <Compile Include="NEgresos.cs" />
@@ -65,6 +106,7 @@
     <Compile Include="NNotas.cs" />
     <Compile Include="NPedido.cs" />
     <Compile Include="NPlatos.cs" />
+    <Compile Include="NProductos.cs" />
     <Compile Include="NReservas.cs" />
     <Compile Include="NVentas.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
