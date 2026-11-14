@@ -10,7 +10,12 @@
         .\Desplegar-Base-de-Datos.ps1 -Database CasaGrandeBD_prod -CarpetaRespaldo D:\Respaldos
 
     Flujo:
-      1. Comprueba LocalDB y que exista la base (si no existe, ofrece restaurarla desde un respaldo .sql).
+      1. Comprueba LocalDB y que exista la base. Si NO existe (PC nuevo) siempre ofrece dos caminos:
+           [1] RESTAURAR desde una copia (.bak o script .sql; busca las copias en la USB, C:\Respaldos, Escritorio y
+               Documentos, o se escribe la ruta). Despues revisa que la copia traiga lo necesario (administrador con PIN,
+               mesas, menu) y ofrece completarlo.
+           [2] CREAR una base NUEVA y vacia (esquema + procedimientos + migraciones) y PEDIR el administrador (nombre y
+               PIN de 4 digitos) y el numero de mesas.
       2. Muestra el estado actual (verificar-despliegue.sql).
       3. HACE UNA COPIA DE SEGURIDAD (.bak) de la base. Sin copia no continua.
       4. Con su confirmacion, crea/actualiza los 3 procedimientos nuevos (01, 03, 04). Son aditivos y repetibles.
@@ -23,9 +28,17 @@ param(
     [string]$Database = 'CasaGrandeBD',
     [string]$Instance = '(localdb)\MSSQLLocalDB',
     [string]$CarpetaRespaldo = 'C:\Respaldos',
-    # Respaldo en formato script .sql para restaurar la base si no existe (opcional; si falta se pregunta).
-    [string]$ScriptRespaldo,
-    [switch]$SoloVerificar
+    # Copia (.bak o script .sql) para restaurar la base si no existe (opcional; si falta se pregunta).
+    [Alias('ScriptRespaldo')]
+    [string]$ArchivoCopia,
+    [switch]$SoloVerificar,
+    # Para automatizar (pruebas, instalaciones repetidas): si no se dan, el script pregunta.
+    [ValidateSet('', 'Restaurar', 'Nueva')][string]$Origen = '',
+    [string]$AdminNombre,
+    [string]$AdminPin,
+    [int]$CantidadMesas = -1,
+    # Responde SI a todas las confirmaciones (no a las que piden escribir una palabra).
+    [switch]$Si
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,10 +51,11 @@ function Ok($t)    { Write-Host "    OK  $t" -ForegroundColor Green }
 function Aviso($t) { Write-Host "    !!  $t" -ForegroundColor Yellow }
 function Termina($codigo) {
     Write-Host ''
-    Read-Host 'Pulse Enter para cerrar' | Out-Null
+    if (-not $Si) { Read-Host 'Pulse Enter para cerrar' | Out-Null }
     exit $codigo
 }
 function Pregunta([string]$texto) {
+    if ($Si) { Write-Host "$texto (S/N): S (-Si)"; return $true }
     $r = Read-Host "$texto (S/N)"
     return ($r -match '^[sS]')
 }
@@ -288,13 +302,268 @@ function Resolver-EsquemaAntiguo {
     }
 }
 
+# ---------------------------------------------------------------------------
+# Instalacion nueva: restaurar desde una copia o crear una base vacia, y revisar que la base tenga lo necesario
+# ---------------------------------------------------------------------------
+# Ejecuta SQL en la base de trabajo, con parametros. Sin -Tabla no devuelve nada; con -Tabla devuelve un DataTable.
+function Sql-Base([string]$sql, [hashtable]$parametros = @{}, [switch]$Tabla) {
+    Add-Type -AssemblyName System.Data
+    $cn = New-Object System.Data.SqlClient.SqlConnection "Server=$Instance;Database=$Database;Integrated Security=true;Connect Timeout=30;Pooling=false"
+    try {
+        $cn.Open()
+        $cmd = $cn.CreateCommand(); $cmd.CommandText = $sql; $cmd.CommandTimeout = 0
+        foreach ($k in $parametros.Keys) { [void]$cmd.Parameters.AddWithValue($k, $parametros[$k]) }
+        if ($Tabla) {
+            $dt = New-Object System.Data.DataTable
+            [void](New-Object System.Data.SqlClient.SqlDataAdapter $cmd).Fill($dt)
+            return , $dt
+        }
+        [void]$cmd.ExecuteNonQuery()
+    } finally { $cn.Dispose() }
+}
+
+# Copias (.bak o script .sql) que parezcan de la base del restaurante, de la mas reciente a la mas antigua.
+function Buscar-Copias {
+    $carpetas = @(
+        (Join-Path $PSScriptRoot 'Copias'), (Join-Path $PSScriptRoot '..\Copias'), $CarpetaRespaldo,
+        [Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('MyDocuments')
+    ) | Where-Object { $_ -and (Test-Path $_) } | ForEach-Object { (Resolve-Path $_).Path } | Select-Object -Unique
+    $lista = @()
+    foreach ($c in $carpetas) {
+        foreach ($f in (Get-ChildItem -LiteralPath $c -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Extension -in '.bak', '.sql' -and $_.Length -gt 1MB })) {
+            $lista += $f
+        }
+    }
+    return @($lista | Sort-Object LastWriteTime -Descending)
+}
+
+function Pedir-Copia {
+    $copias = Buscar-Copias
+    Write-Host ''
+    Write-Host '    Copias encontradas (USB\Copias, C:\Respaldos, Escritorio, Documentos):' -ForegroundColor White
+    if ($copias.Count -eq 0) { Write-Host '      (ninguna)' -ForegroundColor Yellow }
+    $i = 1
+    foreach ($f in $copias) {
+        Write-Host ('      [{0}] {1,-52} {2,8:N0} MB   {3:yyyy-MM-dd HH:mm}' -f $i, $f.Name, ($f.Length / 1MB), $f.LastWriteTime)
+        Write-Host ('          {0}' -f $f.DirectoryName) -ForegroundColor DarkGray
+        $i++
+    }
+    Write-Host '      [R] Escribir la ruta de otra copia   [0] Volver'
+    $e = (Read-Host '    Numero de la copia').Trim().ToUpper()
+    $n = 0
+    if ([int]::TryParse($e, [ref]$n) -and $n -ge 1 -and $n -le $copias.Count) { return $copias[$n - 1].FullName }
+    if ($e -eq 'R') { return (Read-Host '    Ruta de la copia (.bak o .sql)').Trim('" ') }
+    return $null
+}
+
+# Restaura un respaldo .bak como $Database, dejando los archivos en la carpeta de datos de LocalDB.
+function Restaurar-Bak([string]$ruta) {
+    $ficheros = Sql-Master "RESTORE FILELISTONLY FROM DISK = $(Lit $ruta)" -Tabla
+    $dir = [string](Sql-Master "SELECT CAST(SERVERPROPERTY('InstanceDefaultDataPath') AS nvarchar(260))" -Tabla).Rows[0][0]
+    if ([string]::IsNullOrWhiteSpace($dir)) { $dir = $env:USERPROFILE }
+    $moves = @(); $primero = $true
+    foreach ($f in $ficheros.Rows) {
+        if ($f.Type -eq 'L') { $ext = '.ldf' } elseif ($primero) { $ext = '.mdf'; $primero = $false } else { $ext = '.ndf' }
+        $moves += "MOVE $(Lit $f.LogicalName) TO $(Lit (Join-Path $dir ('{0}_{1}{2}' -f $Database, $f.LogicalName, $ext)))"
+    }
+    Sql-Master "RESTORE DATABASE $(Q $Database) FROM DISK = $(Lit $ruta) WITH $($moves -join ', ')"
+}
+
+function Restaurar-Copia([string]$ruta) {
+    if (-not $ruta -or -not (Test-Path -LiteralPath $ruta)) { throw "No existe la copia: $ruta" }
+    Paso "Restaurando la copia $(Split-Path $ruta -Leaf) (puede tardar unos minutos)"
+    if ([IO.Path]::GetExtension($ruta).ToLower() -eq '.bak') {
+        Restaurar-Bak $ruta
+    } else {
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $db 'Restore-ProdCopy.ps1') `
+            -ScriptPath $ruta -Database $Database -Instance $Instance
+        if ($LASTEXITCODE -ne 0) { throw "Restore-ProdCopy.ps1 fallo (codigo $LASTEXITCODE)" }
+    }
+    if (-not (Existe-Base)) { throw "La restauracion termino pero $Database no aparece." }
+    Ok "Copia restaurada como '$Database'"
+}
+
+# PIN de 4 digitos (el mesero entra con el): no vale 0000 ni uno ya usado por otra persona.
+function Pedir-Pin {
+    while ($true) {
+        $pin = $AdminPin
+        if (-not $pin) {
+            $s1 = Read-Host '    PIN del administrador (4 digitos, no se muestra)' -AsSecureString
+            $p1 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s1))
+            $s2 = Read-Host '    Repita el PIN' -AsSecureString
+            $p2 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s2))
+            if ($p1 -cne $p2) { Write-Host '    Los dos PIN no coinciden. Intente de nuevo.' -ForegroundColor Yellow; continue }
+            $pin = $p1
+        }
+        if ($pin -notmatch '^[1-9]\d{3}$') {
+            if ($AdminPin) { throw 'AdminPin debe tener 4 digitos y no empezar en 0.' }
+            Write-Host '    El PIN debe tener 4 digitos y no empezar en 0.' -ForegroundColor Yellow; continue
+        }
+        $usado = [int](Sql-Base 'SELECT COUNT(*) FROM Empleados WHERE Codigo_maestro = @p' @{ '@p' = [int]$pin } -Tabla).Rows[0][0]
+        if ($usado -gt 0) {
+            if ($AdminPin) { throw 'Ese PIN ya lo usa otra persona.' }
+            Write-Host '    Ese PIN ya lo usa otra persona. Elija otro.' -ForegroundColor Yellow; continue
+        }
+        return $pin
+    }
+}
+
+function Crear-Administrador {
+    $nombre = $AdminNombre
+    if (-not $nombre) {
+        $nombre = (Read-Host '    Nombre del administrador (Enter = ADMINISTRADOR)').Trim()
+        if (-not $nombre) { $nombre = 'ADMINISTRADOR' }
+    }
+    $nombre = $nombre.ToUpper()
+    $pin = Pedir-Pin
+    # La clave interna la usa el sistema para iniciar sesion tras validar el PIN: se genera al azar y no se muestra.
+    $clave = -join ((48..57) + (65..90) | Get-Random -Count 12 | ForEach-Object { [char]$_ })
+    Sql-Base @'
+INSERT INTO Empleados (Nombre_empleado, Telefono_empleado, Identificacion_empleado, Correo_electronico,
+                       Cargo_empleado, Password, Codigo_maestro, Estado)
+VALUES (@nombre, '', '', '', 'ADMINISTRADOR', @clave, @pin, 'ACTIVO')
+'@ @{ '@nombre' = $nombre; '@clave' = $clave; '@pin' = [int]$pin }
+    Ok "Administrador '$nombre' creado (entra con su PIN de 4 digitos)"
+}
+
+function Crear-Mesas {
+    $n = $CantidadMesas
+    if ($n -lt 0) {
+        $t = (Read-Host '    Cuantas mesas tiene el restaurante? (0 a 200, Enter = 10)').Trim()
+        $n = if ($t) { 0 } else { 10 }
+        if ($t -and -not [int]::TryParse($t, [ref]$n)) { $n = -1 }
+    }
+    while ($n -lt 0 -or $n -gt 200) {
+        if ($CantidadMesas -ge 0) { throw 'CantidadMesas debe estar entre 0 y 200.' }
+        $t = (Read-Host '    Numero no valido. Cuantas mesas (0 a 200)?').Trim()
+        if (-not [int]::TryParse($t, [ref]$n)) { $n = -1 }
+    }
+    if ($n -eq 0) { Aviso 'Sin mesas: se pueden crear despues desde el sistema.'; return }
+    Sql-Base @'
+DECLARE @i int = 1;
+WHILE @i <= @n
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Mesas WHERE Num_mesa = @i AND Id_mesa > 0)
+        INSERT INTO Mesas (Num_mesa, Descripcion_mesa) VALUES (@i, '');
+    SET @i += 1;
+END
+'@ @{ '@n' = $n }
+    Ok "$n mesas creadas (numeradas de 1 a $n)"
+}
+
+# Crea una base vacia con el esquema de produccion y la deja lista para empezar: tipos "OTRO", administrador y mesas.
+function Crear-Base-Nueva {
+    $esquema = Join-Path $db 'produccion-schema.sql'
+    if (-not (Test-Path $esquema)) { throw "Falta $esquema" }
+    Paso "Creando la base NUEVA '$Database' (esquema de produccion, sin datos)"
+    # El script de esquema empieza con USE [CasaGrandeBD]: se quita para que NO escriba en otra base.
+    $texto = [IO.File]::ReadAllText($esquema, [Text.Encoding]::UTF8)
+    $quitarUse = New-Object System.Text.RegularExpressions.Regex '(?m)^USE \[[^\]]+\]\r?\n'
+    $texto = $quitarUse.Replace($texto, '', 1)
+    $tmpSql = Join-Path $env:TEMP "esquema_$([guid]::NewGuid().ToString('N')).sql"
+    [IO.File]::WriteAllText($tmpSql, $texto, (New-Object Text.UTF8Encoding $true))
+    try {
+        Sql-Master "CREATE DATABASE $(Q $Database)"
+        Correr-Sql $tmpSql $Database
+    } finally { Remove-Item $tmpSql -ErrorAction SilentlyContinue }
+    if (-not (Existe-Base) -or -not (Tiene-EsquemaProduccion)) { throw "La base $Database no quedo con el esquema de produccion." }
+    Ok 'Esquema creado'
+
+    # Los platos y bebidas sin tipo usan el tipo 0 "OTRO".
+    Sql-Base @'
+SET IDENTITY_INSERT Tipo_platos ON;
+IF NOT EXISTS (SELECT 1 FROM Tipo_platos WHERE Id_tipo_plato = 0) INSERT INTO Tipo_platos (Id_tipo_plato, Tipo_plato) VALUES (0, 'OTRO');
+SET IDENTITY_INSERT Tipo_platos OFF;
+SET IDENTITY_INSERT Tipo_bebidas ON;
+IF NOT EXISTS (SELECT 1 FROM Tipo_bebidas WHERE Id_tipo_bebida = 0) INSERT INTO Tipo_bebidas (Id_tipo_bebida, Tipo_bebida) VALUES (0, 'OTRO');
+SET IDENTITY_INSERT Tipo_bebidas OFF;
+'@
+    Write-Host ''
+    Write-Host '    Datos minimos para empezar a trabajar:' -ForegroundColor White
+    Crear-Administrador
+    Crear-Mesas
+    Aviso 'La base queda SIN platos, bebidas ni clientes: se cargan desde el sistema (Platos / Bebidas).'
+}
+
+# El PC es nuevo: SIEMPRE se ofrecen las dos opciones (copia o base nueva). Termina el script si se cancela.
+function Resolver-BaseInexistente {
+    $modo = $Origen
+    $ruta = $ArchivoCopia
+    if (-not $modo) {
+        Write-Host ''
+        Write-Host '    INSTALACION NUEVA: en este equipo (y para este usuario de Windows) no hay base de datos del restaurante.' -ForegroundColor White
+        Write-Host '    Que desea hacer?' -ForegroundColor White
+        Write-Host '      [1] RESTAURAR desde una COPIA de la base del restaurante (.bak o script .sql) -- trae sus empleados,'
+        Write-Host '          mesas, platos y bebidas. Es lo recomendado si ya hay una copia.'
+        Write-Host '      [2] Crear una base NUEVA y VACIA: se piden el administrador (nombre y PIN) y el numero de mesas;'
+        Write-Host '          el menu (platos y bebidas) se carga despues desde el sistema.'
+        Write-Host '      [0] Salir'
+        switch ((Read-Host '    Opcion').Trim()) {
+            '1' { $modo = 'Restaurar' }
+            '2' { $modo = 'Nueva' }
+            default { Write-Host '    No se hizo ningun cambio.'; Termina 1 }
+        }
+    }
+    if ($modo -eq 'Restaurar') {
+        if (-not $ruta) { $ruta = Pedir-Copia }
+        if (-not $ruta) { Write-Host '    Sin copia no se restaura nada.'; Termina 1 }
+        Restaurar-Copia $ruta
+    } else {
+        Crear-Base-Nueva
+    }
+}
+
+# Resume lo que tiene la base y avisa lo que le falta para poder trabajar. Con -Reparar ofrece completarlo.
+function Revisar-Contenido([switch]$Reparar) {
+    $c = Sql-Base @'
+SELECT
+ (SELECT COUNT(*) FROM Empleados WHERE Id_empleado > 0 AND Estado = 'ACTIVO') AS empleados,
+ (SELECT COUNT(*) FROM Empleados WHERE Id_empleado > 0 AND Estado = 'ACTIVO' AND Codigo_maestro > 0) AS con_pin,
+ (SELECT COUNT(*) FROM Empleados WHERE Id_empleado > 0 AND Estado = 'ACTIVO' AND Cargo_empleado = 'ADMINISTRADOR' AND Codigo_maestro > 0) AS admins,
+ (SELECT COUNT(*) FROM Mesas WHERE Id_mesa > 0) AS mesas,
+ (SELECT COUNT(*) FROM Platos WHERE Estado = 'ACTIVO') AS platos,
+ (SELECT COUNT(*) FROM Bebidas WHERE Estado = 'ACTIVO') AS bebidas,
+ (SELECT COUNT(*) FROM Clientes) AS clientes,
+ (SELECT COUNT(*) FROM Ventas) AS ventas
+'@ @{} -Tabla
+    $r = $c.Rows[0]
+    Write-Host ''
+    Write-Host '    Contenido de la base:' -ForegroundColor White
+    Write-Host ('      Empleados activos: {0} ({1} con PIN, {2} administradores con PIN)' -f $r.empleados, $r.con_pin, $r.admins)
+    Write-Host ('      Mesas: {0}   Platos activos: {1}   Bebidas activas: {2}   Clientes: {3}   Ventas: {4}' -f $r.mesas, $r.platos, $r.bebidas, $r.clientes, $r.ventas)
+    if ($r.admins -eq 0) {
+        Aviso 'No hay ningun ADMINISTRADOR activo con PIN: nadie podria administrar el sistema.'
+        if ($Reparar -and (Pregunta '    Crear un administrador ahora?')) { Crear-Administrador }
+    }
+    if ($r.mesas -eq 0) {
+        Aviso 'No hay mesas: no se podran tomar pedidos de mesa.'
+        if ($Reparar -and (Pregunta '    Crear las mesas ahora?')) { Crear-Mesas }
+    }
+    if ($r.platos -eq 0 -and $r.bebidas -eq 0) { Aviso 'El menu esta vacio (sin platos ni bebidas activos): se carga desde el sistema.' }
+    elseif ($r.platos -eq 0) { Aviso 'No hay platos activos.' }
+    elseif ($r.bebidas -eq 0) { Aviso 'No hay bebidas activas.' }
+}
+
 try {
     Write-Host "Base de datos: $Database   Instancia: $Instance   Usuario de Windows: $env:USERNAME" -ForegroundColor White
 
     # ---------- 1. LocalDB y existencia de la base ----------
     Paso '1/7  Comprobando SQL Server LocalDB'
     if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-        Write-Host '    No se encontro LocalDB. Instale "SqlLocalDB.msi" (SQL Server Express, medios LocalDB) y repita.' -ForegroundColor Red
+        $msi = @((Join-Path $PSScriptRoot 'Requisitos\SqlLocalDB.msi'), (Join-Path $PSScriptRoot '..\Requisitos\SqlLocalDB.msi')) |
+            Where-Object { Test-Path $_ } | Select-Object -First 1
+        $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        if ($msi -and $admin -and (Pregunta '    No hay LocalDB en este equipo. Instalarlo ahora desde la USB (Requisitos\SqlLocalDB.msi)?')) {
+            $p = Start-Process msiexec.exe -ArgumentList "/i `"$((Resolve-Path $msi).Path)`" /qn IACCEPTSQLLOCALDBLICENSETERMS=YES" -Wait -PassThru
+            if ($p.ExitCode -notin 0, 3010) { throw "La instalacion de LocalDB fallo (codigo $($p.ExitCode))." }
+            $env:Path += ';C:\Program Files\Microsoft SQL Server\160\Tools\Binn;C:\Program Files\Microsoft SQL Server\150\Tools\Binn;C:\Program Files\Microsoft SQL Server\140\Tools\Binn'
+        }
+    }
+    if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+        Write-Host '    No se encontro SQL Server Express LocalDB (Windows 11 no lo trae).' -ForegroundColor Red
+        if ($msi -and -not $admin) { Write-Host '    La USB trae Requisitos\SqlLocalDB.msi: ejecute este script como ADMINISTRADOR para instalarlo, o instalelo a mano.' -ForegroundColor Yellow }
+        else { Write-Host '    Instale "SqlLocalDB.msi" (SQL Server Express, medios LocalDB) y repita.' -ForegroundColor Red }
         Termina 1
     }
     & sqllocaldb start MSSQLLocalDB | Out-Null
@@ -303,15 +572,9 @@ try {
     if (-not (Existe-Base)) {
         Aviso "La base $Database NO existe para el usuario $env:USERNAME."
         Aviso 'Si el sistema ya funcionaba aqui, entre con el MISMO usuario de Windows que lo usa (LocalDB es por usuario).'
-        if (-not $ScriptRespaldo) { $ScriptRespaldo = (Read-Host 'Ruta del respaldo en formato script .sql para restaurarla (Enter = salir)').Trim('" ') }
-        if (-not $ScriptRespaldo) { Write-Host '    Sin base no se puede continuar.' -ForegroundColor Red; Termina 1 }
-        if (-not (Test-Path $ScriptRespaldo)) { throw "No existe $ScriptRespaldo" }
-        if ($SoloVerificar) { Aviso 'Con -SoloVerificar no se restaura nada.'; Termina 1 }
-        Paso 'Restaurando la base desde el respaldo (puede tardar unos minutos)'
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $db 'Restore-ProdCopy.ps1') `
-            -ScriptPath $ScriptRespaldo -Database $Database -Instance $Instance
-        if ($LASTEXITCODE -ne 0) { throw "Restore-ProdCopy.ps1 fallo (codigo $LASTEXITCODE)" }
-        if (-not (Existe-Base)) { throw "La restauracion termino pero $Database no aparece." }
+        if ($SoloVerificar) { Aviso 'Con -SoloVerificar no se restaura ni se crea nada.'; Termina 1 }
+        Resolver-BaseInexistente
+        if (-not (Existe-Base)) { throw "La base $Database no aparece despues del paso anterior." }
     }
     Ok "La base $Database existe"
 
@@ -330,6 +593,7 @@ try {
     # ---------- 2. Estado actual ----------
     Paso '2/7  Estado actual (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database
+    Revisar-Contenido
     if ($SoloVerificar) { Ok 'Verificacion terminada (no se cambio nada).'; Termina 0 }
 
     # ---------- 3. Copia de seguridad ----------
@@ -398,6 +662,25 @@ try {
     Correr-Sql (Join-Path $db '08_items_eliminados.sql') $Database
     Ok 'Registro de productos eliminados preparado'
 
+    Write-Host ''
+    Write-Host '    Forma de pago de los domicilios (09): agrega Pedidos.Payment_method para que el domicilio se facture solo'
+    Write-Host '    al cumplirse el tiempo. Se aplica siempre; es repetible y no borra datos.'
+    Correr-Sql (Join-Path $db '09_pedidos_forma_pago.sql') $Database
+    Ok 'Forma de pago de domicilios preparada'
+
+    Write-Host ''
+    Write-Host '    Pedidos de Rappi (10): crea la tabla RappiOrders donde se guardan las facturas PDF de Rappi que lee el'
+    Write-Host '    escritorio (una ficha por orden, sin duplicados). Se aplica siempre; es repetible y no borra datos.'
+    Correr-Sql (Join-Path $db '10_rappi_ordenes.sql') $Database
+    Ok 'Tabla de pedidos de Rappi preparada'
+
+    Write-Host ''
+    Write-Host '    Numeracion diaria de domicilios (11): agrega el numero de factura del dia (1..N) a los domicilios y a las'
+    Write-Host '    ordenes de Rappi, cada uno con su propia secuencia. Numera lo que ya existe. Se aplica siempre; es'
+    Write-Host '    repetible y no borra datos.'
+    Correr-Sql (Join-Path $db '11_numeracion_domicilios.sql') $Database
+    Ok 'Numeracion diaria de domicilios preparada'
+
     # ---------- 6. Verificacion final ----------
     Paso '7/7  Verificacion final (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database
@@ -406,6 +689,9 @@ try {
     Write-Host '    Domicilios debe decir OK en tabla, columna, relaciones, mesa 0 y los ocho procedimientos.' -ForegroundColor White
     Write-Host '    Alegra debe decir OK en las cuatro tablas y en las columnas de procesamiento de solicitudes.' -ForegroundColor White
     Write-Host "    Copia de seguridad: $bak" -ForegroundColor White
+    # Al final (ya con copia hecha y migraciones aplicadas): si la base no trae administrador o mesas, se ofrece completarlo.
+    Paso 'Revision final del contenido'
+    Revisar-Contenido -Reparar
     Termina 0
 }
 catch {

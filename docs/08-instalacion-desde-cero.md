@@ -1,5 +1,19 @@
 > Actualizacion 2026-11-06: Windows de 64 bits. En el PC ejecute **01, 02, 03 y 05**; el 04 corresponde a Android. El paso 01 prepara SQL sin credenciales; el nuevo **05-Configurar-Alegra.ps1** importa los TXT Bearer/Basic, verifica la cuenta y configura emision e impresion. Mantenga cerrado el programa hasta terminar 05. El kit incluye las herramientas PDF portables. Detalle y pruebas: [cierre de sesion](15-cierre-de-sesion-2026-11-06.md).
 
+> **Actualización 2026-11-14 — PC nuevo, sin base de datos.** `01-Base-de-Datos.ps1` ya no se detiene si la base no existe:
+> **siempre ofrece dos caminos**. **[1] Restaurar desde una copia** (`.bak` o script `.sql`): busca las copias en
+> `Copias\` de la USB, `C:\Respaldos`, el Escritorio y Documentos, o se escribe la ruta; tras restaurar **revisa que la copia
+> traiga lo necesario** (administrador activo con PIN, mesas, platos y bebidas) y ofrece completar lo que falte.
+> **[2] Crear una base nueva y vacía** (esquema + procedimientos + migraciones 01–11): **pide el nombre y el PIN de 4 dígitos
+> del administrador y el número de mesas**; el menú (platos y bebidas) se carga después desde el sistema.
+> Se prepara con `Preparar-USB.ps1 -CopiaBase <ruta.bak> [-SqlLocalDb <SqlLocalDB.msi>]`: las copias van a `Copias\` y
+> el MSI a `Requisitos\` (Windows 11 no trae LocalDB; con el MSI y PowerShell como administrador el 01 lo instala).
+> Las copias llevan datos reales (empleados, PIN, clientes, ventas): guarde la USB con cuidado. Para automatizar:
+> `-Origen Restaurar|Nueva -ArchivoCopia ... -AdminNombre ... -AdminPin ... -CantidadMesas N -Si`.
+> Probado en LocalDB de desarrollo: base nueva (administrador entra con `sp_Login`, 5 mesas, mesa 0, tipos «OTRO»,
+> segunda ejecución idempotente) y restauración del `.bak` del 2026-11-05. **No** probado en un Windows 11 limpio ni la
+> instalación del MSI de LocalDB.
+
 # 08 — Instalación desde cero en el restaurante
 
 Guía paso a paso para dejar funcionando **el sistema de escritorio, la API móvil y la app Android** en el PC del

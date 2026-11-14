@@ -14,6 +14,8 @@
         07-Configurar-Impresora-Termica.ps1   PC: deja la POS-80 en el formato de rollo largo (tickets largos sin cortar)
         Credenciales-Alegra\           Tokens renombrados para el PC destino
         Soporte\                        copia legible de scripts SQL, auxiliares y reversiones
+        Copias\                         (opcional) copias de la base para restaurar en un PC nuevo
+        Requisitos\                     (opcional) SqlLocalDB.msi
         SHA256SUMS.txt                  sumas para comprobar que la copia no se daño
 
     Uso (en la maquina de desarrollo, no requiere administrador):
@@ -24,6 +26,8 @@
         .\Preparar-USB.ps1 -Version 1.1.0       # version del instalador a copiar
         .\Preparar-USB.ps1 -CarpetaDestino D:\Temp\kit   # NO USB: usa esa carpeta como raiz (pruebas, carpeta de red)
         .\Preparar-USB.ps1 -Si                  # no pide la confirmacion final
+        .\Preparar-USB.ps1 -CopiaBase D:\Copias\CasaGrandeBD.bak   # incluye una copia de la base en Copias\ (restaurable por el 01)
+        .\Preparar-USB.ps1 -SqlLocalDb D:\Setup\SqlLocalDB.msi     # incluye LocalDB en Requisitos\ (el 01 lo instala si falta)
 
     Solo escribe dentro de "<unidad>\Casa Grande Installers". No formatea ni borra nada fuera de esa carpeta.
 #>
@@ -37,6 +41,11 @@ param(
     # Copia lo que ya esté construido, sin recompilar el instalador ni el APK (pruebas del propio script).
     [switch]$SinCompilar,
     [switch]$Si,
+    # Copias de la base del restaurante (.bak o script .sql) que se llevan en Copias\: el 01 las ofrece al restaurar.
+    # Llevan datos reales (empleados, clientes, ventas): use una copia propia y guarde la USB con cuidado.
+    [string[]]$CopiaBase,
+    # SqlLocalDB.msi (SQL Server Express, medios LocalDB). Windows 11 no trae LocalDB; con el MSI el 01 lo instala.
+    [string]$SqlLocalDb,
     [string]$ApkRuta,
     [string]$FlutterBin = 'D:\DevTools\flutter-3.47.8\bin',
     [string]$AlegraBearerFile = 'D:\Setup\apikeyAlegraCasaGrandeNuevo.txt',
@@ -188,10 +197,10 @@ $dbDir = Join-Path $repo 'db'
 $soporteDb = @('Invoke-Sql.ps1', 'Restore-ProdCopy.ps1', 'verificar-despliegue.sql', 'produccion-schema.sql',
                '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql',
                '02_unificar_empleados_duplicados.sql', '05_activar_empleados.sql',
-               '06_domicilios_direcciones.sql', '07_alegra_integration.sql', '08_items_eliminados.sql', 'Configurar-Alegra.ps1',
+               '06_domicilios_direcciones.sql', '07_alegra_integration.sql', '08_items_eliminados.sql', '09_pedidos_forma_pago.sql', '10_rappi_ordenes.sql', '11_numeracion_domicilios.sql', 'Configurar-Alegra.ps1',
                '01_sp_Movil_Insertar_pedido.revert.sql', '03_sp_Movil_Agregar_items.revert.sql',
                '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql',
-               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql', '08_items_eliminados.revert.sql')
+               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql', '08_items_eliminados.revert.sql', '09_pedidos_forma_pago.revert.sql', '10_rappi_ordenes.revert.sql', '11_numeracion_domicilios.revert.sql')
 
 # El paso 01 es autocontenido; Soporte\db se conserva para consulta y ejecucion manual.
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
@@ -218,6 +227,17 @@ $plan = @(
     @{ Origen = $AlegraBearerFile; Destino = 'Credenciales-Alegra\Token-Nuevo-Bearer.txt' },
     @{ Origen = $AlegraBasicFile; Destino = 'Credenciales-Alegra\Token-Anterior-Basic.txt' }
 )
+foreach ($c in @($CopiaBase | Where-Object { $_ })) {
+    if (-not (Test-Path -LiteralPath $c -PathType Leaf)) { Falla "No existe la copia de la base: $c" }
+    if ([IO.Path]::GetExtension($c).ToLower() -notin '.bak', '.sql') { Falla "La copia debe ser .bak o .sql: $c" }
+    $plan += @{ Origen = (Resolve-Path -LiteralPath $c).Path; Destino = ('Copias\' + (Split-Path $c -Leaf)) }
+}
+if ($SqlLocalDb) {
+    if (-not (Test-Path -LiteralPath $SqlLocalDb -PathType Leaf) -or [IO.Path]::GetExtension($SqlLocalDb).ToLower() -ne '.msi') {
+        Falla "SqlLocalDb debe ser el archivo SqlLocalDB.msi: $SqlLocalDb"
+    }
+    $plan += @{ Origen = (Resolve-Path -LiteralPath $SqlLocalDb).Path; Destino = 'Requisitos\SqlLocalDB.msi' }
+}
 foreach ($p in $plan) { if (-not (Test-Path $p.Origen)) { Falla "Falta el archivo de origen: $($p.Origen)" } }
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }
 
@@ -304,6 +324,14 @@ if (Test-Path -LiteralPath $soporte) {
     if([IO.Path]::GetFullPath($soporte) -ne (Join-Path $resolvedDestination 'Soporte')) { Falla 'Ruta Soporte inesperada.' }
     Remove-Item -LiteralPath $soporte -Recurse -Force
 }
+foreach ($sub in 'Copias', 'Requisitos') {
+    $carpeta = Join-Path $destino $sub
+    if (Test-Path -LiteralPath $carpeta) {
+        if ((Get-Item -LiteralPath $carpeta).Attributes -band [IO.FileAttributes]::ReparsePoint) { Falla "$sub no puede ser un enlace." }
+        if ([IO.Path]::GetFullPath($carpeta) -ne (Join-Path $resolvedDestination $sub)) { Falla "Ruta $sub inesperada." }
+        Remove-Item -LiteralPath $carpeta -Recurse -Force
+    }
+}
 New-Item -ItemType Directory -Path (Join-Path $soporte 'db') -Force | Out-Null
 
 foreach ($p in $plan) {
@@ -329,8 +357,13 @@ EJECUTE LOS ARCHIVOS EN ORDEN (el numero del nombre es el orden).
 
 EN EL PC DEL RESTAURANTE (Windows 10/11 de 64 bits, mismo usuario: pasos 01, 02, 03 y 05)
 --------------------------------------------------------------
- 01-Base-de-Datos.ps1       Clic derecho > "Ejecutar con PowerShell".
-                            Hace respaldo y aplica las migraciones de API, empleados, Domicilios y Alegra (07).
+ 01-Base-de-Datos.ps1       Clic derecho > "Ejecutar con PowerShell" (como ADMINISTRADOR si hay que instalar LocalDB).
+                            PC NUEVO (sin base de datos): siempre ofrece [1] RESTAURAR desde una copia (.bak o .sql; busca en
+                            Copias\ de esta USB, C:\Respaldos, Escritorio y Documentos) o [2] CREAR una base nueva y vacia,
+                            donde PIDE el nombre y PIN de 4 digitos del administrador y el numero de mesas. Tras restaurar
+                            revisa que la base traiga administrador con PIN, mesas y menu, y ofrece completarlo.
+                            Si no hay LocalDB (Windows 11 no lo trae) y la USB trae Requisitos\SqlLocalDB.msi, lo instala.
+                            Hace respaldo y aplica las migraciones de API, empleados, Domicilios, Alegra, Rappi y numeracion.
                             Lleva los SQL embebidos. No requiere tokens ni conexion con Alegra.
                             La verificacion final debe indicar OK en las tablas/columnas Alegra.
                             Elija la misma base que usa el escritorio. Mantengalo cerrado hasta terminar 05.
@@ -390,6 +423,8 @@ EN CADA CELULAR ANDROID (7.0 o superior, en el mismo WiFi que el PC)
 OTROS ARCHIVOS
 --------------------------------------------------------------
  Credenciales-Alegra\       Token-Nuevo-Bearer.txt y Token-Anterior-Basic.txt (contienen las claves).
+ Copias\                    (si se incluyo) copias de la base del restaurante para restaurar en un PC nuevo. Datos reales.
+ Requisitos\                (si se incluyo) SqlLocalDB.msi.
  Soporte\                   Copia legible de scripts SQL y reversiones para soporte tecnico.
  SHA256SUMS.txt             Sumas de comprobacion de los archivos.
 
