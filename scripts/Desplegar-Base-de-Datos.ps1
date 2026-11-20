@@ -719,6 +719,12 @@ try {
     Correr-Sql (Join-Path $db '11_numeracion_domicilios.sql') $Database
     Ok 'Numeracion diaria de domicilios preparada'
 
+    Write-Host ''
+    Write-Host '    Numeracion de ventas (12): guarda el consecutivo diario al registrar cada venta del programa.'
+    Write-Host '    Conserva el numero en las reimpresiones. No reconstruye numeros de facturas antiguas.'
+    Correr-Sql (Join-Path $db '12_numeracion_ventas.sql') $Database
+    Ok 'Numeracion persistente de ventas preparada'
+
     # ---------- 6. Verificacion final ----------
     Paso '7/7  Verificacion final (solo lectura)'
     Correr-Sql (Join-Path $db 'verificar-despliegue.sql') $Database

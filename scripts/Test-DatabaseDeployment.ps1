@@ -69,7 +69,7 @@ try {
     Execute-File $database (Join-Path $dbDir 'produccion-schema.sql') -Baseline
     Execute-Sql $database "INSERT dbo.Clientes (Nombre_cliente, Direccion_cliente, Referencia_ubicacion, Estado_cliente) VALUES ('AUDITORIA MIGRACION', 'CRA PRUEBA 123', 'REFERENCIA PRUEBA', 'ACTIVO');"
     $migrations = @('01_sp_Movil_Insertar_pedido.sql','02_unificar_empleados_duplicados.sql',
-        '03_sp_Movil_Agregar_items.sql','04_sp_Movil_Quitar_item.sql','05_activar_empleados.sql','06_domicilios_direcciones.sql','07_alegra_integration.sql','08_items_eliminados.sql','09_pedidos_forma_pago.sql','10_rappi_ordenes.sql','11_numeracion_domicilios.sql')
+        '03_sp_Movil_Agregar_items.sql','04_sp_Movil_Quitar_item.sql','05_activar_empleados.sql','06_domicilios_direcciones.sql','07_alegra_integration.sql','08_items_eliminados.sql','09_pedidos_forma_pago.sql','10_rappi_ordenes.sql','11_numeracion_domicilios.sql','12_numeracion_ventas.sql')
     $firstDefinitions = $null
     for ($pass = 1; $pass -le 2; $pass++) {
         foreach ($file in $migrations) {
@@ -90,6 +90,34 @@ try {
         }
         Write-Host "OK: ejecucion $pass; esquema, procedimientos, direccion migrada y mesa 0 correctos."
     }
+    Execute-File $database (Join-Path $dbDir 'pruebas-numeracion-ventas.sql')
+    Write-Host 'OK: numeracion de ventas, reinicio diario, lotes, rollback y numeros no reutilizados.'
+
+    # Dos cajas facturan a la vez. Ambas deben confirmar con numeros diferentes.
+    $connections = @(); $commands = @(); $pending = @()
+    try {
+        for ($i = 0; $i -lt 2; $i++) {
+            $connection = New-Object System.Data.SqlClient.SqlConnection "Server=$Instance;Database=$database;Integrated Security=true"
+            $connection.Open()
+            $connections += $connection
+            $command = $connection.CreateCommand()
+            $command.CommandText = @'
+INSERT dbo.Ventas (Id_pedido, Fecha_venta, Hora_venta, Total_parcial, Propina, Subtotal, Desechables, Domicilio, Total_final)
+SELECT TOP (1) Id_pedido, '20261119', '13:00', 100, 0, 100, 0, 0, 100 FROM dbo.Pedidos WHERE Observaciones_pedido='AUDITORIA NUMERACION';
+'@
+            $commands += $command
+            $pending += $command.ExecuteNonQueryAsync()
+        }
+        foreach ($task in $pending) { [void]$task.GetAwaiter().GetResult() }
+    } finally {
+        foreach ($command in $commands) { $command.Dispose() }
+        foreach ($connection in $connections) { $connection.Dispose() }
+    }
+    $numbers = Execute-Sql $database "SELECT COUNT(*) AS Quantity, MAX(ReceiptNumber) AS LastNumber FROM dbo.SaleReceiptNumbers WHERE ReceiptDay='20261119';" -Results
+    if ($numbers.Tables[0].Rows[0].Quantity -ne 5 -or $numbers.Tables[0].Rows[0].LastNumber -ne 5) {
+        throw 'La facturacion concurrente perdio o repitio numeros.'
+    }
+    Write-Host 'OK: dos conexiones facturaron concurrentemente con numeros persistidos distintos.'
 } finally {
     # Solo se permite borrar el nombre exacto generado por esta prueba, nunca una base del usuario.
     if ($created -and $database -match '^CasaGrandeAudit_[a-f0-9]{32}$') {

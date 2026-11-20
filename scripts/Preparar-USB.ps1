@@ -202,10 +202,10 @@ $dbDir = Join-Path $repo 'db'
 $soporteDb = @('Invoke-Sql.ps1', 'Restore-ProdCopy.ps1', 'verificar-despliegue.sql', 'produccion-schema.sql',
                '01_sp_Movil_Insertar_pedido.sql', '03_sp_Movil_Agregar_items.sql', '04_sp_Movil_Quitar_item.sql',
                '02_unificar_empleados_duplicados.sql', '05_activar_empleados.sql',
-               '06_domicilios_direcciones.sql', '07_alegra_integration.sql', '08_items_eliminados.sql', '09_pedidos_forma_pago.sql', '10_rappi_ordenes.sql', '11_numeracion_domicilios.sql', 'Configurar-Alegra.ps1',
+               '06_domicilios_direcciones.sql', '07_alegra_integration.sql', '08_items_eliminados.sql', '09_pedidos_forma_pago.sql', '10_rappi_ordenes.sql', '11_numeracion_domicilios.sql', '12_numeracion_ventas.sql', 'Configurar-Alegra.ps1',
                '01_sp_Movil_Insertar_pedido.revert.sql', '03_sp_Movil_Agregar_items.revert.sql',
                '04_sp_Movil_Quitar_item.revert.sql', '02_unificar_empleados_duplicados.revert.sql',
-               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql', '08_items_eliminados.revert.sql', '09_pedidos_forma_pago.revert.sql', '10_rappi_ordenes.revert.sql', '11_numeracion_domicilios.revert.sql')
+               '05_activar_empleados.revert.sql', '06_domicilios_direcciones.revert.sql', '08_items_eliminados.revert.sql', '09_pedidos_forma_pago.revert.sql', '10_rappi_ordenes.revert.sql', '11_numeracion_domicilios.revert.sql', '12_numeracion_ventas.revert.sql')
 
 # El paso 01 es autocontenido; Soporte\db se conserva para consulta y ejecucion manual.
 foreach ($f in $soporteDb) { if (-not (Test-Path (Join-Path $dbDir $f))) { Falla "Falta db\$f" } }

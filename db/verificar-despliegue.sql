@@ -33,7 +33,11 @@ UNION ALL SELECT 'Mesa comodin 0', CASE WHEN EXISTS
 UNION ALL SELECT 'Pedidos.Payment_method (09)', CASE WHEN COL_LENGTH('dbo.Pedidos','Payment_method') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
 UNION ALL SELECT 'RappiOrders (10)', CASE WHEN OBJECT_ID('dbo.RappiOrders','U') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
 UNION ALL SELECT 'Pedidos.DeliveryNumber (11)', CASE WHEN COL_LENGTH('dbo.Pedidos','DeliveryNumber') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
-UNION ALL SELECT 'RappiOrders.DayNumber (11)', CASE WHEN COL_LENGTH('dbo.RappiOrders','DayNumber') IS NOT NULL THEN 'OK' ELSE 'FALTA' END;
+UNION ALL SELECT 'RappiOrders.DayNumber (11)', CASE WHEN COL_LENGTH('dbo.RappiOrders','DayNumber') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'SaleReceiptNumbers (12)', CASE WHEN OBJECT_ID('dbo.SaleReceiptNumbers','U') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'SaleReceiptCounters (12)', CASE WHEN OBJECT_ID('dbo.SaleReceiptCounters','U') IS NOT NULL THEN 'OK' ELSE 'FALTA' END
+UNION ALL SELECT 'tr_Ventas_AssignReceiptNumber (12)', CASE WHEN EXISTS
+    (SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID('dbo.tr_Ventas_AssignReceiptNumber') AND is_disabled=0) THEN 'OK' ELSE 'FALTA' END;
 GO
 
 -- 2. Empleados (db\02): pines_compartidos_entre_activos y activos_con_pin_cero deben ser 0.

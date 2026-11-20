@@ -68,6 +68,13 @@ tiempo está en EN PREPARACIÓN con un anillo de cuenta regresiva (`UI/Countdown
     y código de entrega. No se reimprime el PDF original: es tamaño carta y en un rollo quedaría ilegible. Va a la
     impresora predeterminada, igual que comandas y facturas.
   - Tablas/archivos: `DRappiOrders`, `NRappiOrders`, `RappiOrder`.
+- **Detalle de los platos en la factura de domicilio (2026-11-14).** La precuenta y la factura final de domicilio imprimen, debajo
+  de cada plato con ingredientes, lo mismo que las comandas de mesa (sopa, crema, arroz, acompañantes…):
+  `FrmFacturaFinal.AddIngredientDetails` agrega al nombre del plato sus `Detalle_ingredientes_pedido` (`NPedido.GetIngredientLines`).
+  Solo se llama en las dos ramas de domicilio; las facturas y precuentas de mesa no cambian.
+- **Agregar productos a un domicilio en preparación** (botón Agregar de la tarjeta): al guardar se imprime la factura
+  **completa** (lo anterior y lo nuevo, con el detalle de los platos) y **conserva el mismo número del día**: el número se asigna
+  solo al crear el pedido y la edición no lo toca. Si se entra a agregar y no se agrega nada, no se imprime.
 - **Numeración diaria de facturas (2026-11-14, script `db/11_numeracion_domicilios.sql`).** Solo Domicilios: cada factura
   lleva arriba a la derecha «N° k», con k de 1 a N que empieza de nuevo cada día. Son **dos secuencias separadas**:
   - *Programa:* `Pedidos.DeliveryNumber` (solo `Tipo_pedido = 'DOMICILIO'`, por `Fecha_pedido`). Se asigna al **crear**
