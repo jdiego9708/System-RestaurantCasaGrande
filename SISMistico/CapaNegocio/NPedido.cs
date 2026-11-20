@@ -35,6 +35,8 @@ namespace CapaNegocio
 
         public static string GetPaymentMethod(int orderId) => DPedidos.GetPaymentMethod(orderId);
 
+        public static System.Data.DataTable GetIngredientLines(int orderId) => DPedidos.GetIngredientLines(orderId);
+
         /// <summary>Numero de factura del dia de un domicilio (lo asigna si falta); null si no aplica o no hay numeracion.</summary>
         public static int? GetOrAssignDeliveryNumber(int orderId) => DPedidos.GetOrAssignDeliveryNumber(orderId);
         #endregion

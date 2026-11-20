@@ -11,7 +11,14 @@ namespace CapaNegocio
 {
     public class NVentas
     {
+        public static DataTable GetDeliveryPaymentTotals(DateTime day) => DVenta.GetDeliveryPaymentTotals(day);
+        public static DataTable GetDeliveryPayments(DateTime day) => DVenta.GetDeliveryPayments(day);
+
         public static DataSet GetSaleDetails(int saleId) => DVenta.GetSaleDetails(saleId);
+
+        public static bool IsOrderBilled(int orderId) => DVenta.IsOrderBilled(orderId);
+
+        public static int? GetReceiptNumber(int saleId) => DVenta.GetReceiptNumber(saleId);
 
         #region INSERTAR VENTA
         public static string InsertarVenta(List<string> variables,

@@ -11,6 +11,80 @@ namespace CapaDatos
 {
     public class DVenta
     {
+        /// <summary>Pagos reales de domicilios facturados y valor de productos de los pendientes.</summary>
+        public static DataTable GetDeliveryPaymentTotals(DateTime day)
+        {
+            const string query = @"
+SELECT p.Id_pedido, COALESCE(s.Total_final, items.Total, 0) AS Total,
+       CASE WHEN s.Id_venta IS NOT NULL THEN payments.CashAmount
+            WHEN NULLIF(LTRIM(RTRIM(p.Payment_method)), '') IS NULL THEN NULL
+            WHEN UPPER(LTRIM(RTRIM(p.Payment_method))) IN ('EFECTIVO', 'CASH') THEN COALESCE(items.Total, 0)
+            ELSE 0 END AS CashAmount,
+       CASE WHEN s.Id_venta IS NOT NULL THEN payments.OtherPaymentAmount
+            WHEN NULLIF(LTRIM(RTRIM(p.Payment_method)), '') IS NULL THEN NULL
+            WHEN UPPER(LTRIM(RTRIM(p.Payment_method))) IN ('EFECTIVO', 'CASH') THEN 0
+            ELSE COALESCE(items.Total, 0) END AS OtherPaymentAmount
+FROM dbo.Pedidos p
+OUTER APPLY (SELECT SUM(CAST(d.Precio AS decimal(18,2)) * d.Cantidad) AS Total
+             FROM dbo.Detalle_pedido d WHERE d.Id_pedido = p.Id_pedido) items
+OUTER APPLY (SELECT TOP (1) v.Id_venta, v.Total_final FROM dbo.Ventas v
+             WHERE v.Id_pedido = p.Id_pedido AND v.Estado = 'ACTIVO'
+             AND EXISTS (SELECT 1 FROM dbo.Detalle_venta dv WHERE dv.Id_venta = v.Id_venta)
+             ORDER BY v.Id_venta DESC) s
+OUTER APPLY (SELECT SUM(CASE WHEN UPPER(LTRIM(RTRIM(dv.Metodo_pago))) IN ('EFECTIVO', 'CASH') THEN dv.Valor_pago ELSE 0 END) AS CashAmount,
+                    SUM(CASE WHEN UPPER(LTRIM(RTRIM(dv.Metodo_pago))) IN ('EFECTIVO', 'CASH') THEN 0 ELSE dv.Valor_pago END) AS OtherPaymentAmount
+             FROM dbo.Detalle_venta dv WHERE dv.Id_venta = s.Id_venta) payments
+WHERE p.Tipo_pedido = 'DOMICILIO' AND p.Fecha_pedido >= @Day AND p.Fecha_pedido < @NextDay
+      AND p.Estado_pedido <> 'CANCELADO';";
+            using (SqlConnection connection = new SqlConnection(Conexion.Cn))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@Day", SqlDbType.Date).Value = day.Date;
+                command.Parameters.Add("@NextDay", SqlDbType.Date).Value = day.Date.AddDays(1);
+                DataTable table = new DataTable();
+                try { new SqlDataAdapter(command).Fill(table); }
+                catch (SqlException error) when (error.Number == 207)
+                {
+                    command.CommandText = query.Replace("p.Payment_method", "CAST(NULL AS nvarchar(60))");
+                    new SqlDataAdapter(command).Fill(table);
+                }
+                return table;
+            }
+        }
+
+        /// <summary>Medios previstos de los domicilios pendientes y pagos reales de la ultima venta activa con pagos.</summary>
+        public static DataTable GetDeliveryPayments(DateTime day)
+        {
+            const string query = @"
+SELECT p.Id_pedido, s.Id_venta,
+       CASE WHEN s.Id_venta IS NOT NULL THEN payments.Metodo_pago ELSE NULLIF(LTRIM(RTRIM(p.Payment_method)), '') END AS PaymentMethod,
+       payments.Amount, CAST(CASE WHEN s.Id_venta IS NOT NULL THEN 1 ELSE 0 END AS bit) AS IsFinal
+FROM dbo.Pedidos p
+OUTER APPLY (SELECT TOP (1) v.Id_venta FROM dbo.Ventas v
+             WHERE v.Id_pedido = p.Id_pedido AND v.Estado = 'ACTIVO'
+               AND EXISTS (SELECT 1 FROM dbo.Detalle_venta d WHERE d.Id_venta = v.Id_venta)
+             ORDER BY v.Id_venta DESC) s
+OUTER APPLY (SELECT LTRIM(RTRIM(d.Metodo_pago)) AS Metodo_pago, SUM(CAST(d.Valor_pago AS decimal(18,2))) AS Amount
+             FROM dbo.Detalle_venta d WHERE d.Id_venta = s.Id_venta GROUP BY LTRIM(RTRIM(d.Metodo_pago))) payments
+WHERE p.Tipo_pedido = 'DOMICILIO' AND p.Fecha_pedido >= @Day AND p.Fecha_pedido < @NextDay
+      AND p.Estado_pedido <> 'CANCELADO'
+ORDER BY p.Id_pedido, payments.Metodo_pago;";
+            using (var connection = new SqlConnection(Conexion.Cn))
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@Day", SqlDbType.Date).Value = day.Date;
+                command.Parameters.Add("@NextDay", SqlDbType.Date).Value = day.Date.AddDays(1);
+                var table = new DataTable();
+                try { new SqlDataAdapter(command).Fill(table); }
+                catch (SqlException error) when (error.Number == 207)
+                {
+                    command.CommandText = query.Replace("p.Payment_method", "CAST(NULL AS nvarchar(60))");
+                    new SqlDataAdapter(command).Fill(table);
+                }
+                return table;
+            }
+        }
+
         // Consulta la venta exacta y sus pagos, sin mezclar otras ventas del mismo pedido.
         public static DataSet GetSaleDetails(int saleId)
         {
@@ -119,6 +193,23 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
         #endregion
 
         #region METODO INSERTAR VENTA
+        /// <summary>
+        /// True si el pedido ya tiene una venta ACTIVA con sus pagos (por ejemplo, facturada sola al pasar a TERMINADOS
+        /// mientras la ventana de facturar seguia abierta). Es la misma regla con la que InsertarVenta rechaza duplicados.
+        /// </summary>
+        public static bool IsOrderBilled(int orderId)
+        {
+            using (SqlConnection con = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand(
+                "SELECT COUNT(*) FROM Ventas v WHERE v.Id_pedido = @Id_pedido AND v.Estado = 'ACTIVO' " +
+                "AND EXISTS (SELECT 1 FROM Detalle_venta d WHERE d.Id_venta = v.Id_venta)", con))
+            {
+                cmd.Parameters.Add("@Id_pedido", SqlDbType.Int).Value = orderId;
+                con.Open();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+        }
+
         public string InsertarVenta(List<string> Variables, DataTable detalle_pago,
             out int id_venta, string electronicRequestJson = null)
         {
@@ -636,6 +727,43 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
 
         #endregion
 
+        public static int? GetReceiptNumber(int saleId)
+        {
+            using (SqlConnection connection = new SqlConnection(Conexion.Cn))
+            using (SqlCommand command = new SqlCommand("SELECT ReceiptNumber FROM dbo.SaleReceiptNumbers WHERE SaleId = @SaleId", connection))
+            {
+                command.Parameters.Add("@SaleId", SqlDbType.Int).Value = saleId;
+                connection.Open();
+                try
+                {
+                    object value = command.ExecuteScalar();
+                    return value == null || value == DBNull.Value ? (int?)null : Convert.ToInt32(value);
+                }
+                catch (SqlException ex) when (ex.Number == 208) { return null; }
+            }
+        }
+
+        private static void AddReceiptNumbers(DataTable sales, SqlConnection connection)
+        {
+            sales.Columns.Add("ReceiptNumber", typeof(int));
+            if (sales.Rows.Count == 0 || !sales.Columns.Contains("Id_venta")) return;
+            int minId = sales.AsEnumerable().Min(row => Convert.ToInt32(row["Id_venta"]));
+            int maxId = sales.AsEnumerable().Max(row => Convert.ToInt32(row["Id_venta"]));
+            using (SqlCommand command = new SqlCommand(
+                "SELECT SaleId, ReceiptNumber FROM dbo.SaleReceiptNumbers WHERE SaleId BETWEEN @Min AND @Max", connection))
+            {
+                command.Parameters.Add("@Min", SqlDbType.Int).Value = minId;
+                command.Parameters.Add("@Max", SqlDbType.Int).Value = maxId;
+                DataTable numbers = new DataTable();
+                try { new SqlDataAdapter(command).Fill(numbers); }
+                catch (SqlException ex) when (ex.Number == 208) { return; }
+                Dictionary<int, int> assigned = numbers.AsEnumerable().ToDictionary(
+                    row => Convert.ToInt32(row["SaleId"]), row => Convert.ToInt32(row["ReceiptNumber"]));
+                foreach (DataRow row in sales.Rows)
+                    if (assigned.TryGetValue(Convert.ToInt32(row["Id_venta"]), out int number)) row["ReceiptNumber"] = number;
+            }
+        }
+
         #region METODO BUSCAR VENTA
         public static DataTable BuscarVenta(string tipo_busqueda, string texto_busqueda,
             string fecha1, string fecha2, string hora1, string hora2)
@@ -716,7 +844,7 @@ SELECT Metodo_pago,Valor_pago,Vaucher,Observaciones FROM dbo.Detalle_venta WHERE
 CONVERT(varchar(5), ve.Hora_venta) AS Hora_venta,
 ve.Total_parcial, ve.Propina, ve.Subtotal, ve.Descuento, ve.Bono_cupon, ve.Total_final,
 ve.Observaciones, pe.Id_cliente, cl.Nombre_cliente, pe.Id_mesa, me.Num_mesa,
-pe.Id_empleado, em.Nombre_empleado, pe.Tipo_pedido
+pe.Id_empleado, em.Nombre_empleado, pe.Tipo_pedido, pe.DeliveryNumber
 FROM Ventas ve
 LEFT JOIN Pedidos pe ON pe.Id_pedido = ve.Id_pedido
 LEFT JOIN Clientes cl ON cl.Id_cliente = pe.Id_cliente
@@ -727,7 +855,16 @@ ORDER BY ve.Fecha_venta DESC, ve.Hora_venta DESC, ve.Id_venta DESC;";
                 }
 
                 SqlDataAdapter SqlData= new SqlDataAdapter(SqlCmd);
-                SqlData.Fill(DtResultado);
+                try
+                {
+                    SqlData.Fill(DtResultado);
+                }
+                catch (SqlException ex) when (ex.Number == 207 && SqlCmd.CommandType == CommandType.Text)
+                {
+                    // Bases anteriores al script 11: el historial sigue disponible, sin numero de domicilio.
+                    SqlCmd.CommandText = SqlCmd.CommandText.Replace("pe.DeliveryNumber", "CAST(NULL AS int) AS DeliveryNumber");
+                    SqlData.Fill(DtResultado);
+                }
 
                 // Se agrega al final para conservar las columnas que consumen las pantallas existentes.
                 // Una sola consulta obtiene el tipo real de todos los pedidos de la lista.
@@ -763,6 +900,7 @@ ORDER BY ve.Fecha_venta DESC, ve.Hora_venta DESC, ve.Id_venta DESC;";
                     }
                 }
 
+                AddReceiptNumbers(DtResultado, SqlCon);
                 AddElectronicInvoiceColumns(DtResultado, SqlCon);
 
                 if (DtResultado.Rows.Count < 1)

@@ -11,11 +11,11 @@ namespace CapaDatos
         {
             return Consultar(@"SELECT p.Id_plato Id, 'PLATO' Tipo, p.Nombre_plato Nombre,
                 p.Id_tipo_plato CategoriaId, t.Tipo_plato Categoria, p.Precio_plato Precio,
-                p.Descripcion_plato Descripcion, p.Estado, p.Plato_carta Carta
+                p.Descripcion_plato Descripcion, p.Estado, p.Plato_carta Carta, p.Plato_detallado Detallado
                 FROM dbo.Platos p LEFT JOIN dbo.Tipo_platos t ON t.Id_tipo_plato=p.Id_tipo_plato
                 UNION ALL
                 SELECT b.Id_bebida, 'BEBIDA', b.Nombre_bebida, b.Id_tipo_bebida,
-                t.Tipo_bebida, b.Precio_bebida, b.Descripcion_bebida, b.Estado, ''
+                t.Tipo_bebida, b.Precio_bebida, b.Descripcion_bebida, b.Estado, '', ''
                 FROM dbo.Bebidas b LEFT JOIN dbo.Tipo_bebidas t ON t.Id_tipo_bebida=b.Id_tipo_bebida
                 ORDER BY Nombre, Tipo", null);
         }
@@ -41,7 +41,7 @@ namespace CapaDatos
         }
 
         public static void Guardar(int? id, bool bebida, string nombre, int categoria,
-            decimal precio, string descripcion, bool activo, bool carta, bool? bebidaOriginal = null)
+            decimal precio, string descripcion, bool activo, bool carta, bool? bebidaOriginal = null, bool ingredientes = false)
         {
             if (string.IsNullOrWhiteSpace(nombre) || nombre.Trim().Length > 200)
                 throw new ArgumentException("Escribe un nombre de hasta 200 caracteres.");
@@ -62,20 +62,20 @@ namespace CapaDatos
                         FROM dbo.Platos WITH (UPDLOCK,HOLDLOCK) WHERE Id_plato=@id"
                     : @"INSERT INTO dbo.Platos (Nombre_plato, Id_tipo_plato, Precio_plato, Descripcion_plato, Estado,
                         Imagen_plato, Plato_detallado, Plato_carta)
-                        SELECT @nombre,@categoria,@precio,@descripcion,@estado,Imagen,'INACTIVO',@carta
+                        SELECT @nombre,@categoria,@precio,@descripcion,@estado,Imagen,@detallado,@carta
                         FROM dbo.Bebidas WITH (UPDLOCK,HOLDLOCK) WHERE Id_bebida=@id";
             }
             else if (id.HasValue)
                 sql = bebida
                     ? "UPDATE dbo.Bebidas SET Nombre_bebida=@nombre, Id_tipo_bebida=@categoria, Precio_bebida=@precio, Descripcion_bebida=@descripcion, Estado=@estado WHERE Id_bebida=@id"
-                    : "UPDATE dbo.Platos SET Nombre_plato=@nombre, Id_tipo_plato=@categoria, Precio_plato=@precio, Descripcion_plato=@descripcion, Estado=@estado, Plato_carta=@carta WHERE Id_plato=@id";
+                    : "UPDATE dbo.Platos SET Nombre_plato=@nombre, Id_tipo_plato=@categoria, Precio_plato=@precio, Descripcion_plato=@descripcion, Estado=@estado, Plato_carta=@carta, Plato_detallado=@detallado WHERE Id_plato=@id";
             else
                 sql = bebida
                     ? @"INSERT INTO dbo.Bebidas (Nombre_bebida, Id_tipo_bebida, Precio_bebida, Descripcion_bebida, Estado, Imagen,
                         Precio_trago, Precio_trago_doble, Precio_proveedor, Id_proveedor, Cantidad_unidades, Cantidad_x_unidad, Cantidad_total)
                         VALUES (@nombre,@categoria,@precio,@descripcion,@estado,'SIN IMAGEN',0,0,0,0,0,1,0)"
                     : @"INSERT INTO dbo.Platos (Nombre_plato, Id_tipo_plato, Precio_plato, Descripcion_plato, Estado, Imagen_plato, Plato_detallado, Plato_carta)
-                        VALUES (@nombre,@categoria,@precio,@descripcion,@estado,'SIN IMAGEN','INACTIVO',@carta)";
+                        VALUES (@nombre,@categoria,@precio,@descripcion,@estado,'SIN IMAGEN',@detallado,@carta)";
             using (var cn = new SqlConnection(Conexion.Cn))
             using (var cmd = new SqlCommand(sql, cn))
             {
@@ -86,6 +86,8 @@ namespace CapaDatos
                 cmd.Parameters.Add("@descripcion", SqlDbType.VarChar, bebida ? 200 : 500).Value = descripcion.Trim();
                 cmd.Parameters.Add("@estado", SqlDbType.VarChar, 50).Value = activo ? "ACTIVO" : "INACTIVO";
                 cmd.Parameters.Add("@carta", SqlDbType.VarChar, 50).Value = carta ? "ACTIVO" : "INACTIVO";
+                // Con "Habilitar ingredientes", al pedir el plato se abre la ventana para elegir sopa, arroz, acompanante...
+                cmd.Parameters.Add("@detallado", SqlDbType.VarChar, 50).Value = ingredientes ? "ACTIVO" : "INACTIVO";
                 cmd.Parameters.Add("@id", SqlDbType.Int).Value = (object)id ?? DBNull.Value;
                 cn.Open();
                 using (var transaction = cn.BeginTransaction())

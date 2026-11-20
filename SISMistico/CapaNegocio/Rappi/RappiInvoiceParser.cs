@@ -91,7 +91,12 @@ namespace CapaNegocio.Rappi
                 if (TryLabel(line, "Plataforma", out value)) order.Platform = value;
                 else if (TryLabel(line, "Fecha orden", out value)) order.OrderDateTime = ParseDate(value);
                 else if (TryLabel(line, "Tel[eé]fono", out value)) order.Phone = value;
-                else if (TryLabel(line, "M[eé]todo de pago", out value)) order.PaymentMethod = value;
+                else if (TryLabel(line, "(?:M[eé]todo|Forma) de pago", out value))
+                {
+                    order.PaymentMethod = value;
+                    if (value.Length == 0 && i + 1 < lines.Count && !IsKnownLabel(lines[i + 1]))
+                        order.PaymentMethod = lines[++i];
+                }
                 else if (TryLabel(line, "Direcci[oó]n", out value))
                 {
                     // La direccion puede ocupar varias lineas hasta la siguiente etiqueta.
@@ -112,8 +117,9 @@ namespace CapaNegocio.Rappi
             Match code = Regex.Match(string.Join("\n", lines), @"C[oó]digo de entrega\s*(\S+)", RegexOptions.IgnoreCase);
             if (code.Success) order.DeliveryCode = code.Groups[1].Value;
 
-            // Sin total o sin productos la ficha se muestra, pero avisando que hay que revisar el PDF.
-            order.IsComplete = !string.IsNullOrEmpty(order.ExternalId) && order.Total.HasValue && order.Items.Count > 0;
+            // Sin total, productos o forma de cobro del saldo, la ficha avisa que hay que revisar el PDF.
+            order.IsComplete = !string.IsNullOrEmpty(order.ExternalId) && order.Total.HasValue && order.Items.Count > 0
+                && (order.Total.Value == 0 || !string.IsNullOrWhiteSpace(order.PaymentMethod));
             return order;
         }
 
@@ -135,9 +141,9 @@ namespace CapaNegocio.Rappi
 
         private static readonly string[] Labels =
         {
-            "Restaurante", "Plataforma", "Fecha orden", "Tel[eé]fono", "Direcci[oó]n", "M[eé]todo de pago",
+            "Restaurante", "Plataforma", "Fecha orden", "Tel[eé]fono", "Direcci[oó]n", "(?:M[eé]todo|Forma) de pago",
             "DETALLE ORDEN", "Subtotal", "Descuento", "Costo de env[ií]o", "Propina", "Tarifa de servicio",
-            "Valor pagado", "Total a cobrar", "QR DE ENTREGA",
+            "(?:Valor pagado|Pagado a trav[eé]s de Rappi)", "Total a cobrar", "QR DE ENTREGA",
         };
 
         private static bool IsKnownLabel(string line) =>
@@ -145,7 +151,7 @@ namespace CapaNegocio.Rappi
 
         private static bool TryLabel(string line, string label, out string value)
         {
-            Match match = Regex.Match(line, "^" + label + @"\s*:\s*(.*)$", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(line, "^" + label + @"\s*(?::\s*|$)(.*)$", RegexOptions.IgnoreCase);
             value = match.Success ? match.Groups[1].Value.Trim() : null;
             return match.Success;
         }
@@ -191,15 +197,19 @@ namespace CapaNegocio.Rappi
 
         private static void ParseTotals(List<string> lines, RappiOrder order)
         {
-            foreach (string line in lines)
+            for (int i = 0; i < lines.Count; i++)
             {
-                if (Regex.IsMatch(line, @"^Total a cobrar", RegexOptions.IgnoreCase)) order.Total = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Subtotal", RegexOptions.IgnoreCase)) order.Subtotal = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Descuento", RegexOptions.IgnoreCase)) order.Discount = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Costo de env[ií]o", RegexOptions.IgnoreCase)) order.ShippingCost = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Propina", RegexOptions.IgnoreCase)) order.Tip = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Tarifa de servicio", RegexOptions.IgnoreCase)) order.ServiceFee = LastMoney(line);
-                else if (Regex.IsMatch(line, @"^Valor pagado", RegexOptions.IgnoreCase)) order.PaidThroughRappi = LastMoney(line);
+                string line = lines[i];
+                int? amount = LastMoney(line);
+                if (!amount.HasValue && i + 1 < lines.Count && Regex.IsMatch(lines[i + 1], @"^-?\s*\$?\s*\d[\d.]*$"))
+                    amount = Money(lines[i + 1]);
+                if (Regex.IsMatch(line, @"^Total a cobrar", RegexOptions.IgnoreCase)) order.Total = amount;
+                else if (Regex.IsMatch(line, @"^Subtotal", RegexOptions.IgnoreCase)) order.Subtotal = amount;
+                else if (Regex.IsMatch(line, @"^Descuento", RegexOptions.IgnoreCase)) order.Discount = amount;
+                else if (Regex.IsMatch(line, @"^Costo de env[ií]o", RegexOptions.IgnoreCase)) order.ShippingCost = amount;
+                else if (Regex.IsMatch(line, @"^Propina", RegexOptions.IgnoreCase)) order.Tip = amount;
+                else if (Regex.IsMatch(line, @"^Tarifa de servicio", RegexOptions.IgnoreCase)) order.ServiceFee = amount;
+                else if (Regex.IsMatch(line, @"^(?:Valor pagado|Pagado a trav[eé]s de Rappi)", RegexOptions.IgnoreCase)) order.PaidThroughRappi = amount;
             }
         }
 

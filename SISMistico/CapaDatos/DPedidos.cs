@@ -13,6 +13,28 @@ namespace CapaDatos
     public class DPedidos
     {
         /// <summary>
+        /// Ingredientes elegidos en cada plato del pedido (sopa, crema, arroz, acompanantes...), en el orden en que se
+        /// eligieron: Id_detalle_pedido y Nombre_ingrediente. Son los mismos que salen impresos en las comandas.
+        /// </summary>
+        public static DataTable GetIngredientLines(int orderId)
+        {
+            const string query = @"
+SELECT i.Id_detalle_pedido, g.Nombre_ingrediente
+FROM Detalle_ingredientes_pedido i
+INNER JOIN Ingredientes g ON g.Id_ingrediente = i.Id_ingrediente
+WHERE i.Id_pedido = @OrderId
+ORDER BY i.Id_detalle_ingrediente_pedido";
+            using (SqlConnection con = new SqlConnection(Conexion.Cn))
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+                DataTable table = new DataTable("IngredientLines");
+                new SqlDataAdapter(cmd).Fill(table);
+                return table;
+            }
+        }
+
+        /// <summary>
         /// Numero de factura del dia del domicilio (1..N, empieza de nuevo cada dia). Si todavia no lo tiene lo asigna: el
         /// siguiente del dia del pedido, bajo bloqueo para que dos equipos no repitan numero. Null si el pedido no es un
         /// domicilio o si la base aun no tiene la numeracion (script 11): entonces la factura sale sin numero.

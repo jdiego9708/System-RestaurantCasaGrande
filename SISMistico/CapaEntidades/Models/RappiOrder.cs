@@ -63,6 +63,17 @@ namespace CapaEntidades.Models
         /// </summary>
         public int? OrderValue => this.Total.HasValue ? this.Total.Value + Math.Abs(this.PaidThroughRappi ?? 0) : (int?)null;
 
+        private bool CollectInCash => string.Equals(this.PaymentMethod?.Trim(), "Efectivo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(this.PaymentMethod?.Trim(), "Cash", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Saldo a cobrar en efectivo, sin incluir lo ya pagado en Rappi ni el billete usado para pagar.</summary>
+        public int? CashAmount => !this.Total.HasValue || (this.Total.Value != 0 && string.IsNullOrWhiteSpace(this.PaymentMethod))
+            ? (int?)null : this.CollectInCash ? this.Total.Value : 0;
+
+        /// <summary>Lo pagado en Rappi mas el saldo a cobrar cuando la forma de pago es distinta de efectivo.</summary>
+        public int? OtherPaymentAmount => !this.Total.HasValue || (this.Total.Value != 0 && string.IsNullOrWhiteSpace(this.PaymentMethod))
+            ? (int?)null : Math.Abs(this.PaidThroughRappi ?? 0) + (this.CollectInCash ? 0 : this.Total.Value);
+
         /// <summary>Con cuanto va a pagar el cliente en efectivo.</summary>
         public int? CashPayWith { get; set; }
 
@@ -70,7 +81,7 @@ namespace CapaEntidades.Models
 
         public string DeliveryCode { get; set; }
 
-        /// <summary>False si faltaron datos clave (ID o total); la ficha lo avisa.</summary>
+        /// <summary>False si faltaron datos clave (ID, total, productos o forma de cobro); la ficha lo avisa.</summary>
         public bool IsComplete { get; set; } = true;
 
         public string SourceFile { get; set; }

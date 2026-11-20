@@ -401,10 +401,12 @@ namespace CapaDatos
 
                 if (result)
                 {
+                    // DOMICILIARIO tambien entra: FrmPrincipal ya le arma su menu (solo Domicilios y Clientes).
                     if (tipo_usuario.Equals("CAJERO") || 
                         tipo_usuario.Equals("ADMINISTRADOR") || 
                         tipo_usuario.Equals("MESERO") ||
-                        tipo_usuario.Equals("COCINERO"))
+                        tipo_usuario.Equals("COCINERO") ||
+                        tipo_usuario.Equals("DOMICILIARIO"))
                     {
                         if (ds.Tables.Count >= 3)
                         {

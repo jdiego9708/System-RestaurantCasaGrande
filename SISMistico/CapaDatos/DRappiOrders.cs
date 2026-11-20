@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using CapaEntidades.Models;
+using CapaEntidades.Helpers;
 
 namespace CapaDatos
 {
@@ -192,26 +193,34 @@ SELECT @n;";
         /// </summary>
         public static List<RappiOrder> SearchDay(DateTime day, string text, int page, int pageSize, out int total)
         {
-            string like = string.IsNullOrWhiteSpace(text) ? null : "%" + Escape(text.Trim()) + "%";
-            const string filter = @"
+            int? number = OrderNumberSearch.TryParse(text, 'R', out int parsed) ? (int?)parsed : null;
+            string like = number.HasValue || string.IsNullOrWhiteSpace(text) ? null : "%" + Escape(text.Trim()) + "%";
+            string filter = @"
 WHERE CAST(COALESCE(OrderDateTime, ImportedAt) AS date) = @Day
   AND (@Like IS NULL OR ExternalId LIKE @Like ESCAPE '\' OR CustomerName LIKE @Like ESCAPE '\'
        OR Phone LIKE @Like ESCAPE '\' OR Address LIKE @Like ESCAPE '\' OR ProductsText LIKE @Like ESCAPE '\'
        OR PaymentMethod LIKE @Like ESCAPE '\' OR DeliveryCode LIKE @Like ESCAPE '\')";
+            if (number.HasValue) filter += " AND DayNumber = @DayNumber";
             List<RappiOrder> result = new List<RappiOrder>();
             using (SqlConnection con = new SqlConnection(Conexion.Cn))
             {
                 con.Open();
                 using (SqlCommand count = new SqlCommand("SELECT COUNT(*) FROM dbo.RappiOrders" + filter, con))
                 {
-                    AddFilter(count, day, like);
-                    total = Convert.ToInt32(count.ExecuteScalar());
+                    AddFilter(count, day, like, number);
+                    try { total = Convert.ToInt32(count.ExecuteScalar()); }
+                    catch (SqlException ex) when (ex.Number == 207 && number.HasValue)
+                    {
+                        // Base anterior al script 11: aun no hay consecutivos que buscar.
+                        total = 0;
+                        return result;
+                    }
                 }
                 using (SqlCommand cmd = new SqlCommand(
                     "SELECT * FROM dbo.RappiOrders" + filter +
                     " ORDER BY COALESCE(OrderDateTime, ImportedAt) DESC, Id DESC OFFSET @Skip ROWS FETCH NEXT @Take ROWS ONLY", con))
                 {
-                    AddFilter(cmd, day, like);
+                    AddFilter(cmd, day, like, number);
                     cmd.Parameters.Add("@Skip", SqlDbType.Int).Value = Math.Max(0, page) * pageSize;
                     cmd.Parameters.Add("@Take", SqlDbType.Int).Value = pageSize;
                     DataTable table = new DataTable();
@@ -245,7 +254,9 @@ WHERE CAST(COALESCE(OrderDateTime, ImportedAt) AS date) = @Day
             const string query = @"
 SELECT CAST(COALESCE(OrderDateTime, ImportedAt) AS date) AS OrderDate,
        COALESCE(OrderDateTime, ImportedAt) AS OrderTime,
-       ExternalId, CustomerName, Phone, PaymentMethod, ISNULL(Total, 0) + ABS(ISNULL(PaidThroughRappi, 0)) AS Total
+       ExternalId, CustomerName, Phone, PaymentMethod, Total AS TotalToCollect, PaidThroughRappi,
+       Total + ABS(ISNULL(PaidThroughRappi, 0)) AS Total,
+       DayNumber
 FROM dbo.RappiOrders
 WHERE CAST(COALESCE(OrderDateTime, ImportedAt) AS date) BETWEEN @From AND @To
 ORDER BY COALESCE(OrderDateTime, ImportedAt) DESC, Id DESC";
@@ -255,7 +266,31 @@ ORDER BY COALESCE(OrderDateTime, ImportedAt) DESC, Id DESC";
                 cmd.Parameters.Add("@From", SqlDbType.Date).Value = from.Date;
                 cmd.Parameters.Add("@To", SqlDbType.Date).Value = to.Date;
                 DataTable table = new DataTable("RappiOrders");
-                new SqlDataAdapter(cmd).Fill(table);
+                try
+                {
+                    new SqlDataAdapter(cmd).Fill(table);
+                }
+                catch (SqlException ex) when (ex.Number == 207)
+                {
+                    // La numeracion es opcional en bases anteriores al script 11.
+                    cmd.CommandText = query.Replace("       DayNumber", "       CAST(NULL AS int) AS DayNumber");
+                    new SqlDataAdapter(cmd).Fill(table);
+                }
+                // Los importes originales ya estan persistidos: separar el saldo segun su forma de pago,
+                // sin confundir TOTAL A COBRAR con el valor completo del pedido ni con "paga con".
+                table.Columns.Add("CashAmount", typeof(int));
+                table.Columns.Add("OtherPaymentAmount", typeof(int));
+                foreach (DataRow row in table.Rows)
+                {
+                    RappiOrder payment = new RappiOrder
+                    {
+                        PaymentMethod = Convert.ToString(row["PaymentMethod"]),
+                        Total = row["TotalToCollect"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["TotalToCollect"]),
+                        PaidThroughRappi = row["PaidThroughRappi"] == DBNull.Value ? (int?)null : Convert.ToInt32(row["PaidThroughRappi"]),
+                    };
+                    row["CashAmount"] = payment.CashAmount.HasValue ? (object)payment.CashAmount.Value : DBNull.Value;
+                    row["OtherPaymentAmount"] = payment.OtherPaymentAmount.HasValue ? (object)payment.OtherPaymentAmount.Value : DBNull.Value;
+                }
                 return table;
             }
         }
@@ -273,10 +308,11 @@ ORDER BY COALESCE(OrderDateTime, ImportedAt) DESC, Id DESC";
             }
         }
 
-        private static void AddFilter(SqlCommand cmd, DateTime day, string like)
+        private static void AddFilter(SqlCommand cmd, DateTime day, string like, int? number)
         {
             cmd.Parameters.Add("@Day", SqlDbType.Date).Value = day.Date;
             cmd.Parameters.Add("@Like", SqlDbType.NVarChar, 300).Value = like == null ? (object)DBNull.Value : like;
+            if (number.HasValue) cmd.Parameters.Add("@DayNumber", SqlDbType.Int).Value = number.Value;
         }
 
         // Los comodines de LIKE escritos por el usuario se toman literalmente.
