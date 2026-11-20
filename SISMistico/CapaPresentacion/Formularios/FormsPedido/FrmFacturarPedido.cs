@@ -137,6 +137,27 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         public event EventHandler OnFacturarPedidoSuccess;
 
+        // Revisa en la base si el pedido ya tiene su venta; si es asi avisa y cierra sin duplicar nada.
+        private bool AlreadyBilled(EventArgs e)
+        {
+            if (!NVentas.IsOrderBilled(this.Id_pedido))
+                return false;
+            this.NotifyAlreadyBilled(e);
+            return true;
+        }
+
+        private void NotifyAlreadyBilled(EventArgs e)
+        {
+            MensajeEspera.CloseForm();
+            Mensajes.MensajeInformacion("El pedido " + this.Id_pedido + " ya fue facturado"
+                + (this.IsDomicilio ? " (se factura solo al pasar a TERMINADOS)" : string.Empty)
+                + ". No se creó otra venta.", "Entendido");
+            // En Domicilios se avisa para que el pedido quede en su estado final y la lista se actualice.
+            if (this.IsDomicilio)
+                this.OnFacturarPedidoSuccess?.Invoke(this.Id_pedido, e);
+            this.Close();
+        }
+
         private async void BtnTerminar_Click(object sender, EventArgs e)
         {
             try
@@ -202,6 +223,11 @@ namespace CapaPresentacion.Formularios.FormsPedido
                             return;
                         }
 
+                        // Si el pedido ya se facturo (en Domicilios se factura solo al pasar a TERMINADOS), no se crea otra venta
+                        // ni se vuelve a imprimir: se avisa y se cierra la ventana.
+                        if (this.AlreadyBilled(e))
+                            return;
+
                         if (detalle_pago != null)
                         {
                             if (detalle_pago.Rows.Count > 0)
@@ -214,6 +240,12 @@ namespace CapaPresentacion.Formularios.FormsPedido
                                 rpta =
                                     NVentas.InsertarVenta(variables, out id_venta, detalle_pago,
                                         BuildElectronicRequest(variables, detalle_pago));
+                                // Otro equipo (o la facturacion automatica) se adelanto entre la revision y el guardado.
+                                if (rpta != null && rpta.EndsWith("ya fue facturado.", StringComparison.Ordinal))
+                                {
+                                    this.NotifyAlreadyBilled(e);
+                                    return;
+                                }
                                 if (rpta.Equals("OK"))
                                 {
                                     FrmObservarMesas frm = FrmObservarMesas.GetInstancia();

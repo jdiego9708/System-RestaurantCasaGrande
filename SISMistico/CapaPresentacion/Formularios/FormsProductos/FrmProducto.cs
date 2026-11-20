@@ -21,6 +21,7 @@ namespace CapaPresentacion.Formularios.FormsProductos
         private readonly ModernTextBox description = new ModernTextBox { PlaceholderText = "Descripción opcional" };
         private readonly ModernCheckBox active = new ModernCheckBox { Text = "Producto activo", Checked = true };
         private readonly ModernCheckBox menu = new ModernCheckBox { Text = "Disponible en la carta", Checked = true };
+        private readonly ModernCheckBox ingredients = new ModernCheckBox { Text = "Habilitar ingredientes (sopa, arroz, acompañante...)", Checked = false };
         private readonly Label error = new Label { ForeColor = Theme.Danger, AutoSize = false };
         private readonly ModernButton save = new ModernButton { Text = "Guardar producto" };
         private bool loading;
@@ -54,9 +55,9 @@ namespace CapaPresentacion.Formularios.FormsProductos
             AddField(fields, "Nombre del producto *", name);
             AddField(fields, "Precio de venta (COP) *", price);
             AddField(fields, "Descripción", description);
-            active.Dock = DockStyle.Top; menu.Dock = DockStyle.Top;
-            active.Margin = menu.Margin = Padding.Empty;
-            fields.Controls.Add(active); fields.Controls.Add(menu);
+            active.Dock = DockStyle.Top; menu.Dock = DockStyle.Top; ingredients.Dock = DockStyle.Top;
+            active.Margin = menu.Margin = ingredients.Margin = Padding.Empty;
+            fields.Controls.Add(active); fields.Controls.Add(menu); fields.Controls.Add(ingredients);
             error.Dock = DockStyle.Fill; error.Margin = new Padding(4, 4, 4, 0); root.Controls.Add(error, 0, 2);
             card.Controls.Add(fields); root.Controls.Add(card, 0, 1);
             var footer = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 16, 0, 0) };
@@ -78,6 +79,7 @@ namespace CapaPresentacion.Formularios.FormsProductos
                     description.Text = Convert.ToString(original["Descripcion"]);
                     active.Checked = Convert.ToString(original["Estado"]) == "ACTIVO";
                     menu.Checked = Convert.ToString(original["Carta"]) == "ACTIVO";
+                    ingredients.Checked = Convert.ToString(original["Detallado"]) == "ACTIVO";
                 }
                 await LoadCategories(); name.Focus();
             };
@@ -96,7 +98,7 @@ namespace CapaPresentacion.Formularios.FormsProductos
         {
             loading = true; save.Enabled = false; type.Enabled = false;
             bool isBeverage = beverage.Checked;
-            menu.Visible = !isBeverage; description.MaxLength = isBeverage ? 200 : 500;
+            menu.Visible = ingredients.Visible = !isBeverage; description.MaxLength = isBeverage ? 200 : 500;
             try
             {
                 error.Text = "";
@@ -126,11 +128,11 @@ namespace CapaPresentacion.Formularios.FormsProductos
             bool? originalBeverage = original == null ? (bool?)null : Convert.ToString(original["Tipo"]) == "BEBIDA";
             int categoryId = Convert.ToInt32(category.SelectedValue);
             string productName = name.Text, details = description.Text;
-            bool enabled = active.Checked, inMenu = menu.Checked;
+            bool enabled = active.Checked, inMenu = menu.Checked, withIngredients = ingredients.Checked && !isBeverage;
             saving = true; save.Enabled = false; type.Enabled = false; UseWaitCursor = true;
             try
             {
-                await Task.Run(() => NProductos.Guardar(id, isBeverage, productName, categoryId, amount, details, enabled, inMenu, originalBeverage));
+                await Task.Run(() => NProductos.Guardar(id, isBeverage, productName, categoryId, amount, details, enabled, inMenu, originalBeverage, withIngredients));
                 saving = false; DialogResult = DialogResult.OK; Close();
             }
             catch (Exception ex) { error.Text = "No se pudo guardar: " + ex.Message; }

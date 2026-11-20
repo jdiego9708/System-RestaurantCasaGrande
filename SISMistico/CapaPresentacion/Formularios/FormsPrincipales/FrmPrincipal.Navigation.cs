@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -15,7 +15,16 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         private Label navigationTitle;
         private Label navigationDate;
         private bool arrangingNavigation;
+        private bool updatingContentSpace;
         private FlowLayoutPanel navigationItems;
+        private TableLayoutPanel navigationShell;
+        private TableLayoutPanel navigationSidebar;
+        private Panel navigationBrand;
+        private Label navigationFooter;
+        private MainNavigationButton menuToggle;
+        private bool navigationCollapsed;
+        private const int ExpandedSidebarWidth = 248;
+        private const int CollapsedSidebarWidth = 80;
 
         private void BuildModernNavigation()
         {
@@ -36,6 +45,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 248));
             shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             shell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            navigationShell = shell;
             shell.Controls.Add(panelBotones, 0, 0);
             // Sin barra superior: el contenido ocupa todo el alto y el boton de cuenta flota sobre el fondo.
             shell.Controls.Add(panel1, 1, 0);
@@ -52,6 +62,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
             sidebar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
+            navigationSidebar = sidebar;
             var brand = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Color.Transparent };
             lblMistico.Text = "Casa Grande"; lblMistico.AutoSize = false;
             lblMistico.Anchor = AnchorStyles.Top | AnchorStyles.Left;
@@ -70,11 +81,21 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             brand.Controls.Add(new MainNavigationDivider { Location = new Point(24, 91), Size = new Size(200, 8) });
             var sectionCaption = new Label
             {
-                Text = "Espacio de trabajo", Location = new Point(25, 111), Size = new Size(205, 24),
+                Text = "Espacio de trabajo", Location = new Point(25, 111), Size = new Size(158, 24),
                 ForeColor = MainNavigationColors.Ink, BackColor = Color.Transparent,
             };
             SetNavigationFont(sectionCaption, "Trebuchet MS", 10f, FontStyle.Bold);
             brand.Controls.Add(sectionCaption);
+            navigationBrand = brand;
+            navigationFooter = label1;
+            // Boton hamburguesa: contrae el panel a solo iconos y lo vuelve a expandir.
+            menuToggle = new MainNavigationButton { Size = new Size(44, 38), TabStop = false };
+            ConfigureNavigation(menuToggle, IconChar.Bars, "Contraer men\u00fa");
+            menuToggle.IconOnly = true; menuToggle.Dock = DockStyle.None;
+            menuToggle.Location = new Point(192, 98);
+            menuToggle.Click += (sender, args) => SetNavigationCollapsed(!navigationCollapsed);
+            brand.Controls.Add(menuToggle);
+            menuToggle.BringToFront();
             navigationItems = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false,
@@ -123,6 +144,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                     var selected = (MainNavigationButton)sender;
                     foreach (var item in navigationButtons) item.Active = item == selected;
                     navigationTitle.Text = selected.Text;
+                    UpdateContentSpace();
                 };
             }
             ConfigureNavigation(btnUsuario, IconChar.User, btnUsuario.Text, true);
@@ -134,6 +156,8 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             if (components == null) components = new System.ComponentModel.Container();
             var hints = new ToolTip(components);
             hints.SetToolTip(settings, settings.AccessibleName); hints.SetToolTip(account, account.AccessibleName);
+            hints.SetToolTip(menuToggle, "Contraer o expandir el menú");
+            foreach (var button in navigationButtons) hints.SetToolTip(button, button.Text);
             navigationTitle = new Label { Text = "Panel de control", Font = Theme.Heading, ForeColor = MainNavigationColors.Ink,
                 BackColor = Color.Transparent, AutoEllipsis = true, Dock = DockStyle.Fill, Margin = Padding.Empty };
             navigationDate = new Label { Text = DateTime.Today.ToString("dddd \u00b7 dd MMMM yyyy", CultureInfo.GetCultureInfo("es-CO")),
@@ -147,12 +171,68 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             account.Floating = true; account.Height = 40;
             Controls.Add(account);
             account.BringToFront();
+            // La franja depende del formulario visible, tambien al abrirlo por otro flujo o volver al frente.
+            panel1.ControlAdded += (sender, args) =>
+            {
+                Form child = args.Control as Form;
+                if (child != null)
+                {
+                    child.VisibleChanged += (s, e) => UpdateContentSpace();
+                    child.Activated += (s, e) => UpdateContentSpace();
+                    child.FormClosed += (s, e) => UpdateContentSpace();
+                }
+                UpdateContentSpace();
+            };
+            panel1.ControlRemoved += (sender, args) => UpdateContentSpace();
+            panel1.Layout += (sender, args) => UpdateContentSpace();
             navigationItems.SizeChanged += (sender, args) => LayoutModernNavigation();
             Shown += (sender, args) => { LayoutModernNavigation(); UpdateFloatingAccount(); };
             LayoutModernNavigation();
             ResumeLayout(true);
         }
 
+        // Contrae el panel izquierdo a una columna de iconos (menu hamburguesa) o lo expande de nuevo.
+        private void SetNavigationCollapsed(bool collapsed)
+        {
+            if (navigationShell == null) return;
+            navigationCollapsed = collapsed;
+            SuspendLayout();
+            navigationShell.ColumnStyles[0].Width = collapsed ? CollapsedSidebarWidth : ExpandedSidebarWidth;
+            navigationSidebar.RowStyles[0].Height = collapsed ? 72 : 140;
+            foreach (Control child in navigationBrand.Controls)
+                if (child != menuToggle) child.Visible = !collapsed;
+            navigationFooter.Visible = !collapsed;
+            menuToggle.Location = collapsed ? new Point((CollapsedSidebarWidth - menuToggle.Width) / 2 - 4, 18) : new Point(192, 98);
+            menuToggle.Text = collapsed ? "Expandir men\u00fa" : "Contraer men\u00fa";
+            navigationItems.Padding = new Padding(collapsed ? 8 : 14, 4, 0, 0);
+            foreach (var button in navigationButtons) button.IconOnly = collapsed;
+            ResumeLayout(true);
+            LayoutModernNavigation();
+            foreach (var button in navigationButtons) button.Invalidate();
+        }
+
+        private void UpdateContentSpace()
+        {
+            if (updatingContentSpace) return;
+            // Controls enumera los hijos en orden Z: el primero visible es el que ocupa el frente.
+            Form active = panel1.Controls.OfType<Form>()
+                .FirstOrDefault(child => child.Visible && child.WindowState != FormWindowState.Minimized);
+            SetFullSpace(active is Formularios.FormsDomicilios.FrmDeliveries);
+        }
+
+        // El boton flotante y su reserva de espacio cambian juntos.
+        private void SetFullSpace(bool full)
+        {
+            if (updatingContentSpace) return;
+            updatingContentSpace = true;
+            try
+            {
+                btnUsuario.Visible = !full;
+                Padding padding = full ? Padding.Empty : new Padding(0, 48, 0, 0);
+                if (panel1.Padding != padding) panel1.Padding = padding;
+            }
+            finally { updatingContentSpace = false; }
+        }
         // Texto del boton flotante: nombre del empleado + fecha de hoy; se reajusta ancho y posicion.
         private void UpdateFloatingAccount()
         {
@@ -190,7 +270,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
             navigationItems.SuspendLayout();
             try
             {
-                int width = Math.Max(120, navigationItems.ClientSize.Width
+                int width = Math.Max(navigationCollapsed ? 40 : 120, navigationItems.ClientSize.Width
                     - navigationItems.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 8);
                 foreach (var button in navigationButtons)
                     button.Size = new Size(width, 46);

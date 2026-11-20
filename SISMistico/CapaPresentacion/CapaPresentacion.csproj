@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -374,10 +374,16 @@
     </Compile>
     <Compile Include="UI\Badge.cs" />
     <Compile Include="UI\IconRenderer.cs" />
+    <Compile Include="UI\LucideIcons.cs" />
+    <Compile Include="UI\MinimalIconButton.cs" />
     <Compile Include="UI\ModernDateField.cs" />
     <Compile Include="UI\ModernButton.cs" />
     <Compile Include="UI\ModernCard.cs" />
     <Compile Include="UI\ModernTextBox.cs" />
+    <Compile Include="UI\ModernNumberPicker.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliverySearchBar.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliveryTouchList.cs" />
+    <Compile Include="Formularios\FormsDomicilios\DeliveryListLayout.cs" />
     <Compile Include="UI\ModernSelectionControls.cs" />
     <Compile Include="Formularios\FormsProductos\FrmProductos.cs" />
     <Compile Include="Formularios\FormsProductos\AlegraProductValidationCache.cs" />
@@ -456,6 +462,14 @@
       <DependentUpon>FrmPedido.cs</DependentUpon>
     </Compile>
     <Compile Include="Formularios\FormsPedido\ProductThumbnails.cs" />
+    <Compile Include="Formularios\FormsPedido\ProductSearchRow.cs" />
+    <Compile Include="Formularios\FormsPedido\CircleImage.cs" />
+    <Compile Include="Formularios\FormsPedido\OrderLineRow.cs" />
+    <Compile Include="Formularios\FormsPedido\OrderSummaryBar.cs" />
+    <Compile Include="UI\ObservationEditor.cs" />
+    <Compile Include="UI\TouchScrollPanel.cs" />
+    <Compile Include="UI\TouchDataGridView.cs" />
+    <Compile Include="UI\ChoiceGroup.cs" />
     <Compile Include="Formularios\FormsPedido\FrmPedido.Designer.cs">
       <DependentUpon>FrmPedido.cs</DependentUpon>
     </Compile>
@@ -1153,6 +1167,15 @@
     </None>
     <None Include="Resources\add2.png" />
     <EmbeddedResource Include="Resources\MainBackground.png" />
+    <EmbeddedResource Include="Resources\Lucide\lucide.ttf">
+      <LogicalName>CapaPresentacion.Resources.Lucide.lucide.ttf</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Lucide\codepoints.json">
+      <LogicalName>CapaPresentacion.Resources.Lucide.codepoints.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Lucide\LICENSE">
+      <LogicalName>CapaPresentacion.Resources.Lucide.LICENSE</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\CasaGrandeLoginEmblem.png">
       <LogicalName>CapaPresentacion.Resources.CasaGrandeLoginEmblem.png</LogicalName>
     </EmbeddedResource>

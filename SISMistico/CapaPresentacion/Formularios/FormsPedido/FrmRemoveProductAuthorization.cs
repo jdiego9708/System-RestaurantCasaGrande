@@ -7,8 +7,9 @@ using System.Windows.Forms;
 
 namespace CapaPresentacion.Formularios.FormsPedido
 {
-    // Autorización para quitar un producto de un pedido ya guardado: código maestro único de 8 dígitos (el mismo
-    // que pide el celular) y observación obligatoria, en el mismo diálogo. Ver ApiConfig.CodigoMaestroValido.
+    // Autorización para una acción destructiva sobre algo ya guardado (quitar un producto de un pedido, cancelar un
+    // domicilio): código maestro único de 8 dígitos (el mismo que pide el celular) y observación obligatoria, en
+    // el mismo diálogo. Ver ApiConfig.CodigoMaestroValido. Los textos se pueden adaptar a cada acción.
     public sealed class FrmRemoveProductAuthorization : Form
     {
         private readonly TextBox codeBox;
@@ -18,9 +19,21 @@ namespace CapaPresentacion.Formularios.FormsPedido
         /// <summary>Motivo escrito por quien autoriza (sin espacios en los extremos). Solo válido si el diálogo devolvió OK.</summary>
         public string Observation { get; private set; }
 
+        /// <summary>Autorización para quitar un producto ya guardado (textos originales).</summary>
         public FrmRemoveProductAuthorization(string productName)
+            : this("Quitar producto", "Quitar «" + productName + "»", "Quitar producto", IconChar.Trash, "Cancelar")
         {
-            Text = "Quitar producto";
+        }
+
+        /// <summary>Autorización con los textos de la acción que se confirma.</summary>
+        /// <param name="windowTitle">Título de la ventana.</param>
+        /// <param name="heading">Encabezado: qué se va a hacer y sobre qué.</param>
+        /// <param name="acceptText">Texto del botón que confirma.</param>
+        /// <param name="acceptIcon">Icono del botón que confirma.</param>
+        /// <param name="dismissText">Texto del botón que cierra sin hacer nada.</param>
+        public FrmRemoveProductAuthorization(string windowTitle, string heading, string acceptText, IconChar acceptIcon, string dismissText)
+        {
+            Text = windowTitle;
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -33,7 +46,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
             Label title = new Label
             {
-                Text = "Quitar «" + productName + "»",
+                Text = heading,
                 Font = Theme.Heading,
                 Dock = DockStyle.Top,
                 Height = 34,
@@ -70,9 +83,9 @@ namespace CapaPresentacion.Formularios.FormsPedido
             errorLabel = new Label { Dock = DockStyle.Top, Height = 28, ForeColor = Theme.Danger, Text = string.Empty };
 
             Panel buttons = new Panel { Dock = DockStyle.Bottom, Height = 64, Padding = new Padding(0, Theme.Gap, 0, 0) };
-            ModernButton cancel = new ModernButton { Text = "Cancelar", Kind = ButtonKind.Outline, Icon = IconChar.Xmark, Width = 150, Height = 48, Dock = DockStyle.Left };
+            ModernButton cancel = new ModernButton { Text = dismissText, Kind = ButtonKind.Outline, Icon = IconChar.Xmark, Width = 150, Height = 48, Dock = DockStyle.Left };
             cancel.Click += (s, e) => { DialogResult = DialogResult.Cancel; Close(); };
-            ModernButton accept = new ModernButton { Text = "Quitar producto", Kind = ButtonKind.Success, Icon = IconChar.Trash, Width = 210, Height = 48, Dock = DockStyle.Right };
+            ModernButton accept = new ModernButton { Text = acceptText, Kind = ButtonKind.Success, Icon = acceptIcon, Width = 210, Height = 48, Dock = DockStyle.Right };
             accept.Click += (s, e) => Accept();
             buttons.Controls.Add(accept);
             buttons.Controls.Add(cancel);

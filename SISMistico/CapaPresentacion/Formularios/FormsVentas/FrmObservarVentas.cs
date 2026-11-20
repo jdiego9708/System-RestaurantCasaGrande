@@ -1,4 +1,4 @@
-﻿using CapaNegocio;
+using CapaNegocio;
 using CapaEntidades.Models;
 using CapaPresentacion.Formularios.FormsIngresos;
 using CapaPresentacion.Formularios.FormsEgresos;
@@ -25,6 +25,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private DataTable allResults;
         private int currentPage;
         private bool bindingPage;
+        private string sortedColumn;
+        private bool sortDescending;
         private readonly Button firstPageButton = new Button();
         private readonly Button previousPageButton = new Button();
         private readonly Button nextPageButton = new Button();
@@ -43,9 +45,10 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private bool showingExpenses;
         private DateTime cashQueryStart;
         private DateTime cashQueryEnd;
-        // Cuarta vista del listado: ventas por Rappi (leidas de las facturas PDF). Se comporta como los ingresos y egresos:
+        // Ventas por Rappi (leidas de las facturas PDF). Se comporta como los ingresos y egresos:
         // sin doble clic de detalle ni eliminacion de cuentas.
         private bool showingRappi;
+        private bool showingDeliveries;
         private DateTime rappiQueryStart;
         private DateTime rappiQueryEnd;
         private bool ShowingCash => showingIncome || showingExpenses || showingRappi;
@@ -70,7 +73,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         {
             InitializeComponent();
             this.BuildModernLayout();
-            this.textFilters = new SalesColumnFilters(this.dgvVentas, ApplyResultFilters, () => allResults);
+            this.textFilters = new SalesColumnFilters(this.dgvVentas, ApplyResultFilters, () => allResults, ApplyResultSort);
             this.dashboard.IncomeRequested += (s, e) =>
             {
                 if (this.btnBuscar.Enabled) BuscarMovimientos(false);
@@ -83,12 +86,21 @@ namespace CapaPresentacion.Formularios.FormsVentas
             {
                 if (this.btnBuscar.Enabled) BuscarRappi();
             };
+            this.dashboard.DeliveriesRequested += (s, e) =>
+            {
+                if (!this.btnBuscar.Enabled) return;
+                showingIncome = showingExpenses = showingRappi = false;
+                showingDeliveries = true;
+                dashboard.SelectDeliveries();
+                BuscarVentas("VENTA FECHAS", "");
+            };
             this.dashboard.SalesRequested += (s, e) =>
             {
                 if (!this.btnBuscar.Enabled) return;
                 showingIncome = false;
                 showingExpenses = false;
                 showingRappi = false;
+                showingDeliveries = false;
                 dashboard.SelectCash(false, false);
                 BuscarVentas("VENTA FECHAS", "");
             };
@@ -141,7 +153,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 Dock = DockStyle.Top, Height = 78,
                 Padding = new Padding(12, 8, 12, 8),
             };
-            Panel toolbarViewport = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
+            // La barra de filtros mide mas que la ventana en pantallas pequenas: se desplaza con el dedo.
+            Panel toolbarViewport = new TouchScrollPanel { Dock = DockStyle.Fill, AutoScroll = true, TouchPanning = true };
             TableLayoutPanel toolbar = new TableLayoutPanel
             {
                 Dock = DockStyle.Top, Height = 60, ColumnCount = 8, RowCount = 1,
@@ -322,7 +335,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 column.DefaultCellStyle.FormatProvider = SalesCulture;
                 string name = column.DataPropertyName.Length > 0 ? column.DataPropertyName : column.Name;
                 if (name == "Id_venta" || name == "Id_pedido" || name == "Bono_cupon" || name == "Observaciones"
-                    || name == "Id_cliente" || name == "Id_mesa" || name == "Id_empleado")
+                    || name == "Id_cliente" || name == "Id_mesa" || name == "Id_empleado"
+                    || name == "DeliveryNumber" || name == "ReceiptNumber")
                     column.Visible = false;
                 if (column.DataPropertyName.Length > 0)
                     column.SortMode = DataGridViewColumnSortMode.Programmatic;
@@ -390,7 +404,13 @@ namespace CapaPresentacion.Formularios.FormsVentas
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0
                 && this.dgvVentas.Columns[e.ColumnIndex].Name == RowNumberColumn)
             {
-                e.Value = rowNumbers.TryGetValue(e.RowIndex, out int number) ? number.ToString(SalesCulture) : "";
+                DataGridViewRow row = this.dgvVentas.Rows[e.RowIndex];
+                if (showingRappi || !ShowingCash)
+                {
+                    e.Value = AssignedNumberLabel(row);
+                }
+                else
+                    e.Value = rowNumbers.TryGetValue(e.RowIndex, out int number) ? number.ToString(SalesCulture) : "";
                 e.FormattingApplied = true;
                 return;
             }
@@ -492,7 +512,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         {
             var footer = new Panel
             {
-                Dock = DockStyle.Bottom, Height = 34,
+                Dock = DockStyle.Bottom, Height = 48,
                 Padding = new Padding(0, 3, 0, 0), BackColor = Color.Transparent,
             };
             var pager = new FlowLayoutPanel
@@ -502,7 +522,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 Margin = Padding.Empty, Padding = Padding.Empty, BackColor = Color.Transparent,
             };
             pageHint.AutoSize = true;
-            pageHint.MinimumSize = new Size(0, 28);
+            pageHint.MinimumSize = new Size(0, 40);
             pageHint.TextAlign = ContentAlignment.MiddleRight;
             pageHint.Font = Theme.Small;
             pageHint.ForeColor = Theme.TextMuted;
@@ -518,8 +538,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 buttons[i].Text = symbols[i];
                 buttons[i].AccessibleName = labels[i] + " p\u00e1gina";
                 hints.SetToolTip(buttons[i], buttons[i].AccessibleName);
-                buttons[i].Size = new Size(28, 28);
-                buttons[i].Margin = new Padding(1, 0, 1, 0);
+                buttons[i].Size = new Size(44, 40); // tamano tactil
+                buttons[i].Margin = new Padding(2, 0, 2, 0);
                 buttons[i].Padding = Padding.Empty;
                 buttons[i].FlatStyle = FlatStyle.Flat;
                 buttons[i].FlatAppearance.BorderSize = 0;
@@ -558,6 +578,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private void BindResults(DataTable records)
         {
             allResults = records;
+            sortedColumn = null;
+            sortDescending = false;
             currentPage = 0;
             bindingPage = true;
             try
@@ -596,6 +618,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 this.dgvVentas.DataSource = slice;
                 SetPrintHover(-1);
                 StyleSalesColumns();
+                RestoreSortGlyph();
             }
             finally
             {
@@ -609,17 +632,31 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
         private void SortResultColumn(object sender, DataGridViewCellMouseEventArgs e)
         {
-            if (e.ColumnIndex < 0 || e.Button != MouseButtons.Left || allResults == null || !this.btnBuscar.Enabled) return;
-            var column = this.dgvVentas.Columns[e.ColumnIndex];
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= this.dgvVentas.Columns.Count || e.Button != MouseButtons.Left
+                || allResults == null || bindingPage || !this.btnBuscar.Enabled) return;
+            DataGridViewColumn column = this.dgvVentas.Columns[e.ColumnIndex];
             string name = column.DataPropertyName;
-            if (!allResults.Columns.Contains(name)) return;
-            // Las columnas de texto conservan su menu de filtro y orden global.
-            if (allResults.Columns[name].DataType == typeof(string) && name != "Hora_venta" && name != "Fecha_venta") return;
-            bool descending = column.HeaderCell.SortGlyphDirection != SortOrder.Descending;
+            if (!allResults.Columns.Contains(name) || column.SortMode == DataGridViewColumnSortMode.NotSortable
+                || this.textFilters.IsFilterClick(column, e.X)) return;
+            ApplyResultSort(name, sortedColumn != name || !sortDescending);
+        }
+
+        private void ApplyResultSort(string name, bool descending)
+        {
+            if (allResults == null || !allResults.Columns.Contains(name) || bindingPage || !this.btnBuscar.Enabled) return;
             allResults.DefaultView.Sort = SalesColumnFilterState.ColumnName(name) + (descending ? " DESC" : " ASC");
+            sortedColumn = name;
+            sortDescending = descending;
             ShowPage(0);
-            foreach (DataGridViewColumn other in this.dgvVentas.Columns) other.HeaderCell.SortGlyphDirection = SortOrder.None;
-            column.HeaderCell.SortGlyphDirection = descending ? SortOrder.Descending : SortOrder.Ascending;
+        }
+
+        private void RestoreSortGlyph()
+        {
+            // ShowPage recrea las columnas: actualizar solo las que pertenecen al grid actual.
+            foreach (DataGridViewColumn column in this.dgvVentas.Columns)
+                column.HeaderCell.SortGlyphDirection = column.SortMode == DataGridViewColumnSortMode.Programmatic
+                    && column.DataPropertyName == sortedColumn
+                    ? (sortDescending ? SortOrder.Descending : SortOrder.Ascending) : SortOrder.None;
         }
 
         private void EnsureRowNumberColumn()
@@ -637,9 +674,18 @@ namespace CapaPresentacion.Formularios.FormsVentas
             column.Visible = true;
             column.DisplayIndex = 0;
             column.MinimumWidth = 52;
-            column.Width = Math.Max(52, TextRenderer.MeasureText(
-                ResultCount.ToString(SalesCulture), Theme.Small).Width + 24);
-            column.HeaderCell.ToolTipText = "Consecutivo de todos los resultados de la consulta";
+            int numberWidth = 52;
+            foreach (DataGridViewRow row in this.dgvVentas.Rows)
+            {
+                string label = showingRappi || !ShowingCash
+                    ? AssignedNumberLabel(row)
+                    : ResultCount.ToString(SalesCulture);
+                numberWidth = Math.Max(numberWidth, TextRenderer.MeasureText(label, Theme.Small).Width + 24);
+            }
+            column.Width = numberWidth;
+            column.HeaderCell.ToolTipText = showingRappi || !ShowingCash
+                ? "Numero asignado al pedido e impreso en su factura"
+                : "Consecutivo de todos los resultados de la consulta";
             column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             column.HeaderCell.Style.Padding = Padding.Empty;
             column.DefaultCellStyle = new DataGridViewCellStyle
@@ -647,6 +693,14 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 Alignment = DataGridViewContentAlignment.MiddleCenter,
                 Padding = Padding.Empty, ForeColor = Theme.TextMuted, Font = Theme.Small,
             };
+        }
+
+        private string AssignedNumberLabel(DataGridViewRow row)
+        {
+            string field = showingRappi ? "DayNumber" : showingDeliveries ? "DeliveryNumber" : "ReceiptNumber";
+            object number = SalesCell(row, field);
+            return number == null || number == DBNull.Value ? "—"
+                : (showingRappi ? "R - " : "N - ") + Convert.ToString(number, SalesCulture);
         }
 
         private void UpdateRowNumbers()
@@ -677,8 +731,9 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     ResultAmount(row, "Descuento"), ResultAmount(row, "Propina"),
                     Convert.ToString(ResultCell(row, "Tipo_pedido")), hour);
             }
-            this.dashboard.UpdateMetrics(metrics);
-            emptySales.RecordName = "ventas";
+            if (showingDeliveries) this.dashboard.UpdateDeliveries(metrics.Count, metrics.Total);
+            else this.dashboard.UpdateMetrics(metrics);
+            emptySales.RecordName = showingDeliveries ? "ventas por domicilio" : "ventas";
             emptySales.HasQuery = this.dgvVentas.DataSource != null;
             emptySales.Visible = metrics.Count == 0;
             PositionEmptySales();
@@ -687,7 +742,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 ? " | " + this.textFilters.ActiveCount + " filtros de columna activos" : "";
             resultsHint.Text = this.dgvVentas.DataSource == null ? "Selecciona el per\u00edodo y pulsa Buscar."
                 : metrics.Count == 0 ? "No hay ventas para los filtros seleccionados." + filterHint
-                : metrics.Count.ToString("N0", SalesCulture) + " ventas en la consulta \u00b7 Indicadores de todos los resultados \u00b7 Importes en COP \u00b7 Doble clic para ver factura" + filterHint;
+                : metrics.Count.ToString("N0", SalesCulture) + (showingDeliveries ? " ventas por domicilio" : " ventas")
+                    + " en la consulta \u00b7 Importes en COP \u00b7 Doble clic para ver factura" + filterHint;
         }
 
         private void PositionEmptySales()
@@ -1374,7 +1430,9 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 showingIncome = !expenses;
                 showingExpenses = expenses;
                 showingRappi = false;
+                showingDeliveries = false;
                 RefreshRappiKpi(start, end);
+                RefreshProgramSalesKpis(start, end);
                 dashboard.SelectCash(showingIncome, showingExpenses);
                 this.gbOpciones.Visible = false;
                 this.chkEliminarCuentas.Checked = false;
@@ -1595,7 +1653,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
 
                 DataTable tablaVenta =
                     NVentas.BuscarVenta(tipo_busqueda, texto_busqueda, fecha1, fecha2, hora1, hora2);
-                BindResults(tablaVenta);
+                UpdateProgramSalesKpis(tablaVenta);
+                BindResults(SelectProgramSales(tablaVenta, showingDeliveries));
                 RefreshRappiKpi(start, end);
                 // Mismas fuentes y sumas que el Reporte diario; no incluyen ventas ni n\u00f3mina.
                 string from = start.ToString("yyyy-MM-dd");
@@ -1641,13 +1700,51 @@ namespace CapaPresentacion.Formularios.FormsVentas
             }
         }
 
-        // El indicador de Rappi cuenta las ventas leidas de las facturas PDF en el mismo periodo de la consulta.
+        private static DataTable SelectProgramSales(DataTable sales, bool deliveries)
+        {
+            if (sales == null) return null;
+            DataTable selected = sales.Clone();
+            foreach (DataRow row in sales.Rows)
+            {
+                bool isDelivery = sales.Columns.Contains("Tipo_pedido")
+                    && "DOMICILIO".Equals(Convert.ToString(row["Tipo_pedido"]).Trim(), StringComparison.OrdinalIgnoreCase);
+                if (isDelivery == deliveries) selected.ImportRow(row);
+            }
+            return selected;
+        }
+
+        private void UpdateProgramSalesKpis(DataTable sales)
+        {
+            DataTable normal = SelectProgramSales(sales, false);
+            DataTable deliveries = SelectProgramSales(sales, true);
+            SalesMetrics metrics = new SalesMetrics();
+            if (normal != null)
+                foreach (DataRowView row in normal.DefaultView)
+                {
+                    TimeSpan time;
+                    int hour = TimeSpan.TryParse(Convert.ToString(ResultCell(row, "Hora_venta")), out time) ? time.Hours : -1;
+                    metrics.Add(ResultAmount(row, "Total_final"), ResultAmount(row, "Subtotal"),
+                        ResultAmount(row, "Descuento"), ResultAmount(row, "Propina"),
+                        Convert.ToString(ResultCell(row, "Tipo_pedido")), hour);
+                }
+            dashboard.UpdateMetrics(metrics);
+            dashboard.UpdateDeliveries(deliveries?.Rows.Count, deliveries == null ? (decimal?)null : SumCashRecords(deliveries, "Total_final"));
+        }
+
+        private void RefreshProgramSalesKpis(DateTime start, DateTime end)
+        {
+            UpdateProgramSalesKpis(NVentas.BuscarVenta("VENTA FECHAS", "",
+                start.ToString("yyyy-MM-dd"), end.ToString("yyyy-MM-dd"), "00:00", "23:59"));
+        }
+
+        // El indicador de Rappi cuenta las facturas PDF en el mismo periodo de la consulta.
         private void RefreshRappiKpi(DateTime start, DateTime end)
         {
             try
             {
                 DataTable orders = NRappiOrders.ListRange(start, end);
-                this.dashboard.UpdateRappi(orders.Rows.Count, SumCashRecords(orders, "Total"));
+                this.dashboard.UpdateRappi(orders.Rows.Count, SumCashRecords(orders, "Total"),
+                    SumCashRecords(orders, "CashAmount"), SumCashRecords(orders, "OtherPaymentAmount"));
             }
             catch (Exception)
             {
@@ -1676,6 +1773,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 showingIncome = false;
                 showingExpenses = false;
                 showingRappi = true;
+                showingDeliveries = false;
+                RefreshProgramSalesKpis(start, end);
                 dashboard.SelectRappi();
                 this.gbOpciones.Visible = false;
                 this.chkEliminarCuentas.Checked = false;
@@ -1698,11 +1797,11 @@ namespace CapaPresentacion.Formularios.FormsVentas
             }
         }
 
-        // Datos basicos de cada venta de Rappi: fecha, hora, orden, cliente, telefono, forma de pago y total a cobrar.
+        // El valor del pedido se separa entre efectivo y otros medios; la forma de pago corresponde al saldo a cobrar.
         private void StyleRappiColumns()
         {
-            string[] names = { "OrderDate", "OrderTime", "ExternalId", "CustomerName", "Phone", "PaymentMethod", "Total" };
-            string[] captions = { "Fecha", "Hora", "Orden de Rappi", "Cliente", "Tel\u00e9fono", "Forma de pago", "Valor del pedido" };
+            string[] names = { "OrderDate", "OrderTime", "ExternalId", "CustomerName", "Phone", "PaymentMethod", "CashAmount", "OtherPaymentAmount", "Total" };
+            string[] captions = { "Fecha", "Hora", "Orden de Rappi", "Cliente", "Tel\u00e9fono", "Forma de pago", "Efectivo", "Otros medios", "Valor del pedido" };
             foreach (DataGridViewColumn column in this.dgvVentas.Columns)
             {
                 int index = Array.IndexOf(names, column.DataPropertyName);
@@ -1721,13 +1820,18 @@ namespace CapaPresentacion.Formularios.FormsVentas
                     column.DefaultCellStyle.Format = "hh:mm tt";
                     column.DefaultCellStyle.FormatProvider = CultureInfo.InvariantCulture;
                 }
-                if (index == 6)
+                if (index >= 6)
                 {
                     column.DefaultCellStyle.Format = "C0";
                     column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                     column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
                     column.DefaultCellStyle.Font = Theme.BodyBold;
                     column.DefaultCellStyle.ForeColor = Theme.Darken(Theme.Rappi, 0.25f);
+                    column.MinimumWidth = 135;
+                    if (column.DataPropertyName == "CashAmount")
+                        column.HeaderCell.ToolTipText = "TOTAL A COBRAR cuando la forma de pago es efectivo. No incluye lo ya pagado en Rappi.";
+                    else if (column.DataPropertyName == "OtherPaymentAmount")
+                        column.HeaderCell.ToolTipText = "Lo pagado a traves de Rappi mas el saldo a cobrar por datafono, transferencia u otro medio distinto de efectivo.";
                 }
             }
             for (int i = 0; i < names.Length; i++)
@@ -1780,13 +1884,15 @@ namespace CapaPresentacion.Formularios.FormsVentas
             UpdateMovementAction();
             UpdateRowNumbers();
             int count = 0;
-            decimal total = 0;
+            decimal total = 0, cash = 0, other = 0;
             foreach (DataRowView row in FilteredResults())
             {
                 count++;
                 total += ResultAmount(row, "Total");
+                cash += ResultAmount(row, "CashAmount");
+                other += ResultAmount(row, "OtherPaymentAmount");
             }
-            this.dashboard.UpdateRappi(count, total);
+            this.dashboard.UpdateRappi(count, total, cash, other);
             emptySales.HasQuery = this.dgvVentas.DataSource != null;
             emptySales.RecordName = "ventas de Rappi";
             emptySales.Visible = count == 0;
@@ -1873,8 +1979,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
             this.resumenVenta = new ResumenVenta();
             this.containerResumen = new PoperContainer(resumenVenta);
 
-            this.dgvVentas =
-                ConfiguracionDatagridview.ConfigurationGrid(this.dgvVentas);
+            // El ayudante configura la misma tabla y la devuelve; no hace falta reasignarla (ahora es TouchDataGridView).
+            ConfiguracionDatagridview.ConfigurationGrid(this.dgvVentas);
             this.StyleSalesGrid();
             this.Horas();
             this.date1.Value = DateTime.Today;

@@ -21,8 +21,10 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         private static readonly CultureInfo Colombia = CultureInfo.GetCultureInfo("es-CO");
 
         /// <summary>Envia el ticket a la impresora predeterminada, igual que las comandas y facturas.</summary>
-        public static void Print(RappiOrder order)
+        public static void Print(RappiOrder order, int copies = 1)
         {
+            if (copies < 0 || copies > 99) throw new ArgumentOutOfRangeException("copies");
+            if (copies == 0) return;
             if (order == null)
                 throw new ArgumentNullException("order");
 
@@ -33,8 +35,9 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 host.Controls.Add(viewer);
                 Configure(viewer.LocalReport, order);
                 viewer.RefreshReport();
-                using (ControladorImpresion printer = new ControladorImpresion())
-                    printer.Imprimir(viewer.LocalReport);
+                for (int copy = 0; copy < copies; copy++)
+                    using (ControladorImpresion printer = new ControladorImpresion())
+                        printer.Imprimir(viewer.LocalReport);
             }
         }
 

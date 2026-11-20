@@ -1,4 +1,4 @@
-﻿using CapaPresentacion.Formularios.FormsBebidas;
+using CapaPresentacion.Formularios.FormsBebidas;
 using CapaPresentacion.Formularios.FormsClientes;
 using CapaPresentacion.Formularios.FormsDetalles;
 using CapaPresentacion.Formularios.FormsDomicilios;
@@ -323,6 +323,7 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
                 }
                 frm.BringToFront();
                 frm.Activate();
+                this.SetFullSpace(true);
             }
             catch (Exception ex)
             {
@@ -881,67 +882,22 @@ namespace CapaPresentacion.Formularios.FormsPrincipales
         {
             DatosInicioSesion datos = DatosInicioSesion.GetInstancia();
             this.btnUsuario.Text = datos.Nombre_empleado; UpdateFloatingAccount();
-            if (datos.Cargo_empleado.Equals("ADMINISTRADOR"))
-            {
-                this.btnEmpleados.Enabled = true;
-                this.btnClientes.Enabled = true;
-                this.btnPlatos.Enabled = true;
-                this.btnBebidas.Enabled = true;
-                this.btnMesasPedidos.Enabled = true;
-                this.btnInsumos.Enabled = true;
-                this.btnAdministracion.Enabled = true;
-            }
-            else if (datos.Cargo_empleado.Equals("MESERO"))
-            {
-                this.btnEmpleados.Enabled = false;
-                this.btnClientes.Enabled = true;
-                this.btnPlatos.Enabled = false;
-                this.btnBebidas.Enabled = false;
-                this.btnMesasPedidos.Enabled = true;
-                this.btnInsumos.Enabled = false;
-                this.btnAdministracion.Enabled = false;
-            }
-            else if (datos.Cargo_empleado.Equals("CAJERO"))
-            {
-                this.btnEmpleados.Enabled = false;
-                this.btnClientes.Enabled = true;
-                this.btnPlatos.Enabled = false;
-                this.btnBebidas.Enabled = false;
-                this.btnMesasPedidos.Enabled = true;
-                this.btnInsumos.Enabled = false;
-                this.btnAdministracion.Enabled = false;
-            }
-            else if (datos.Cargo_empleado.Equals("COCINERO"))
-            {
-                this.btnEmpleados.Enabled = false;
-                this.btnClientes.Enabled = true;
-                this.btnPlatos.Enabled = false;
-                this.btnBebidas.Enabled = false;
-                this.btnMesasPedidos.Enabled = true;
-                this.btnInsumos.Enabled = false;
-                this.btnAdministracion.Enabled = false;
-            }
-            else if (datos.Cargo_empleado.Equals("DOMICILIARIO"))
-            {
-                // Solo domicilios; Clientes queda activo para elegir cliente y gestionar sus direcciones.
-                this.btnEmpleados.Enabled = false;
-                this.btnClientes.Enabled = true;
-                this.btnPlatos.Enabled = false;
-                this.btnBebidas.Enabled = false;
-                this.btnMesasPedidos.Enabled = false;
-                this.btnInsumos.Enabled = false;
-                this.btnAdministracion.Enabled = false;
-            }
-            else
-            {
-                this.btnEmpleados.Enabled = false;
-                this.btnClientes.Enabled = false;
-                this.btnPlatos.Enabled = false;
-                this.btnBebidas.Enabled = false;
-                this.btnMesasPedidos.Enabled = false;
-                this.btnInsumos.Enabled = false;
-                this.btnAdministracion.Enabled = false;
-            }
+            // Permisos del menu por cargo:
+            //  - DOMICILIARIO: todas las opciones excepto Mesas y pedidos (y ademas ve Domicilios).
+            //  - ADMINISTRADOR, MESERO, CAJERO y COCINERO: todas las opciones; Domicilios solo lo ve el
+            //    administrador y el domiciliario (ver ApplyDeliveryLayout).
+            //  - Cualquier otro cargo: nada habilitado.
+            string cargo = datos.Cargo_empleado;
+            bool delivery = cargo.Equals("DOMICILIARIO");
+            bool allowed = delivery || cargo.Equals("ADMINISTRADOR") || cargo.Equals("MESERO")
+                || cargo.Equals("CAJERO") || cargo.Equals("COCINERO");
+            this.btnEmpleados.Enabled = allowed;
+            this.btnClientes.Enabled = allowed;
+            this.btnPlatos.Enabled = allowed;
+            this.btnBebidas.Enabled = allowed;
+            this.btnMesasPedidos.Enabled = allowed && !delivery;
+            this.btnInsumos.Enabled = allowed;
+            this.btnAdministracion.Enabled = allowed;
 
             this.ApplyDeliveryLayout(datos.Cargo_empleado);
 

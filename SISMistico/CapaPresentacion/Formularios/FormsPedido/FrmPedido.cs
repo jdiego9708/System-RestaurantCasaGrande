@@ -21,11 +21,172 @@
         {
             InitializeComponent();
             this.BuildCatalogPager();
+            this.BuildBannerLine();
+            this.BuildInfoPanel();
+            this.EnableTouchSupport();
             this.txtBusqueda.onKeyPress += TxtBusqueda_OnTextoKeyPress;
             this.btnPlatos.Click += BtnPlatos_Click;
             this.btnBebidas.Click += BtnBebidas_Click;
             this.btnSave.Click += BtnSave_Click;
             this.Load += FrmPedido_Load;
+        }
+
+        private readonly Label bannerSeparator = new Label
+        {
+            Text = "-",
+            AutoSize = true,
+            ForeColor = Color.White,
+            BackColor = Color.Transparent,
+            Font = new Font("Segoe UI", 14.25F, FontStyle.Bold),
+        };
+
+        // El titulo y el dato de entrega/mesero van en una sola linea separados por un guion
+        // ("Nuevo domicilio para X - Entrega: Y"), lo que permite una barra superior mas baja.
+        // Los textos se asignan en varios sitios; la linea se recoloca sola cuando cambia el tamano de cualquiera.
+        private void BuildBannerLine()
+        {
+            this.panelBanner.Controls.Add(this.bannerSeparator);
+            this.lblTitulo.SizeChanged += (s, e) => this.LayoutBannerLine();
+            this.lblMesero.SizeChanged += (s, e) => this.LayoutBannerLine();
+            this.lblMesero.TextChanged += (s, e) => this.LayoutBannerLine();
+            this.LayoutBannerLine();
+        }
+
+        private void LayoutBannerLine()
+        {
+            const int gap = 6;
+            // Sin texto de entrega/mesero no hay nada que separar.
+            bool hasSecond = !string.IsNullOrWhiteSpace(this.lblMesero.Text);
+            this.bannerSeparator.Visible = hasSecond;
+            this.lblMesero.Visible = hasSecond;
+            int height = this.panelBanner.Height;
+            this.lblTitulo.Location = new Point(3, (height - this.lblTitulo.Height) / 2);
+            this.bannerSeparator.Location = new Point(this.lblTitulo.Right + gap, (height - this.bannerSeparator.Height) / 2);
+            this.lblMesero.Location = new Point(this.bannerSeparator.Right + gap, (height - this.lblMesero.Height) / 2);
+        }
+
+        private readonly OrderSummaryBar infoBar = new OrderSummaryBar
+        {
+            Parts = SummaryPart.Date | SummaryPart.Time | SummaryPart.Items,
+            Size = new Size(262, 28),
+        };
+        private readonly OrderSummaryBar totalBar = new OrderSummaryBar
+        {
+            Parts = SummaryPart.Subtotal,
+            Size = new Size(176, 34),
+        };
+        private readonly CapaPresentacion.UI.ModernNumberPicker copiesPicker = new CapaPresentacion.UI.ModernNumberPicker
+        {
+            AccessibleName = "Copias de la comanda",
+            AccessibleDescription = "Cantidad de copias de la comanda. Cero no imprime comanda.",
+        };
+        private readonly CapaPresentacion.UI.ModernNumberPicker clientsPicker = new CapaPresentacion.UI.ModernNumberPicker
+        {
+            AccessibleName = "Numero de clientes",
+            AccessibleDescription = "Cantidad de clientes de la mesa.",
+        };
+        private readonly Label clientsLabel = NewInfoLabel("Clientes");
+        private CapaPresentacion.UI.MinimalIconButton btnSave;
+
+        private static Label NewInfoLabel(string text) => new Label
+        {
+            Text = text,
+            AutoSize = false,
+            TextAlign = ContentAlignment.MiddleRight,
+            Font = CapaPresentacion.UI.Theme.Small,
+            ForeColor = CapaPresentacion.UI.Theme.TextMuted,
+            BackColor = Color.Transparent,
+        };
+
+        // Panel Informacion. Columna derecha: el selector de copias EXACTAMENTE encima del boton Terminar (mismo
+        // ancho y misma columna); a su izquierda, en la banda 1, el rotulo "Copias".
+        //   banda 1: fecha/hora y productos en badges.
+        //   banda 2: subtotal en badge y, solo en mesas, el numero de clientes.
+        // Los controles numericos y el boton miden 38-40 px para poder usarse con el dedo.
+        private void BuildInfoPanel()
+        {
+            GroupBox box = this.groupBox5;
+            int width = box.Width;
+            const int right = 8;
+            const int columnWidth = 104;
+            const int bandOneTop = 19;
+            const int bandTwoTop = 63;
+            int columnLeft = width - right - columnWidth;
+
+            this.infoBar.Location = new Point(8, bandOneTop + 5);
+            this.totalBar.Location = new Point(8, bandTwoTop + 3);
+
+            // Columna derecha: copias arriba, Terminar abajo.
+            this.copiesPicker.Size = new Size(columnWidth, 38);
+            this.copiesPicker.Location = new Point(columnLeft, bandOneTop);
+            this.copiesPicker.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            Label copiesLabel = NewInfoLabel("Copias");
+            copiesLabel.Bounds = new Rectangle(columnLeft - 50, bandOneTop, 46, 38);
+            copiesLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            this.btnSave = new CapaPresentacion.UI.MinimalIconButton
+            {
+                MinimalStyle = true,
+                LucideIcon = "check",
+                Text = "Terminar",
+                AccentColor = CapaPresentacion.UI.Theme.Success,
+                CornerRadius = 10,
+                Font = CapaPresentacion.UI.Theme.BodyBold,
+                Size = new Size(columnWidth, 40),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                AccessibleName = "Terminar",
+                AccessibleDescription = "Confirma el pedido y lo guarda.",
+            };
+            this.btnSave.Location = new Point(columnLeft, bandTwoTop);
+
+            // Clientes (solo mesas) en la banda 2, a la izquierda de Terminar.
+            this.clientsPicker.Size = new Size(80, 38);
+            this.clientsPicker.Location = new Point(columnLeft - 6 - 80, bandTwoTop + 1);
+            this.clientsPicker.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.clientsLabel.Bounds = new Rectangle(this.clientsPicker.Left - 52, bandTwoTop + 1, 48, 38);
+            this.clientsLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            // Las barras de badges llegan hasta justo antes de los controles de la derecha y se estiran con el panel:
+            // la de arriba hasta el rotulo "Copias" y la de abajo hasta el rotulo "Clientes" (o hasta Terminar si
+            // no hay clientes). Los badges reparten entre si el ancho sobrante (OrderSummaryBar.FillWidth).
+            this.infoBar.Width = copiesLabel.Left - 6 - this.infoBar.Left;
+            this.totalBar.Width = this.clientsLabel.Left - 6 - this.totalBar.Left;
+            this.infoBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.totalBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            box.Controls.AddRange(new Control[]
+            {
+                this.infoBar, this.totalBar, this.clientsLabel, this.clientsPicker,
+                copiesLabel, this.copiesPicker, this.btnSave,
+            });
+            this.UpdateSummary(0, 0);
+        }
+
+        // Soporte tactil nativo (mismo mecanismo que Domicilios): los tres paneles se desplazan con un dedo,
+        // con inercia, y los selectores numericos tienen flechas grandes.
+        private void EnableTouchSupport()
+        {
+            this.panelTipo.TouchPanning = true;
+            this.panelResultados.TouchPanning = true;
+            this.panelPedido.TouchPanning = true;
+            this.copiesPicker.StepWidth = 30;
+            this.clientsPicker.StepWidth = 30;
+        }
+
+        private void UpdateSummary(decimal subtotal, int itemCount)
+        {
+            DateTime now = DateTime.Now;
+            this.infoBar.SetSummary(now, subtotal, itemCount);
+            this.totalBar.SetSummary(now, subtotal, itemCount);
+        }
+
+        // Un domicilio o un pedido ya guardado no pregunta por el numero de clientes.
+        private void SetClientsVisible(bool visible)
+        {
+            this.clientsLabel.Visible = visible;
+            this.clientsPicker.Visible = visible;
+            // Sin el selector de clientes, el subtotal aprovecha ese espacio hasta el boton Terminar.
+            int limit = (visible ? this.clientsLabel.Left : this.btnSave.Left) - 6;
+            this.totalBar.Width = limit - this.totalBar.Left;
         }
 
         private DialogResult Comprobacion()
@@ -101,7 +262,7 @@
                 Hora_pedido = DateTime.Now.ToString("HH:mm"),
                 Tipo_pedido = tipo_pedido,
                 Observaciones_pedido = string.Empty,
-                CantidadClientes = (int)this.numericClientes.Value,
+                CantidadClientes = this.clientsPicker.Value,
                 AddressId = this.IsDomicilio ? this.AddressId : null,
             };
 
@@ -358,27 +519,34 @@
                         //    this.frmComandas.AsignarTablas();
                         //}
 
+                        // Copias del selector del panel Informacion: 0 = no se imprime comanda.
+                        int copies = this.copiesPicker.Value;
                         if (this.IsDomicilio)
                         {
                             // Un domicilio no imprime comandas: sale directo la precuenta titulada
                             // "DOMICILIO - FACTURA". El pedido sigue PENDIENTE (imprimir no cambia su estado).
-                            CapaPresentacion.Api.ApiImpresion.ImprimirPrecuenta(id_pedido);
+                            // Al agregar productos a un domicilio ya hecho (IsEditar) sale la factura COMPLETA, con lo
+                            // anterior y lo nuevo, y conserva su numero del dia (no se asigna otro). Si se entra a agregar
+                            // y no se agrega nada, no se imprime.
+                            if (copies > 0 && (!this.IsEditar || listDetalle.Count > 0))
+                                for (int copy = 0; copy < copies; copy++)
+                                    CapaPresentacion.Api.ApiImpresion.ImprimirPrecuenta(id_pedido);
                         }
-                        else if (this.chkPrintComandas.Checked)
+                        else if (copies > 0)
                         {
                             string kind = this.IsDomicilio ? "DOMICILIO " : string.Empty;
                             if (dtBebidas.Rows.Count > 0)
                             {
                                 this.frmComandas.ObtenerReporte("Casa Grande | " + kind + "Bebidas");
                                 this.frmComandas.AsignarTablas(dtBebidas);
-                                this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
+                                this.frmComandas.ImprimirFactura(copies);
                             }
 
                             if (dtPlatos.Rows.Count > 0)
                             {
                                 this.frmComandas.ObtenerReporte("Casa Grande | " + kind + "Platos");
                                 this.frmComandas.AsignarTablas(dtPlatos);
-                                this.frmComandas.ImprimirFactura((int)this.numericComandas.Value);
+                                this.frmComandas.ImprimirFactura(copies);
                             }
                         }
                         MensajeEspera.CloseForm();
@@ -465,8 +633,8 @@
         {
             this.lblTitulo.Text = "Nuevo domicilio para " + this.ClienteSelected?.Nombre_cliente;
             this.lblMesero.Text = "Entrega: " + this.AddressText;
-            this.numericClientes.Value = 1;
-            this.gbNumClientes.Visible = false;
+            this.clientsPicker.Value = 1;
+            this.SetClientsVisible(false);
         }
 
         private void BtnBebidas_Click(object sender, EventArgs e)
@@ -697,26 +865,27 @@
             try
             {
                 this.panelPedido.clearDataSource();
-                StringBuilder info = new StringBuilder();
-                info.Append("Fecha y hora: ").Append(DateTime.Now.ToLongDateString());
-                info.Append(" " + DateTime.Now.ToLongTimeString()).Append(Environment.NewLine);
+                decimal subtotal = 0;
+                int itemCount = 0;
                 if (products != null)
                 {
-                    decimal subtotal = 0;
                     this.panelPedido.BackgroundImage = null;
+                    // Vista de lista: una linea por producto, a todo el ancho util (sin la barra de desplazamiento).
+                    int lineWidth = this.panelPedido.Width - SystemInformation.VerticalScrollBarWidth;
                     List<UserControl> controls = new List<UserControl>();
                     foreach (ProductBinding pr in products)
                     {
                         subtotal += pr.Precio * pr.Cantidad;
-                        ProductoItem productoItem = new ProductoItem
+                        itemCount += pr.Cantidad;
+                        OrderLineRow productoItem = new OrderLineRow
                         {
                             Product = pr,
+                            Width = lineWidth,
                         };
                         productoItem.OnBtnAddClick += ProductoItem_OnBtnAddClick;
                         productoItem.OnBtnRemoveClick += ProductoItem_OnBtnRemoveClick;
                         controls.Add(productoItem);
                     }
-                    info.Append("Subtotal: ").Append(subtotal.ToString("C").Replace(",00", ""));
                     this.panelPedido.AddArrayControl(controls);
 
                     this.threadLoadImages = new Thread(new ThreadStart(() => LoadImagesProductsSelected()))
@@ -728,11 +897,10 @@
                 }
                 else
                 {
-                    info.Append("Subtotal: ").Append(0.ToString("C").Replace(",00", ""));
                     this.panelPedido.BackgroundImage = Resources.SIN_IMAGENES;
                     this.panelPedido.BackgroundImageLayout = ImageLayout.Center;
                 }
-                this.txtInfoPedido.Text = info.ToString();
+                this.UpdateSummary(subtotal, itemCount);
             }
             catch (Exception ex)
             {
@@ -829,7 +997,7 @@
             {
                 foreach (UserControl control in this.panelPedido.controlsUser)
                 {
-                    if (control is ProductoItem product)
+                    if (control is OrderLineRow product)
                     {
                         Image img;
                         string nombreimagen = product.Product.NombreImagen;
@@ -1017,7 +1185,7 @@
 
             this.lblMesero.Text = "Mesero/Empleado " + pedido.Empleado.Nombre_empleado;
             this.lblTitulo.Text = "Adicionar/Remover productos del pedido número " + pedido.Id_pedido;
-            this.numericClientes.Value = pedido.CantidadClientes;
+            this.clientsPicker.Value = pedido.CantidadClientes;
             this.IsEditar = true;
 
             //Obtener el detalle del pedido
@@ -1166,7 +1334,6 @@
             set
             {
                 _informacion = value;
-                this.txtInfoPedido.Text = value;
             }
         }
         public bool IsEditar
@@ -1175,8 +1342,7 @@
             set
             {
                 _isEditar = value;
-                this.numericClientes.Visible = false;
-                this.gbNumClientes.Visible = false;
+                this.SetClientsVisible(false);
             }
         }
         public bool IsDomicilio { get; set; }

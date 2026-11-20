@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace CapaPresentacion.Controles
 {
-    public partial class CustomGridPanel : Panel
+    public partial class CustomGridPanel : CapaPresentacion.UI.TouchScrollPanel
     {
         public List<UserControl> controlsUser;
         public List<Control> controlsDefault;
@@ -145,6 +145,9 @@ namespace CapaPresentacion.Controles
                     int column = 1;
                     int positionX = 0;
                     int positionY = 0;
+                    //Alto de la fila actual: con controles de alturas distintas la siguiente fila
+                    //debe empezar bajo el mas alto, no bajo el primero que la abre
+                    int rowHeight = 0;
                     foreach (Control con in controlsUser)
                     {
                         //Casteo el UserControl
@@ -155,13 +158,15 @@ namespace CapaPresentacion.Controles
                         {
                             user.Location = new Point(positionX, positionY);
                             positionX += user.Width;
+                            rowHeight = Math.Max(rowHeight, user.Height);
 
                             //Sumar uno a la positionColumn
                             column += 1;
                         }
                         else
                         {
-                            positionY += user.Height;
+                            positionY += rowHeight;
+                            rowHeight = user.Height;
                             column = 1;
                             positionX = 0;
 

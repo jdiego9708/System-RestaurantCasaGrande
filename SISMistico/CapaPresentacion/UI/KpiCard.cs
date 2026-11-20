@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using FontAwesome.Sharp;
@@ -17,6 +18,20 @@ namespace CapaPresentacion.UI
         private string value = "0";
         private IconChar icon = IconChar.None;
         private Color accent = Theme.Primary;
+        private string[] paymentTotals;
+
+        public void SetPaymentTotals(decimal? total, decimal? cash, decimal? other)
+        {
+            CultureInfo culture = CultureInfo.GetCultureInfo("es-CO");
+            paymentTotals = new[]
+            {
+                total.HasValue ? total.Value.ToString("C0", culture) : "\u2014",
+                cash.HasValue ? cash.Value.ToString("C0", culture) : "\u2014",
+                other.HasValue ? other.Value.ToString("C0", culture) : "\u2014",
+            };
+            AccessibleDescription = "Total: " + paymentTotals[0] + "; Efectivo: " + paymentTotals[1] + "; Otros medios: " + paymentTotals[2];
+            Invalidate();
+        }
 
         public KpiCard()
         {
@@ -70,6 +85,12 @@ namespace CapaPresentacion.UI
                 g.FillPath(brush, path);
             }
 
+            if (paymentTotals != null)
+            {
+                DrawPaymentSummary(g);
+                return;
+            }
+
             // Circulo translucido con el icono.
             int circle = this.Height - 22;
             Rectangle circleBounds = new Rectangle(14, (this.Height - circle) / 2, circle, circle);
@@ -92,6 +113,32 @@ namespace CapaPresentacion.UI
             TextRenderer.DrawText(g, this.caption, Theme.SmallBold,
                 new Rectangle(textX, this.Height - 24, textWidth, 18), Color.FromArgb(235, 255, 255, 255),
                 TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
+        }
+        private void DrawPaymentSummary(Graphics g)
+        {
+            const TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter
+                | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
+            int countWidth = TextRenderer.MeasureText(value, Theme.Heading, Size.Empty, flags).Width + 2;
+            int titleLeft = 10 + countWidth + 6;
+            int captionWidth = TextRenderer.MeasureText(caption, Theme.SmallBold, Size.Empty, flags).Width + 2;
+            TextRenderer.DrawText(g, value, Theme.Heading, new Rectangle(10, 0, countWidth, Height), Color.White, flags);
+            TextRenderer.DrawText(g, caption, Theme.SmallBold, new Rectangle(titleLeft, 0, captionWidth, Height), Color.White, flags);
+            int badgesLeft = titleLeft + captionWidth + 10;
+            int badgesWidth = Width - badgesLeft - 8;
+            string[] labels = { "Total", "Efectivo", "Otros medios" };
+            for (int index = 0; index < labels.Length; index++)
+            {
+                int left = badgesLeft + index * badgesWidth / 3;
+                int right = badgesLeft + (index + 1) * badgesWidth / 3;
+                Rectangle badge = new Rectangle(left, (Height - 36) / 2, System.Math.Max(8, right - left - 4), 36);
+                using (GraphicsPath path = Theme.RoundedPath(badge, 7))
+                using (SolidBrush glass = new SolidBrush(Color.FromArgb(32, Color.White)))
+                    g.FillPath(glass, path);
+                TextRenderer.DrawText(g, labels[index], Theme.Small, new Rectangle(badge.X + 4, badge.Y + 1, badge.Width - 8, 15), Color.FromArgb(225, Color.White),
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, paymentTotals[index], Theme.SmallBold, new Rectangle(badge.X + 3, badge.Y + 16, badge.Width - 6, 18), Color.White,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
+            }
         }
     }
 }

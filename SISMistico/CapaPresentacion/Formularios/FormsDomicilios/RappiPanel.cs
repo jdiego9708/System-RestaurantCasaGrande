@@ -38,6 +38,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
     public sealed class RappiPanel : Panel
     {
         private const int PageSize = 10;
+        private readonly DeliverySearchBar searchBar;
 
         private readonly ModernTextBox search = new ModernTextBox
         {
@@ -45,7 +46,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             Icon = IconChar.MagnifyingGlass,
             Dock = DockStyle.Fill,
         };
-        private readonly FlowLayoutPanel list = new FlowLayoutPanel
+        private readonly FlowLayoutPanel list = new DeliveryTouchList
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
@@ -64,6 +65,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         private FileSystemWatcher watcher;
         private volatile bool folderChanged;
         private bool importing;
+        private bool forceReload;
         private DateTime lastScan = DateTime.MinValue;
         private int page;
         private int total;
@@ -72,19 +74,29 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         /// <summary>Cuantas ordenes de Rappi hay hoy; el formulario lo usa para el indicador superior.</summary>
         public event EventHandler<int> TodayCountChanged;
+        public event Action<decimal?, decimal?, decimal?> TodayTotalsChanged;
 
         public RappiPanel()
         {
             this.Dock = DockStyle.Fill;
             this.BackColor = Theme.Surface;
 
-            Panel searchRow = new Panel { Dock = DockStyle.Top, Height = 50, Padding = new Padding(0, 4, 0, 4), BackColor = Theme.Surface };
-            searchRow.Controls.Add(this.search);
+            this.searchBar = new DeliverySearchBar(this.search);
+            this.searchBar.ViewChanged += (s, e) =>
+            {
+                this.list.SuspendLayout();
+                try
+                {
+                    foreach (RappiCard card in this.list.Controls.OfType<RappiCard>()) card.CompactView = this.searchBar.CompactView;
+                    this.list.AutoScrollPosition = Point.Empty;
+                }
+                finally { this.list.ResumeLayout(true); }
+            };
 
             TableLayoutPanel pager = new TableLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                Height = 54,
+                Height = 58,
                 ColumnCount = 3,
                 RowCount = 1,
                 BackColor = Theme.Surface,
@@ -105,7 +117,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             this.Controls.Add(this.list);
             this.Controls.Add(pager);
             this.Controls.Add(this.status);
-            this.Controls.Add(searchRow);
+            this.Controls.Add(this.searchBar);
 
             this.list.SizeChanged += (s, e) => this.FitCards();
             this.previous.Click += (s, e) => this.GoTo(this.page - 1);
@@ -151,6 +163,18 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             }
             this.folderChanged = true;
             this.tick.Start();
+            this.OnTick();
+        }
+
+        /// <summary>
+        /// Boton Actualizar de Domicilios: revisa la carpeta ya (sin esperar los 30 s) y reconstruye la lista aunque nada haya cambiado.
+        /// </summary>
+        public void RefreshNow()
+        {
+            if (this.watcher == null && this.folder == null)
+                return;
+            this.folderChanged = true;
+            this.forceReload = true;
             this.OnTick();
         }
 
@@ -225,7 +249,9 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                             parts.Add(result.Duplicates + (result.Duplicates == 1 ? " duplicada apartada" : " duplicadas apartadas") + " en Duplicados");
                         this.status.Text = string.Join(" · ", parts) + " · " + DateTime.Now.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
                     }
-                    this.Reload(result.Imported > 0);
+                    bool forced = this.forceReload;
+                    this.forceReload = false;
+                    this.Reload(result.Imported > 0 || forced);
                 }));
             });
         }
@@ -258,7 +284,13 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 this.previous.Enabled = this.page > 0;
                 this.next.Enabled = this.page < pages - 1;
 
-                int dayCount = string.IsNullOrWhiteSpace(this.search.Text) ? count : NRappiOrders.CountDay(today);
+                // Totales del dia completo: no se limitan a la pagina ni al buscador.
+                System.Data.DataTable dayOrders = NRappiOrders.ListRange(today, today);
+                int dayCount = dayOrders.Rows.Count;
+                var rows = dayOrders.Rows.Cast<System.Data.DataRow>().ToList();
+                Func<string, decimal?> sum = column => rows.Any(row => row.IsNull(column))
+                    ? (decimal?)null : rows.Sum(row => Convert.ToDecimal(row[column]));
+                this.TodayTotalsChanged?.Invoke(sum("Total"), sum("CashAmount"), sum("OtherPaymentAmount"));
                 this.TodayCountChanged?.Invoke(this, dayCount);
 
                 string newSignature = this.page + "|" + this.search.Text + "|" + count + "|" + string.Join(",", orders.Select(o => o.Id));
@@ -296,9 +328,13 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 this.list.Controls.Add(empty);
             }
 
+            // Cada ficha muestra el numero de su factura: las que aun no lo tienen lo reciben en orden de llegada.
+            foreach (RappiOrder order in orders.Where(o => !o.DayNumber.HasValue).OrderBy(o => o.OrderDateTime ?? DateTime.MaxValue))
+                order.DayNumber = NRappiOrders.EnsureDayNumber(order.ExternalId);
+
             foreach (RappiOrder order in orders)
             {
-                RappiCard card = new RappiCard { Width = this.CardWidth() };
+                RappiCard card = new RappiCard { Width = this.CardWidth(), CompactView = this.searchBar.CompactView, GetPrintCopies = () => this.searchBar.Copies };
                 card.Bind(order);
                 this.list.Controls.Add(card);
             }

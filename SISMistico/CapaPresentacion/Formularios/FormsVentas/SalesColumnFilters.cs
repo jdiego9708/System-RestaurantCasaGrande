@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -37,16 +37,18 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private readonly DataGridView grid;
         private readonly Action changed;
         private readonly Func<DataTable> sourceProvider;
+        private readonly Action<string, bool> sortRequested;
         private readonly SalesColumnFilterState state = new SalesColumnFilterState();
         private DataTable source;
         private ToolStripDropDown popup;
         public int ActiveCount => state.Selected.Count;
 
-        public SalesColumnFilters(DataGridView grid, Action changed, Func<DataTable> sourceProvider = null)
+        public SalesColumnFilters(DataGridView grid, Action changed, Func<DataTable> sourceProvider = null, Action<string, bool> sortRequested = null)
         {
             this.grid = grid;
             this.changed = changed;
             this.sourceProvider = sourceProvider;
+            this.sortRequested = sortRequested;
             grid.ColumnHeaderMouseClick += OpenFilter;
             grid.CellPainting += PaintHeader;
             grid.DataSourceChanged += SourceChanged;
@@ -76,7 +78,9 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 if (!IsTextColumn(column)) continue;
                 column.SortMode = DataGridViewColumnSortMode.Programmatic;
                 column.HeaderCell.Style.Padding = new Padding(10, 0, 30, 0);
-                column.HeaderCell.ToolTipText = state.Selected.ContainsKey(column.DataPropertyName)
+                column.HeaderCell.ToolTipText = sortRequested != null
+                    ? "Haz clic en el t\u00edtulo para ordenar; en el icono para filtrar los valores."
+                    : state.Selected.ContainsKey(column.DataPropertyName)
                     ? "Filtro activo. Haz clic para modificarlo o quitarlo."
                     : "Haz clic para buscar y filtrar los valores de esta columna.";
             }
@@ -97,11 +101,14 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 && name != "Hora_venta" && name != "Fecha_venta";
         }
 
+        public bool IsFilterClick(DataGridViewColumn column, int x) =>
+            IsTextColumn(column) && x >= column.Width - 32;
+
         private void OpenFilter(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.ColumnIndex < 0 || e.Button != MouseButtons.Left) return;
             DataGridViewColumn column = grid.Columns[e.ColumnIndex];
-            if (!IsTextColumn(column)) return;
+            if (!IsTextColumn(column) || (sortRequested != null && !IsFilterClick(column, e.X))) return;
             if (popup != null) popup.Dispose();
             string key = column.DataPropertyName;
             List<string> options = SalesColumnFilterState.Values(source, key);
@@ -134,11 +141,19 @@ namespace CapaPresentacion.Formularios.FormsVentas
             };
             panel.Sort += (s, args) =>
             {
-                source.DefaultView.Sort = SalesColumnFilterState.ColumnName(key) + (panel.SortDescending ? " DESC" : " ASC");
-                foreach (DataGridViewColumn other in grid.Columns) other.HeaderCell.SortGlyphDirection = SortOrder.None;
-                column.HeaderCell.SortGlyphDirection = panel.SortDescending ? SortOrder.Descending : SortOrder.Ascending;
-                changed();
-                popup.Close();
+                if (sortRequested != null)
+                    sortRequested(key, panel.SortDescending);
+                else
+                {
+                    source.DefaultView.Sort = SalesColumnFilterState.ColumnName(key) + (panel.SortDescending ? " DESC" : " ASC");
+                    changed();
+                    // El callback puede regenerar las columnas. Buscar la cabecera vigente por su campo.
+                    foreach (DataGridViewColumn current in grid.Columns)
+                        current.HeaderCell.SortGlyphDirection = current.DataPropertyName == key
+                            && current.SortMode == DataGridViewColumnSortMode.Programmatic
+                            ? (panel.SortDescending ? SortOrder.Descending : SortOrder.Ascending) : SortOrder.None;
+                }
+                popup?.Close();
             };
             popup.SizeChanged += (s, args) =>
             {

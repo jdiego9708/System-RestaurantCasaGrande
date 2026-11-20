@@ -23,6 +23,12 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         public string Notes { get; set; }
     }
 
+    public sealed class DeliveryPayment
+    {
+        public string Method { get; set; }
+        public decimal? Amount { get; set; }
+    }
+
     /// <summary>
     /// Lo que la tarjeta muestra ademas del pedido: cliente, entrega y productos. Va aparte de la tarjeta para
     /// que el dibujo no dependa de la base de datos (las pruebas de renderizado la llenan a mano).
@@ -33,9 +39,14 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         public string Phone { get; set; }
         public string Address { get; set; }
         public string Notes { get; set; }
+        /// <summary>Numero del dia de la factura de domicilio (el mismo que sale impreso); null si todavia no tiene.</summary>
+        public int? Number { get; set; }
         public List<DeliveryItem> Items { get; } = new List<DeliveryItem>();
         /// <summary>False si la consulta del detalle fallo; la tarjeta lo avisa en vez de quedar vacia.</summary>
         public bool Loaded { get; set; }
+        public bool PaymentsLoaded { get; set; }
+        public bool PaymentsFinal { get; set; }
+        public List<DeliveryPayment> Payments { get; } = new List<DeliveryPayment>();
 
         public static DeliveryDetails Load(Pedidos order)
         {
@@ -46,6 +57,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 return details;
 
             details.Loaded = true;
+            details.Number = NPedido.GetOrAssignDeliveryNumber(order.Id_pedido);
             details.Notes = Convert.ToString(main.Rows[0]["Observaciones_pedido"]);
 
             // La consulta antigua concatena el telefono al nombre del cliente.
@@ -88,8 +100,26 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         private const int ShadowDepth = 4;
         private const int AccentWidth = 5;
         private const int PaddingX = 16;
-        private const int ButtonHeight = 30;
+        private const int ButtonHeight = 44;
         private const int ExpandWidth = 104;
+        private bool compactView;
+        private bool compactExpanded;
+        private readonly ModernButton moreButton = NewAction(string.Empty, ButtonKind.Outline, IconChar.EllipsisH);
+        private readonly ContextMenuStrip compactMenu = new ContextMenuStrip();
+
+        public bool CompactView
+        {
+            get => compactView;
+            set
+            {
+                if (compactView == value) return;
+                compactView = value;
+                compactExpanded = false;
+                compactMenu.Close();
+                UpdateExpandButton();
+                Relayout();
+            }
+        }
         // Pedidos que el usuario expandio; sobrevive a la reconstruccion de tarjetas en cada refresco.
         private static readonly HashSet<int> ExpandedOrders = new HashSet<int>();
         private const int ChipWidth = 36;
@@ -103,6 +133,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         private readonly ModernButton addButton = NewAction("Agregar", ButtonKind.Primary, IconChar.Plus);
         private readonly ModernButton printButton = NewAction(string.Empty, ButtonKind.Outline, IconChar.Print);
         private readonly ModernButton cancelButton = NewAction(string.Empty, ButtonKind.Danger, IconChar.Xmark);
+        private readonly ModernButton finishButton = NewAction(string.Empty, ButtonKind.Success, IconChar.CircleCheck);
         private readonly ModernButton expandButton = NewAction("Expandir", ButtonKind.Outline, IconChar.ChevronDown);
         private readonly ToolTip toolTip = new ToolTip();
         private readonly Observacion cancelNote = new Observacion();
@@ -119,6 +150,8 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         /// <summary>Se pidio facturar; el emisor es el <see cref="Pedidos"/> de la tarjeta.</summary>
         public event EventHandler BillRequested;
+        /// <summary>Se pidio pasarlo a TERMINADOS ya (como si se agotara el tiempo), sin abrir la ventana de facturar.</summary>
+        public event EventHandler FinishRequested;
         /// <summary>El pedido cambio (cancelado o con productos nuevos) y la lista debe recargarse.</summary>
         public event EventHandler Changed;
 
@@ -138,14 +171,22 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             this.Controls.Add(this.addButton);
             this.Controls.Add(this.printButton);
             this.Controls.Add(this.cancelButton);
+            this.Controls.Add(this.finishButton);
             this.Controls.Add(this.expandButton);
+            this.Controls.Add(this.moreButton);
+            this.moreButton.Visible = false;
+            this.moreButton.AccessibleName = "Acciones del domicilio";
+            this.toolTip.SetToolTip(this.moreButton, "Acciones del domicilio");
+            this.moreButton.Click += (s, e) => this.ShowCompactActions();
             this.expandButton.Click += this.ExpandButton_Click;
 
             this.toolTip.SetToolTip(this.billButton, "Facturar domicilio");
             this.toolTip.SetToolTip(this.addButton, "Agregar platos o bebidas al domicilio");
             this.toolTip.SetToolTip(this.cancelButton, "Cancelar el domicilio");
+            this.toolTip.SetToolTip(this.finishButton, "Pasar a TERMINADOS: se factura ya, como si se acabara el tiempo");
 
             this.billButton.Click += (s, e) => this.BillRequested?.Invoke(this.order, e);
+            this.finishButton.Click += (s, e) => this.FinishRequested?.Invoke(this.order, e);
             this.addButton.Click += this.AddButton_Click;
             this.printButton.Click += this.PrintButton_Click;
             this.cancelButton.Click += this.CancelButton_Click;
@@ -153,15 +194,21 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             this.cancelNote.btnSave.Click += this.CancelNote_Save;
         }
 
+        public Func<int> GetPrintCopies { get; set; }
         public Pedidos Order => this.order;
 
         public DeliveryStage Stage => this.stage;
 
-        private static ModernButton NewAction(string text, ButtonKind kind, IconChar icon) => new ModernButton
+        private string ContactText => string.IsNullOrWhiteSpace(this.details?.Phone)
+            ? string.Empty : "Contacto: " + this.details.Phone.Trim();
+
+        private static ModernButton NewAction(string text, ButtonKind kind, IconChar icon) => new DeliveryTouchButton
         {
             Text = text,
             Kind = kind,
             Icon = icon,
+            MinimalStyle = icon == IconChar.Print || icon == IconChar.ChevronDown || icon == IconChar.EllipsisH,
+            LucideIcon = icon == IconChar.Print ? "printer" : icon == IconChar.ChevronDown ? "chevron-down" : icon == IconChar.EllipsisH ? "ellipsis" : null,
             Font = Theme.BodyBold,
             CornerRadius = 9,
             Size = new Size(ButtonHeight, ButtonHeight),
@@ -181,6 +228,8 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             this.billButton.Visible = pending;
             this.addButton.Visible = pending;
             this.cancelButton.Visible = pending;
+            // Solo mientras se prepara: al agotarse el tiempo el pedido ya esta en TERMINADOS.
+            this.finishButton.Visible = stage == DeliveryStage.Preparing;
             this.toolTip.SetToolTip(this.printButton,
                 pending ? "Imprimir las comandas nuevamente" : "Imprimir la factura nuevamente");
 
@@ -200,6 +249,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
             TimeSpan remaining = DeliveryTiming.Remaining(this.order, now);
             this.ring.Remaining = remaining;
+            if (this.compactView) this.Invalidate();
             Color color = this.ring.CurrentColor;
             if (color != this.accent)
             {
@@ -213,6 +263,13 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         private void ExpandButton_Click(object sender, EventArgs e)
         {
+            if (this.compactView)
+            {
+                this.compactExpanded = !this.compactExpanded;
+                this.UpdateExpandButton();
+                this.Relayout();
+                return;
+            }
             this.expanded = !this.expanded;
             if (this.expanded)
                 ExpandedOrders.Add(this.order.Id_pedido);
@@ -224,8 +281,33 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         private void UpdateExpandButton()
         {
-            this.expandButton.Text = this.expanded ? "Contraer" : "Expandir";
-            this.expandButton.Icon = this.expanded ? IconChar.ChevronUp : IconChar.ChevronDown;
+            bool detail = this.compactView ? this.compactExpanded : this.expanded;
+            this.expandButton.Text = this.compactView ? string.Empty : detail ? "Contraer" : "Expandir";
+            this.expandButton.Icon = detail ? IconChar.ChevronUp : IconChar.ChevronDown;
+            ((MinimalIconButton)this.expandButton).LucideIcon = detail ? "chevron-up" : "chevron-down";
+            this.expandButton.AccessibleName = detail ? "Contraer detalle" : "Expandir detalle";
+            this.toolTip.SetToolTip(this.expandButton, this.expandButton.AccessibleName);
+        }
+
+        private void ShowCompactActions()
+        {
+            this.BuildCompactActions();
+            this.compactMenu.Show(this.moreButton, new Point(0, this.moreButton.Height));
+        }
+
+        private void BuildCompactActions()
+        {
+            while (this.compactMenu.Items.Count > 0) this.compactMenu.Items[0].Dispose();
+            if (this.stage != DeliveryStage.Billed)
+            {
+                this.compactMenu.Items.Add(DeliveryListLayout.Action("Facturar", (s, e) => this.BillRequested?.Invoke(this.order, e)));
+                this.compactMenu.Items.Add(DeliveryListLayout.Action("Agregar productos", this.AddButton_Click));
+                if (this.stage == DeliveryStage.Preparing)
+                    this.compactMenu.Items.Add(DeliveryListLayout.Action("Pasar a terminados", (s, e) => this.FinishRequested?.Invoke(this.order, e)));
+            }
+            this.compactMenu.Items.Add(DeliveryListLayout.Action(this.stage == DeliveryStage.Billed ? "Imprimir factura" : "Imprimir comandas", this.PrintButton_Click));
+            if (this.stage != DeliveryStage.Billed)
+                this.compactMenu.Items.Add(DeliveryListLayout.Action("Cancelar domicilio", this.CancelButton_Click));
         }
 
         private Color AccentForStage()
@@ -267,27 +349,50 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             try
             {
                 this.laidOutWidth = this.Width;
+                bool pendingStage = this.stage != DeliveryStage.Billed;
+                this.billButton.Visible = this.addButton.Visible = this.cancelButton.Visible = pendingStage && !this.compactView;
+                this.finishButton.Visible = this.stage == DeliveryStage.Preparing && !this.compactView;
+                this.printButton.Visible = !this.compactView || !pendingStage;
+                this.moreButton.Visible = this.compactView && pendingStage;
+                this.ring.Visible = this.stage == DeliveryStage.Preparing && !this.compactView;
+                if (this.compactView)
+                {
+                    this.expandButton.Bounds = new Rectangle(this.Width - 100, 14, 44, 44);
+                    this.moreButton.Bounds = new Rectangle(this.Width - 52, 14, 44, 44);
+                    this.printButton.Bounds = new Rectangle(this.Width - 52, 14, 44, 44);
+                    this.Height = this.ComposeCompact(null);
+                    this.Invalidate();
+                    return;
+                }
                 int height = this.Compose(null);
 
                 Rectangle surface = this.SurfaceBounds;
                 int left = surface.X + AccentWidth + PaddingX;
                 int right = surface.Right - PaddingX;
-                this.ring.Location = new Point(right - this.ring.Width, surface.Y + 8);
+                this.ring.Location = new Point(right - this.ring.Width, surface.Y + 8 + (this.ContactText.Length > 0 ? 30 : 0));
 
-                // A la derecha, los dos botones de icono; a la izquierda, los de texto con el ancho que sobre.
+                // Cobrar/agregar/terminar arriba; imprimir/cancelar/expandir abajo. Blancos tactiles de 44 px.
+                bool pending = this.stage != DeliveryStage.Billed;
+                int secondaryTop = this.buttonsTop + (pending ? ButtonHeight + 6 : 0);
                 int x = right - ExpandWidth;
-                this.expandButton.Bounds = new Rectangle(x, this.buttonsTop, ExpandWidth, ButtonHeight);
+                this.expandButton.Bounds = new Rectangle(x, secondaryTop, ExpandWidth, ButtonHeight);
                 x -= 6;
                 if (this.cancelButton.Visible)
                 {
                     x -= ButtonHeight;
-                    this.cancelButton.Location = new Point(x, this.buttonsTop);
+                    this.cancelButton.Location = new Point(x, secondaryTop);
                     x -= 6;
                 }
                 x -= ButtonHeight;
-                this.printButton.Location = new Point(x, this.buttonsTop);
+                this.printButton.Location = new Point(x, secondaryTop);
 
-                int textWidth = Math.Min(116, (x - 12 - left - 6) / 2);
+                int primaryRight = right;
+                if (this.finishButton.Visible)
+                {
+                    this.finishButton.Location = new Point(right - ButtonHeight, this.buttonsTop);
+                    primaryRight -= ButtonHeight + 6;
+                }
+                int textWidth = Math.Min(116, (primaryRight - left - 6) / 2);
                 bool compact = textWidth < 92;
                 this.billButton.Text = compact ? string.Empty : "Facturar";
                 this.addButton.Text = compact ? string.Empty : "Agregar";
@@ -311,6 +416,11 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             // Fuera de la superficie se ve la lista: se limpia con su color, no con el blanco de la tarjeta.
             g.Clear(Theme.ContainerBackground(this));
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            if (this.compactView && this.order != null)
+            {
+                this.ComposeCompact(g);
+                return;
+            }
 
             Rectangle surface = this.SurfaceBounds;
             if (surface.Width < 40 || surface.Height < 40 || this.order == null)
@@ -354,10 +464,27 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             string number = "#" + this.order.Id_pedido;
             Size numberSize = new Size(LineWidth(number, Theme.Heading), 24);
             DrawText(g, number, Theme.Heading, Theme.TextPrimary, new Rectangle(left, y, numberSize.Width + 2, 24), SingleLine);
+            bool hasContact = this.ContactText.Length > 0;
+            if (hasContact)
+            {
+                int contactLeft = left + numberSize.Width + 10;
+                DeliveryListLayout.DrawContact(g, this.details.Phone,
+                    new Rectangle(contactLeft, y, Math.Max(10, right - contactLeft), 24));
+                y += 28;
+            }
+
+            // Numero de la factura ligada (el mismo que lleva impreso arriba a la derecha), junto al numero del pedido.
+            int tagWidth = 0;
+            if (this.details.Number.HasValue)
+            {
+                string tag = "N° " + this.details.Number.Value;
+                tagWidth = LineWidth(tag, Theme.SmallBold) + 18;
+                DrawChip(g, new Rectangle(hasContact ? left : left + numberSize.Width + 10, y + 1, tagWidth, 22), tag);
+            }
 
             string stageText = this.StageText();
             int pillWidth = LineWidth(stageText, Theme.SmallBold) + 32;
-            int pillX = left + numberSize.Width + 10;
+            int pillX = (hasContact ? left : left + numberSize.Width + 10) + (tagWidth > 0 ? tagWidth + 8 : 0);
             if (pillX + pillWidth > left + headWidth)
             {
                 // No cabe al lado del numero: baja a su propia linea.
@@ -378,25 +505,70 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             if (this.expanded)
             {
                 y += this.IconRow(g, IconChar.LocationDot, this.details.Address, left, y, headWidth);
-                y += this.IconRow(g, IconChar.Phone, this.details.Phone, left, y, headWidth);
+                y += DeliveryListLayout.DrawContact(g, this.details.Phone, new Rectangle(left, y, headWidth, 22));
             }
             y += this.IconRow(g, IconChar.Clock, summary, left, y, headWidth);
 
             if (hasRing)
-                y = Math.Max(y, surface.Y + 8 + this.ring.Height + 2);
+                y = Math.Max(y, surface.Y + 8 + (hasContact ? 30 : 0) + this.ring.Height + 2);
 
             if (this.expanded)
                 y = this.ComposeDetail(g, left, right, fullWidth, y + 4);
 
             y += 2;
             this.buttonsTop = y;
+            if (this.stage != DeliveryStage.Billed) y += ButtonHeight + 6;
             y += ButtonHeight + 8;
             return y + ShadowDepth + 1;
+        }
+
+        private int ComposeCompact(Graphics g)
+        {
+            // Misma distribucion en todas las etapas (la de "Terminados"): insignia del numero del dia, #pedido y
+            // cliente en la primera fila; telefono y direccion en la segunda, con el estado a la derecha. En
+            // preparacion ese estado es el temporizador (en el color del anillo).
+            string status;
+            if (this.stage == DeliveryStage.Preparing)
+                status = DeliveryListLayout.Time(this.ring.Remaining);
+            else
+                status = this.stage == DeliveryStage.Billed ? string.Empty : this.StageText();
+            DeliveryListLayout.DrawFinished(g, this.Width, this.accent,
+                this.details.Number.HasValue ? "N" + this.details.Number.Value : null,
+                "#" + this.order.Id_pedido, string.IsNullOrWhiteSpace(this.details.CustomerName) ? "Sin cliente" : this.details.CustomerName.Trim(),
+                this.details.Phone, this.details.Address, status);
+            if (!this.compactExpanded) return DeliveryListLayout.Height;
+            int y = DeliveryListLayout.Height + 4;
+            int right = this.Width - 12;
+            y += DrawText(g, "Pedido #" + this.order.Id_pedido + " · " + FormatOrderTime(this.order.Hora_pedido), Theme.SmallBold,
+                Theme.TextPrimary, new Rectangle(12, y, right - 12, 0), Wrapped) + 6;
+            y += this.IconRow(g, IconChar.LocationDot, this.details.Address, 12, y, right - 12);
+            y += DeliveryListLayout.DrawContact(g, this.details.Phone, new Rectangle(12, y, right - 12, 22));
+            return this.ComposeDetail(g, 12, right, right - 12, y + 4) + 8;
         }
 
         // Productos y observaciones; solo se recorre con la tarjeta expandida.
         private int ComposeDetail(Graphics g, int left, int right, int fullWidth, int y)
         {
+            Divider(g, left, right, y);
+            y += 8;
+
+            y += DrawText(g, this.details.PaymentsLoaded && !this.details.PaymentsFinal ? "Medio de pago previsto" : "Medios de pago", Theme.SmallBold,
+                Theme.TextPrimary, new Rectangle(left, y, fullWidth, 0), Wrapped) + 4;
+            if (!this.details.PaymentsLoaded || this.details.Payments.Count == 0)
+                y += DrawText(g, this.details.PaymentsLoaded ? "Sin medio de pago asignado" : "No se pudieron consultar los medios de pago",
+                    Theme.Small, Theme.TextMuted, new Rectangle(left, y, fullWidth, 0), Wrapped) + 4;
+            foreach (DeliveryPayment payment in this.details.Payments)
+            {
+                string amount = payment.Amount.HasValue ? payment.Amount.Value.ToString("C0", CultureInfo.GetCultureInfo("es-CO")) : string.Empty;
+                int amountWidth = amount.Length == 0 ? 0 : LineWidth(amount, Theme.SmallBold) + 8;
+                int height = Math.Max(22, DrawText(g, payment.Method, Theme.Small, Theme.TextMuted,
+                    new Rectangle(left, y, Math.Max(40, fullWidth - amountWidth), 0), Wrapped));
+                if (amountWidth > 0)
+                    DrawText(g, amount, Theme.SmallBold, Theme.TextPrimary, new Rectangle(right - amountWidth, y, amountWidth, height),
+                        SingleLine | TextFormatFlags.Right);
+                y += height + 2;
+            }
+            y += 4;
             Divider(g, left, right, y);
             y += 8;
 
@@ -540,6 +712,8 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         private void PrintButton_Click(object sender, EventArgs e)
         {
+            int copies = Math.Max(0, Math.Min(99, this.GetPrintCopies?.Invoke() ?? 1));
+            if (copies == 0) return;
             MensajeEspera.ShowWait("Imprimiendo...");
             try
             {
@@ -549,14 +723,14 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                     FrmComandas kitchenTickets = new FrmComandas { Id_pedido = this.order.Id_pedido };
                     kitchenTickets.ObtenerReporte("Casa Grande | DOMICILIO");
                     kitchenTickets.AsignarTablas();
-                    kitchenTickets.ImprimirFactura(1);
+                    kitchenTickets.ImprimirFactura(copies);
                 }
                 else
                 {
                     FrmFacturaFinal invoice = new FrmFacturaFinal { Id_pedido = this.order.Id_pedido };
                     invoice.AsignarReporte();
                     invoice.AsignarTablasCuentaFinal();
-                    invoice.ImprimirFactura(1);
+                    invoice.ImprimirFactura(copies);
                 }
             }
             finally
@@ -567,16 +741,47 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            // Un domicilio en preparacion ya esta guardado y en cocina: cancelarlo exige el codigo maestro y un
+            // comentario obligatorio, igual que quitar un producto ya guardado de un pedido.
+            if (this.stage == DeliveryStage.Preparing)
+            {
+                this.CancelWithAuthorization();
+                return;
+            }
+
             this.cancelNote.txtObservacion.Clear();
             Mensajes.MensajePregunta("¿Está seguro que desea cancelar el domicilio?", "Si", "No", out DialogResult answer);
             if (answer == DialogResult.Yes)
                 this.ShowCancelNote();
         }
 
+        private void CancelWithAuthorization()
+        {
+            string observation;
+            using (CapaPresentacion.Formularios.FormsPedido.FrmRemoveProductAuthorization authorization =
+                new CapaPresentacion.Formularios.FormsPedido.FrmRemoveProductAuthorization(
+                    "Cancelar domicilio", "Cancelar el domicilio #" + this.order.Id_pedido,
+                    "Cancelar domicilio", IconChar.Trash, "Volver"))
+            {
+                if (authorization.ShowDialog(this.FindForm()) != DialogResult.OK)
+                    return;
+                observation = authorization.Observation;
+            }
+
+            string result = NPedido.CancelarPedido(this.order.Id_pedido, observation);
+            if (result.Equals("OK"))
+            {
+                Mensajes.MensajeOkForm("Se canceló correctamente el domicilio");
+                this.Changed?.Invoke(this.order, EventArgs.Empty);
+            }
+            else
+                Mensajes.MensajeInformacion("No se pudo cancelar el domicilio: " + result, "Entendido");
+        }
+
         private void ShowCancelNote()
         {
             this.cancelPopup = new PoperContainer(this.cancelNote);
-            this.cancelPopup.Show(this.cancelButton);
+            this.cancelPopup.Show(this.compactView ? this.moreButton : this.cancelButton);
         }
 
         private void CancelNote_Save(object sender, EventArgs e)
@@ -602,6 +807,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             if (disposing)
             {
                 this.toolTip.Dispose();
+                this.compactMenu.Dispose();
                 this.cancelPopup?.Dispose();
                 this.cancelNote.Dispose();
             }

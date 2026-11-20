@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using CapaEntidades.Models;
+using CapaEntidades.Helpers;
 using CapaNegocio;
 using CapaPresentacion.Formularios.FormsPedido;
 using CapaPresentacion.UI;
@@ -46,8 +47,17 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         private readonly RappiPanel rappiPanel = new RappiPanel();
         private readonly FlowLayoutPanel listPreparing = NewList();
         private readonly FlowLayoutPanel listFinished = NewList();
-        private readonly Badge preparingCount = NewCounter(BadgeKind.Danger);
-        private readonly Badge finishedCount = NewCounter(BadgeKind.Success);
+        // Un buscador por panel, igual al del panel RAPPI.
+        private readonly ModernTextBox searchPreparing = NewSearch();
+        private readonly ModernTextBox searchFinished = NewSearch();
+        private readonly DeliverySearchBar preparingSearchBar;
+        private readonly DeliverySearchBar finishedSearchBar;
+        private readonly Timer searchDelay = new Timer { Interval = 350 };
+        private List<Pedidos> lastPreparing = new List<Pedidos>();
+        private List<Pedidos> lastFinished = new List<Pedidos>();
+        private readonly Dictionary<int, DeliveryDetails> detailsCache = new Dictionary<int, DeliveryDetails>();
+        private Dictionary<int, DataRow[]> paymentRows = new Dictionary<int, DataRow[]>();
+        private bool paymentsAvailable;
         private readonly Label lblSubtitle = new Label();
         private readonly Timer refreshTimer = new Timer { Interval = 10000 };
         // Mueve las cuentas regresivas de las tarjetas; no consulta la base salvo cuando una se agota.
@@ -58,6 +68,13 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
         private FrmDeliveries()
         {
+            this.preparingSearchBar = new DeliverySearchBar(this.searchPreparing);
+            this.finishedSearchBar = new DeliverySearchBar(this.searchFinished);
+            this.preparingSearchBar.ViewChanged += (s, e) => SetListView(this.listPreparing, this.preparingSearchBar.CompactView);
+            this.finishedSearchBar.ViewChanged += (s, e) => SetListView(this.listFinished, this.finishedSearchBar.CompactView);
+            this.kpiPreparing.SetPaymentTotals(0, 0, 0);
+            this.kpiFinished.SetPaymentTotals(0, 0, 0);
+            this.kpiRappi.SetPaymentTotals(0, 0, 0);
             this.Text = "Domicilios";
             this.BackColor = Theme.Background;
             this.Font = Theme.Body;
@@ -71,22 +88,26 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             root.Controls.Add(this.BuildHeader());
             this.Controls.Add(root);
 
+            this.searchPreparing.TextChanged += (s, e) => { this.searchDelay.Stop(); this.searchDelay.Start(); };
+            this.searchFinished.TextChanged += (s, e) => { this.searchDelay.Stop(); this.searchDelay.Start(); };
+            this.searchDelay.Tick += (s, e) => { this.searchDelay.Stop(); this.Refill(); };
             this.listPreparing.SizeChanged += (s, e) => FitCards(this.listPreparing);
             this.listFinished.SizeChanged += (s, e) => FitCards(this.listFinished);
             this.Load += (s, e) => this.RefreshDeliveries(true);
             this.VisibleChanged += (s, e) => { if (this.Visible) this.RefreshDeliveries(false); };
             // El panel RAPPI lee solo las facturas PDF de su carpeta; el indicador superior cuenta las ordenes de hoy.
             this.rappiPanel.TodayCountChanged += (s, count) => this.kpiRappi.Value = count.ToString();
+            this.rappiPanel.TodayTotalsChanged += (total, cash, other) => this.kpiRappi.SetPaymentTotals(total, cash, other);
             this.Load += (s, e) => this.rappiPanel.Start();
             this.refreshTimer.Tick += (s, e) => { if (this.Visible) this.RefreshDeliveries(false); };
             this.refreshTimer.Start();
             this.clockTimer.Tick += this.ClockTimer_Tick;
             this.clockTimer.Start();
-            this.FormClosed += (s, e) => { this.refreshTimer.Dispose(); this.clockTimer.Dispose(); this.rappiPanel.Stop(); };
+            this.FormClosed += (s, e) => { this.refreshTimer.Dispose(); this.clockTimer.Dispose(); this.searchDelay.Dispose(); this.rappiPanel.Stop(); };
         }
 
         #region CONSTRUCCION DE LA PANTALLA
-        private static FlowLayoutPanel NewList() => new FlowLayoutPanel
+        private static FlowLayoutPanel NewList() => new DeliveryTouchList
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
@@ -96,13 +117,11 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             Padding = new Padding(0, 4, 0, 4),
         };
 
-        // Contador de pedidos junto al titulo de cada columna.
-        private static Badge NewCounter(BadgeKind kind) => new Badge
+        private static ModernTextBox NewSearch() => new ModernTextBox
         {
-            Kind = kind,
-            Text = "0",
-            Size = new Size(40, 24),
-            Anchor = AnchorStyles.Top | AnchorStyles.Right,
+            PlaceholderText = "Buscar por pedido, cliente, teléfono, dirección o producto",
+            Icon = IconChar.MagnifyingGlass,
+            Dock = DockStyle.Fill,
         };
 
         private Control BuildHeader()
@@ -122,10 +141,15 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 Text = "Actualizar",
                 Kind = ButtonKind.Outline,
                 Icon = IconChar.ArrowsRotate,
-                Size = new Size(140, 40),
+                Size = new Size(140, 44),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
             };
-            refresh.Click += (s, e) => this.RefreshDeliveries(true);
+            refresh.Click += (s, e) =>
+            {
+                this.RefreshDeliveries(true);
+                // Tambien el panel RAPPI: revisa la carpeta de facturas y vuelve a leer las ordenes de hoy.
+                this.rappiPanel.RefreshNow();
+            };
 
             FlowLayoutPanel actions = new FlowLayoutPanel
             {
@@ -139,7 +163,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 Text = "REALIZAR PEDIDO",
                 Kind = ButtonKind.Success,
                 Icon = IconChar.Plus,
-                Size = new Size(210, 40),
+                Size = new Size(210, 44),
                 Margin = new Padding(0, 0, 12, 0),
             };
             newOrder.Click += this.BtnNewOrder_Click;
@@ -159,7 +183,7 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             TableLayoutPanel row = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
-                Height = 72,
+                Height = 64,
                 ColumnCount = 3,
                 RowCount = 1,
             };
@@ -183,53 +207,20 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 3));
 
             columns.Controls.Add(BuildColumn("EN PREPARACIÓN", IconChar.Fire, Theme.Danger, this.listPreparing,
-                this.preparingCount), 0, 0);
+                this.preparingSearchBar), 0, 0);
             columns.Controls.Add(BuildColumn("TERMINADOS", IconChar.CircleCheck, Theme.Success, this.listFinished,
-                this.finishedCount), 1, 0);
+                this.finishedSearchBar), 1, 0);
             columns.Controls.Add(BuildRappiColumn(), 2, 0);
             return columns;
         }
 
-        private static Control Header(string title, IconChar icon, Color color, Badge counter = null)
-        {
-            Panel header = new Panel { Dock = DockStyle.Top, Height = 40, BackColor = Theme.Surface };
-            if (counter != null)
-            {
-                // Se agrega antes que el titulo para que quede por encima de su etiqueta, que es mas ancha.
-                counter.Location = new Point(header.Width - counter.Width - 4, 8);
-                header.Controls.Add(counter);
-            }
-            IconPictureBox glyph = new IconPictureBox
-            {
-                IconChar = icon,
-                IconColor = color,
-                IconSize = 22,
-                BackColor = Theme.Surface,
-                Size = new Size(28, 28),
-                Location = new Point(2, 8),
-            };
-            Label label = new Label
-            {
-                Text = title,
-                AutoSize = false,
-                Location = new Point(34, 0),
-                Size = new Size(300, 40),
-                TextAlign = ContentAlignment.MiddleLeft,
-                BackColor = Theme.Surface,
-            };
-            label.StyleLabel(LabelKind.Heading);
-            header.Controls.Add(label);
-            header.Controls.Add(glyph);
-            return header;
-        }
-
         private static ModernCard BuildColumn(string title, IconChar icon, Color color, FlowLayoutPanel list,
-            Badge counter)
+            DeliverySearchBar search)
         {
             ModernCard card = new ModernCard { Dock = DockStyle.Fill, AccentColor = color };
             list.BackColor = Theme.Surface;
             card.Controls.Add(list);
-            card.Controls.Add(Header(title, icon, color, counter));
+            card.Controls.Add(search);
             return card;
         }
 
@@ -237,7 +228,6 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
         {
             ModernCard card = new ModernCard { Dock = DockStyle.Fill, AccentColor = Theme.Rappi };
             card.Controls.Add(this.rappiPanel);
-            card.Controls.Add(Header("RAPPI", IconChar.Motorcycle, Theme.Rappi));
             return card;
         }
         #endregion
@@ -287,21 +277,32 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
 
                 this.kpiPreparing.Value = preparing.Count.ToString();
                 this.kpiFinished.Value = finished.Count.ToString();
-                this.preparingCount.Text = preparing.Count.ToString();
-                this.finishedCount.Text = finished.Count.ToString();
                 this.lblSubtitle.Text = now.ToString("dddd d 'de' MMMM", new CultureInfo("es-CO"))
                     + "  ·  actualizado " + now.ToString("h:mm tt", CultureInfo.InvariantCulture)
                     + "  ·  preparación " + (int)DeliveryTiming.PreparationTime.TotalMinutes + " min";
 
-                // La huella separa los dos paneles: un pedido que cambia de panel la cambia aunque siga PENDIENTE.
+                try
+                {
+                    DataTable totals = NVentas.GetDeliveryPaymentTotals(now.Date);
+                    UpdatePanelTotals(this.kpiPreparing, preparing, totals);
+                    UpdatePanelTotals(this.kpiFinished, finished, totals);
+                }
+                catch
+                {
+                    this.kpiPreparing.SetPaymentTotals(null, null, null);
+                    this.kpiFinished.SetPaymentTotals(null, null, null);
+                }
+                string paymentsSignature = this.CapturePaymentDetails(now.Date);
+                // La huella separa los dos paneles e incluye correcciones de pagos sin cambiar el estado del pedido.
                 string newSignature = string.Join("|", preparing.Select(p => p.Id_pedido + p.Estado_pedido))
-                    + "#" + string.Join("|", finished.Select(p => p.Id_pedido + p.Estado_pedido));
+                    + "#" + string.Join("|", finished.Select(p => p.Id_pedido + p.Estado_pedido)) + "#" + paymentsSignature;
                 if (!force && newSignature == this.signature)
                     return;
                 this.signature = newSignature;
 
-                this.Fill(this.listPreparing, preparing, "No hay domicilios en preparación", now);
-                this.Fill(this.listFinished, finished, "Aún no hay domicilios terminados hoy", now);
+                this.lastPreparing = preparing;
+                this.lastFinished = finished;
+                this.Refill();
             }
             catch (Exception ex)
             {
@@ -314,6 +315,98 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
                 this.refreshTimer.Start();
                 this.clockTimer.Start();
             }
+        }
+
+        private static void UpdatePanelTotals(KpiCard card, List<Pedidos> orders, DataTable totals)
+        {
+            HashSet<int> ids = new HashSet<int>(orders.Select(order => order.Id_pedido));
+            List<DataRow> rows = totals.Rows.Cast<DataRow>().Where(row => ids.Contains(Convert.ToInt32(row["Id_pedido"]))).ToList();
+            Func<string, decimal?> sum = column => rows.Count != ids.Count || rows.Any(row => row.IsNull(column))
+                ? (decimal?)null : rows.Sum(row => Convert.ToDecimal(row[column]));
+            card.SetPaymentTotals(sum("Total"), sum("CashAmount"), sum("OtherPaymentAmount"));
+        }
+        // Rellena los dos paneles con lo ultimo consultado, aplicando el texto de cada buscador.
+        private void Refill()
+        {
+            DateTime now = DateTime.Now;
+            // El detalle (cliente, telefono, productos y numero de factura) se consulta una vez por pedido y se recuerda mientras
+            // siga en la lista. Se carga del mas antiguo al mas nuevo para que un pedido sin numero (anterior a la numeracion)
+            // reciba el siguiente en orden de llegada.
+            foreach (Pedidos order in this.lastPreparing.Concat(this.lastFinished).OrderBy(p => p.Id_pedido))
+                this.DetailsOf(order);
+            HashSet<int> ids = new HashSet<int>(this.lastPreparing.Concat(this.lastFinished).Select(p => p.Id_pedido));
+            foreach (int stale in this.detailsCache.Keys.Where(k => !ids.Contains(k)).ToList())
+                this.detailsCache.Remove(stale);
+            this.Fill(this.listPreparing, this.Filter(this.lastPreparing, this.searchPreparing.Text),
+                string.IsNullOrWhiteSpace(this.searchPreparing.Text) ? "No hay domicilios en preparación" : "Ningún pedido coincide con la búsqueda", now);
+            this.Fill(this.listFinished, this.Filter(this.lastFinished, this.searchFinished.Text),
+                string.IsNullOrWhiteSpace(this.searchFinished.Text) ? "Aún no hay domicilios terminados hoy" : "Ningún pedido coincide con la búsqueda", now);
+        }
+
+        private DeliveryDetails DetailsOf(Pedidos order)
+        {
+            DeliveryDetails details;
+            if (!this.detailsCache.TryGetValue(order.Id_pedido, out details) || !details.Loaded)
+            {
+                details = DeliveryDetails.Load(order);
+                this.detailsCache[order.Id_pedido] = details;
+            }
+            details.PaymentsLoaded = this.paymentsAvailable;
+            details.PaymentsFinal = false;
+            details.Payments.Clear();
+            if (this.paymentRows.TryGetValue(order.Id_pedido, out DataRow[] rows))
+                foreach (DataRow row in rows)
+                {
+                    details.PaymentsFinal |= Convert.ToBoolean(row["IsFinal"]);
+                    string method = Convert.ToString(row["PaymentMethod"]).Trim();
+                    if (method.Length > 0)
+                        details.Payments.Add(new DeliveryPayment
+                        {
+                            Method = method,
+                            Amount = row.IsNull("Amount") ? (decimal?)null : Convert.ToDecimal(row["Amount"]),
+                        });
+                }
+            return details;
+        }
+
+        private string CapturePaymentDetails(DateTime day)
+        {
+            try
+            {
+                DataTable table = NVentas.GetDeliveryPayments(day);
+                this.paymentRows = table.AsEnumerable().GroupBy(row => Convert.ToInt32(row["Id_pedido"]))
+                    .ToDictionary(group => group.Key, group => group.ToArray());
+                this.paymentsAvailable = true;
+                return string.Join("|", table.AsEnumerable().Select(row => string.Join(";", row.ItemArray.Select(
+                    value => Convert.ToString(value, CultureInfo.InvariantCulture)))));
+            }
+            catch
+            {
+                this.paymentRows.Clear();
+                this.paymentsAvailable = false;
+                return "PAYMENTS_UNAVAILABLE";
+            }
+        }
+
+        // Sin distinguir mayusculas ni tildes; busca en el numero, el cliente, el telefono, la direccion, las notas y los productos.
+        private List<Pedidos> Filter(List<Pedidos> orders, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return orders;
+            string needle = text.Trim();
+            bool numbered = OrderNumberSearch.TryParse(needle, 'N', out int number);
+            CompareInfo compare = CultureInfo.GetCultureInfo("es-CO").CompareInfo;
+            CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+            Func<string, bool> has = value => !string.IsNullOrEmpty(value) && compare.IndexOf(value, needle, options) >= 0;
+            return orders.Where(order =>
+            {
+                if (numbered) return this.DetailsOf(order).Number == number;
+                if (has(Convert.ToString(order.Id_pedido)))
+                    return true;
+                DeliveryDetails d = this.DetailsOf(order);
+                return has(d.CustomerName) || has(d.Phone) || has(d.Address) || has(d.Notes)
+                    || d.Items.Any(i => has(i.Name) || has(i.Notes));
+            }).ToList();
         }
 
         // Cada segundo avanza las cuentas regresivas; cuando una se agota, el pedido pasa a TERMINADOS.
@@ -355,13 +448,30 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             foreach (Pedidos order in orders)
             {
                 // La tarjeta ocupa el ancho de la columna y calcula sola su altura.
-                DeliveryCard card = new DeliveryCard { Width = CardWidth(list) };
-                card.Bind(order, DeliveryDetails.Load(order), DeliveryTiming.StageOf(order, now), now);
+                DeliveryCard card = new DeliveryCard
+                {
+                    Width = CardWidth(list),
+                    CompactView = list == this.listPreparing ? this.preparingSearchBar.CompactView : this.finishedSearchBar.CompactView,
+                    GetPrintCopies = () => list == this.listPreparing ? this.preparingSearchBar.Copies : this.finishedSearchBar.Copies,
+                };
+                card.Bind(order, this.DetailsOf(order), DeliveryTiming.StageOf(order, now), now);
                 card.BillRequested += this.Card_OnBtnNextClick;
+                card.FinishRequested += this.Card_OnFinishClick;
                 card.Changed += (s, e) => this.RefreshDeliveries(true);
                 list.Controls.Add(card);
             }
             list.ResumeLayout();
+        }
+
+        private static void SetListView(FlowLayoutPanel list, bool compact)
+        {
+            list.SuspendLayout();
+            try
+            {
+                foreach (DeliveryCard card in list.Controls.OfType<DeliveryCard>()) card.CompactView = compact;
+                list.AutoScrollPosition = Point.Empty;
+            }
+            finally { list.ResumeLayout(true); }
         }
 
         // Al cambiar el tamano de la ventana las tarjetas siguen el ancho de su columna.
@@ -420,6 +530,31 @@ namespace CapaPresentacion.Formularios.FormsDomicilios
             billing.ObtenerPedido(order.Id_pedido);
             billing.OnFacturarPedidoSuccess += this.Billing_OnFacturarPedidoSuccess;
             billing.Show();
+        }
+
+        // Pasa un pedido en preparacion a TERMINADOS ya: lo mismo que ocurre al agotarse el tiempo (venta con la forma de
+        // pago elegida al crearlo y estado Facturado), sin pasar por la ventana de Facturar pedido.
+        private void Card_OnFinishClick(object sender, EventArgs e)
+        {
+            Pedidos order = (Pedidos)sender;
+            if (!"PENDIENTE".Equals(order.Estado_pedido))
+                return;
+            Mensajes.MensajePregunta("¿Pasar el domicilio #" + order.Id_pedido + " a TERMINADOS? Se factura ahora.",
+                "Terminar", "Cancelar", out DialogResult answer);
+            if (answer != DialogResult.Yes)
+                return;
+            try
+            {
+                if (!DeliveryAutoBilling.TryBill(order))
+                    Mensajes.MensajeInformacion("No se pudo facturar el domicilio #" + order.Id_pedido
+                        + ". Revise que tenga productos y vuelva a intentarlo.", "Entendido");
+            }
+            catch (Exception ex)
+            {
+                Mensajes.MensajeErrorCompleto("FrmDeliveries", "Card_OnFinishClick",
+                    "No se pudo pasar el domicilio a terminados", ex.Message);
+            }
+            this.RefreshDeliveries(true);
         }
 
         private void Billing_OnFacturarPedidoSuccess(object sender, EventArgs e)

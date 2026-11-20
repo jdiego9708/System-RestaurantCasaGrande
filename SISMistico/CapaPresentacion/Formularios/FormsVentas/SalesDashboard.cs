@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -46,7 +46,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
     internal sealed class SalesDashboard : TableLayoutPanel
     {
         private const int KpiCount = 9;
-        private const int KpiRowHeight = 78;
+        private const int WideColumns = 10;
+        private const int KpiRowHeight = 136;
         private const int ChartsHeight = 164;
         private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("es-CO");
         private readonly Label[] values = new Label[KpiCount];
@@ -57,38 +58,63 @@ namespace CapaPresentacion.Formularios.FormsVentas
         private readonly TableLayoutPanel charts = new TableLayoutPanel();
         private readonly ModernButton chartsButton = new ModernButton();
         public ModernButton ChartsButton => chartsButton;
+        private readonly Label rappiCash = new SalesMetricBadge { Caption = "Efectivo", Tint = Theme.Success };
+        private readonly Label rappiOther = new SalesMetricBadge { Caption = "Otros medios", Tint = Theme.Info };
         private bool chartsExpanded;
         private readonly ModernCard[] kpiCards = new ModernCard[KpiCount];
-        private const int RappiCard = 8;
+        private const int RappiCard = 7;
+        private const int DeliveryCard = 8;
         public event EventHandler IncomeRequested;
         public event EventHandler ExpensesRequested;
         public event EventHandler SalesRequested;
         public event EventHandler RappiRequested;
+        public event EventHandler DeliveriesRequested;
 
-        // Ventas, ingresos, egresos y Rappi son las cuatro vistas del listado: solo una queda resaltada.
+        // Ventas, ingresos, egresos, Rappi y domicilios comparten el listado: solo una vista queda resaltada.
         public void SelectCash(bool income, bool expenses)
         {
             kpiCards[2].AccentColor = income ? Theme.Primary : Color.Empty;
             kpiCards[3].AccentColor = expenses ? Theme.Primary : Color.Empty;
             kpiCards[RappiCard].AccentColor = Color.Empty;
+            kpiCards[DeliveryCard].AccentColor = Color.Empty;
+            kpiCards[0].AccentColor = income || expenses ? Color.Empty : Theme.Primary;
             kpiCards[1].AccentColor = income || expenses ? Color.Empty : Theme.Primary;
         }
 
         public void SelectRappi()
         {
             kpiCards[1].AccentColor = Color.Empty;
+            kpiCards[0].AccentColor = Color.Empty;
+            kpiCards[DeliveryCard].AccentColor = Color.Empty;
             kpiCards[2].AccentColor = Color.Empty;
             kpiCards[3].AccentColor = Color.Empty;
             kpiCards[RappiCard].AccentColor = Theme.Primary;
         }
 
+        public void SelectDeliveries()
+        {
+            SelectRappi();
+            kpiCards[RappiCard].AccentColor = Color.Empty;
+            kpiCards[DeliveryCard].AccentColor = Theme.Primary;
+        }
+
+        public void UpdateDeliveries(int? count, decimal? total)
+        {
+            values[DeliveryCard].Text = total.HasValue ? total.Value.ToString("C0", Culture) : "—";
+            details[DeliveryCard].Text = count.HasValue
+                ? count.Value.ToString("N0", Culture) + (count.Value == 1 ? " domicilio" : " domicilios")
+                : "Sin datos de domicilios";
+        }
+
         /// <summary>Ventas de Rappi del periodo: cantidad y valor total en el mismo indicador. Null = sin datos.</summary>
-        public void UpdateRappi(int? count, decimal? total)
+        public void UpdateRappi(int? count, decimal? total, decimal? cash = null, decimal? other = null)
         {
             values[RappiCard].Text = total.HasValue ? total.Value.ToString("C0", Culture) : "—";
             details[RappiCard].Text = count.HasValue
-                ? count.Value.ToString("N0", Culture) + (count.Value == 1 ? " venta" : " ventas") + " por Rappi"
+                ? count.Value.ToString("N0", Culture)
                 : "Sin datos de Rappi";
+            rappiCash.Text = cash.HasValue ? cash.Value.ToString("C0", Culture) : "\u2014";
+            rappiOther.Text = other.HasValue ? other.Value.ToString("C0", Culture) : "\u2014";
         }
 
         private static void WireKpiClick(Control control, EventHandler handler)
@@ -101,17 +127,19 @@ namespace CapaPresentacion.Formularios.FormsVentas
         public SalesDashboard()
         {
             Dock = DockStyle.Top;
-            ColumnCount = KpiCount;
-            RowCount = 2;
+            ColumnCount = WideColumns;
+            RowCount = 3;
             Margin = Padding.Empty;
-            for (int i = 0; i < KpiCount; i++) ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / KpiCount));
+            for (int i = 0; i < WideColumns; i++) ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / WideColumns));
             RowStyles.Add(new RowStyle(SizeType.Absolute, KpiRowHeight));
             RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
+            RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
             string[] titles = { "VENTAS", "TOTAL VENDIDO", "TOTAL INGRESOS", "TOTAL EGRESOS",
-                "TICKET PROMEDIO", "DESCONTADO", "CON DESCUENTO", "PROPINAS", "RAPPI" };
+                "TICKET PROMEDIO", "TOTAL DE DESCUENTOS", "PROPINAS", "RAPPI", "DOMICILIOS" };
             for (int i = 0; i < titles.Length; i++)
             {
-                // Reservar el borde, la sombra y las esquinas antes de distribuir el texto.
+                Color[] accents = { Theme.Primary, Theme.Success, Theme.Info, Theme.Danger,
+                    Theme.Primary, Theme.Warning, Theme.Success, Theme.Rappi, Theme.Info };
                 ModernCard card = new ModernCard
                 {
                     Dock = DockStyle.Fill, Padding = new Padding(12, 10, 12, 10),
@@ -119,27 +147,52 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 };
                 TableLayoutPanel content = new TableLayoutPanel
                 {
-                    Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3,
+                    Dock = DockStyle.Fill, ColumnCount = 1, RowCount = i == RappiCard ? 2 : 3,
                     Margin = Padding.Empty, Padding = Padding.Empty, BackColor = Color.Transparent,
                 };
                 content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-                content.RowStyles.Add(new RowStyle(SizeType.Percent, 30));
-                content.RowStyles.Add(new RowStyle(SizeType.Percent, 40));
-                content.RowStyles.Add(new RowStyle(SizeType.Percent, 30));
-                Label title = new Label { Text = titles[i], Font = Theme.Small, ForeColor = Theme.TextMuted };
-                values[i] = new Label { Font = Theme.BodyBold, ForeColor = i == 1 || i == 2 ? Theme.Success : i == RappiCard ? Theme.Rappi : Theme.TextPrimary };
-                details[i] = new Label { Font = Theme.Small, ForeColor = Theme.TextMuted };
-                Label[] lines = { title, values[i], details[i] };
-                for (int line = 0; line < lines.Length; line++)
+                content.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+                content.RowStyles.Add(new RowStyle(SizeType.Percent, i == RappiCard ? 100 : 48));
+                if (i != RappiCard) content.RowStyles.Add(new RowStyle(SizeType.Percent, 52));
+                Label title = new Label
                 {
-                    lines[line].Dock = DockStyle.Fill;
-                    lines[line].Margin = Padding.Empty;
-                    lines[line].BackColor = Color.Transparent;
-                    lines[line].BorderStyle = BorderStyle.None;
-                    lines[line].AutoSize = false;
-                    lines[line].AutoEllipsis = true;
-                    lines[line].TextAlign = ContentAlignment.MiddleLeft;
-                    content.Controls.Add(lines[line], 0, line);
+                    Text = titles[i] == "TOTAL DE DESCUENTOS" ? "TOTAL DE\nDESCUENTOS"
+                        : titles[i] == "TICKET PROMEDIO" ? "TICKET\nPROMEDIO" : titles[i],
+                    Font = Theme.SmallBold, ForeColor = Theme.TextMuted,
+                    Dock = DockStyle.Fill, Margin = Padding.Empty, BackColor = Color.Transparent,
+                    TextAlign = ContentAlignment.MiddleLeft, AutoEllipsis = true,
+                };
+                values[i] = new SalesMetricBadge { Tint = accents[i], Font = Theme.BodyBold };
+                details[i] = new SalesMetricBadge { Tint = Theme.Neutral, Font = Theme.Small, Subtle = true };
+                content.Controls.Add(title, 0, 0);
+                if (i == RappiCard)
+                {
+                    ((SalesMetricBadge)values[i]).Caption = "Total vendido";
+                    ((SalesMetricBadge)details[i]).Caption = "Ventas";
+                    details[i].Font = Theme.BodyBold;
+                    TableLayoutPanel grid = new TableLayoutPanel
+                    {
+                        Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2,
+                        Margin = Padding.Empty, Padding = Padding.Empty, BackColor = Color.Transparent,
+                    };
+                    for (int badgeColumn = 0; badgeColumn < 2; badgeColumn++) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+                    for (int row = 0; row < 2; row++) grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+                    Label[] badges = { values[i], details[i], rappiCash, rappiOther };
+                    for (int badge = 0; badge < badges.Length; badge++)
+                    {
+                        badges[badge].Dock = DockStyle.Fill;
+                        badges[badge].Margin = new Padding(badge % 2 == 0 ? 0 : 3, badge < 2 ? 0 : 3, badge % 2 == 0 ? 3 : 0, badge < 2 ? 3 : 0);
+                        grid.Controls.Add(badges[badge], badge % 2, badge / 2);
+                    }
+                    content.Controls.Add(grid, 0, 1);
+                }
+                else
+                {
+                    values[i].Dock = details[i].Dock = DockStyle.Fill;
+                    values[i].Margin = new Padding(0, 0, 0, 3);
+                    details[i].Margin = new Padding(0, 3, 0, 0);
+                    content.Controls.Add(values[i], 0, 1);
+                    content.Controls.Add(details[i], 0, 2);
                 }
                 card.Controls.Add(content);
                 kpiCards[i] = card;
@@ -147,7 +200,10 @@ namespace CapaPresentacion.Formularios.FormsVentas
                 if (i == 3) WireKpiClick(card, (sender, args) => ExpensesRequested?.Invoke(this, EventArgs.Empty));
                 if (i == 0 || i == 1) WireKpiClick(card, (sender, args) => SalesRequested?.Invoke(this, EventArgs.Empty));
                 if (i == RappiCard) WireKpiClick(card, (sender, args) => RappiRequested?.Invoke(this, EventArgs.Empty));
-                Controls.Add(card, i, 0);
+                if (i == DeliveryCard) WireKpiClick(card, (sender, args) => DeliveriesRequested?.Invoke(this, EventArgs.Empty));
+                int column = i < RappiCard ? i : i + (i > RappiCard ? 1 : 0);
+                Controls.Add(card, column, 0);
+                if (i == RappiCard) SetColumnSpan(card, 2);
             }
             chartsButton.Text = "Gr\u00e1ficas";
             chartsButton.AccessibleName = "Gr\u00e1ficas";
@@ -167,14 +223,43 @@ namespace CapaPresentacion.Formularios.FormsVentas
             charts.Margin = Padding.Empty;
             for (int i = 0; i < 3; i++) charts.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 3));
             charts.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            Controls.Add(charts, 0, 1);
-            SetColumnSpan(charts, KpiCount);
+            Controls.Add(charts, 0, 2);
+            SetColumnSpan(charts, WideColumns);
             AddChart("VENTAS POR TIPO", types, 0);
             AddChart("FACTURAS CON DESCUENTO", discounts, 1);
             AddChart("ACTIVIDAD POR HORA", hours, 2);
             SelectCash(false, false);
             UpdateCashTotals(null, null);
             UpdateRappi(null, null);
+            UpdateDeliveries(null, null);
+            ApplyChartsState();
+            ArrangeKpis();
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            if (kpiCards[KpiCount - 1] != null) ArrangeKpis();
+        }
+
+        private void ArrangeKpis()
+        {
+            int columns = ClientSize.Width >= 1250 ? WideColumns : 5;
+            if (ColumnCount == columns) return;
+            SuspendLayout();
+            SetColumnSpan(charts, 1);
+            ColumnCount = Math.Max(ColumnCount, columns);
+            for (int i = 0; i < KpiCount; i++)
+            {
+                int slot = i <= RappiCard ? i : i + 1;
+                SetCellPosition(kpiCards[i], new TableLayoutPanelCellPosition(slot % columns, slot / columns));
+            }
+            ColumnCount = columns;
+            ColumnStyles.Clear();
+            for (int i = 0; i < columns; i++) ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / columns));
+            SetColumnSpan(charts, columns);
+            RowStyles[1].Height = columns == WideColumns ? 0 : KpiRowHeight;
+            ResumeLayout(true);
             ApplyChartsState();
         }
 
@@ -182,8 +267,8 @@ namespace CapaPresentacion.Formularios.FormsVentas
         {
             SuspendLayout();
             charts.Visible = chartsExpanded;
-            RowStyles[1].Height = chartsExpanded ? ChartsHeight : 0;
-            Height = KpiRowHeight + (chartsExpanded ? ChartsHeight : 0);
+            RowStyles[2].Height = chartsExpanded ? ChartsHeight : 0;
+            Height = KpiRowHeight * (ColumnCount == WideColumns ? 1 : 2) + (chartsExpanded ? ChartsHeight : 0);
             chartsButton.Icon = chartsExpanded ? FontAwesome.Sharp.IconChar.ChevronUp : FontAwesome.Sharp.IconChar.ChevronDown;
             chartsButton.AccessibleDescription = chartsExpanded ? "Ocultar las tres gr\u00e1ficas" : "Mostrar las tres gr\u00e1ficas";
             ResumeLayout(true);
@@ -202,7 +287,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
         public void UpdateExpenseTotal(decimal total)
         {
             values[3].Text = total.ToString("C0", Culture);
-            details[3].Text = "Egresos del per\u00edodo (sin n\u00f3mina)";
+            details[3].Text = "Sin n\u00f3mina \u00b7 COP";
         }
 
         public void UpdateIncomeTotal(decimal total)
@@ -216,7 +301,7 @@ namespace CapaPresentacion.Formularios.FormsVentas
             values[2].Text = income.HasValue ? income.Value.ToString("C0", Culture) : "\u2014";
             values[3].Text = expenses.HasValue ? expenses.Value.ToString("C0", Culture) : "\u2014";
             details[2].Text = income.HasValue ? "Ingresos extras del per\u00edodo" : "Sin datos de ingresos";
-            details[3].Text = expenses.HasValue ? "Egresos del per\u00edodo (sin n\u00f3mina)" : "Sin datos de egresos";
+            details[3].Text = expenses.HasValue ? "Sin n\u00f3mina \u00b7 COP" : "Sin datos de egresos";
         }
 
         public void UpdateMetrics(SalesMetrics metrics)
@@ -225,14 +310,12 @@ namespace CapaPresentacion.Formularios.FormsVentas
             values[1].Text = metrics.Total.ToString("C0", Culture);
             values[4].Text = metrics.Average.ToString("C0", Culture);
             values[5].Text = metrics.Discount.ToString("C0", Culture);
-            values[6].Text = metrics.DiscountShare.ToString("N1", Culture) + " %";
-            values[7].Text = metrics.Tips.ToString("C0", Culture);
+            values[6].Text = metrics.Tips.ToString("C0", Culture);
             details[0].Text = "En esta consulta";
             details[1].Text = "Suma de totales finales";
             details[4].Text = "Por factura \u00b7 COP";
             details[5].Text = metrics.EffectiveDiscount.ToString("N1", Culture) + " % del subtotal";
-            details[6].Text = metrics.DiscountCount.ToString("N0", Culture) + " de " + metrics.Count.ToString("N0", Culture) + " facturas";
-            details[7].Text = "Promedio " + (metrics.Count == 0 ? 0 : metrics.Tips / metrics.Count).ToString("C0", Culture);
+            details[6].Text = "Promedio " + (metrics.Count == 0 ? 0 : metrics.Tips / metrics.Count).ToString("C0", Culture);
             types.SetData(metrics.ByType.Select(item => new KeyValuePair<string, decimal>(item.Key, item.Value)), "Importe final por tipo de pedido");
             discounts.SetData(new[] {
                 new KeyValuePair<string, decimal>("Con descuento", metrics.DiscountCount),
@@ -241,6 +324,57 @@ namespace CapaPresentacion.Formularios.FormsVentas
         }
     }
 
+    /// <summary>Dato del historial: superficie tintada, borde sutil y valor centrado.</summary>
+    internal sealed class SalesMetricBadge : Label
+    {
+        private Color tint = Theme.Primary;
+        private string caption;
+        private bool subtle;
+        public Color Tint { get => tint; set { tint = value; Invalidate(); } }
+        public string Caption { get => caption; set { caption = value; Invalidate(); } }
+        public bool Subtle { get => subtle; set { subtle = value; Invalidate(); } }
+
+        public SalesMetricBadge()
+        {
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            AutoSize = false;
+            BackColor = Color.Transparent;
+            Font = Theme.BodyBold;
+            Text = "\u2014";
+            Margin = Padding.Empty;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (Width < 8 || Height < 8) return;
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle bounds = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = Theme.RoundedPath(bounds, 8))
+            using (SolidBrush fill = new SolidBrush(Theme.Lighten(tint, subtle ? 0.97f : 0.92f)))
+            using (Pen border = new Pen(Theme.Lighten(tint, subtle ? 0.91f : 0.82f)))
+            {
+                g.FillPath(fill, path);
+                g.DrawPath(border, path);
+            }
+            Rectangle text = new Rectangle(5, 2, Width - 10, Height - 4);
+            if (!string.IsNullOrEmpty(caption))
+            {
+                int captionHeight = 15;
+                TextRenderer.DrawText(g, caption, Theme.Small,
+                    new Rectangle(text.X, text.Y, text.Width, captionHeight), Theme.TextMuted,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding
+                    | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+                text.Y += captionHeight;
+                text.Height -= captionHeight;
+            }
+            TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+                | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis;
+            flags |= subtle && string.IsNullOrEmpty(caption) ? TextFormatFlags.WordBreak : TextFormatFlags.SingleLine;
+            TextRenderer.DrawText(g, Text, Font, text, subtle ? Theme.TextMuted : Theme.Darken(tint, 0.2f), flags);
+        }
+    }
     internal sealed class MiniSalesChart : Control
     {
         private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("es-CO");

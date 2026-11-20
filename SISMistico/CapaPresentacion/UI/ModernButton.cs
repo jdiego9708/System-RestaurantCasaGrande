@@ -63,6 +63,13 @@ namespace CapaPresentacion.UI
             base.Dispose(disposing);
         }
 
+        // Levantar el dedo al terminar de desplazar un panel tactil no debe pulsar el boton.
+        protected override void OnClick(EventArgs e)
+        {
+            if (TouchScrollPanel.IsClickSuppressed(this)) return;
+            base.OnClick(e);
+        }
+
         public ModernButton()
         {
             this.spinnerTimer.Tick += (s, e) => { this.spinnerAngle = (this.spinnerAngle + 30) % 360; this.Invalidate(); };

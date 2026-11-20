@@ -20,40 +20,6 @@ namespace CapaPresentacion
             this.Load += FrmFacturaFinal_Load;
         }
 
-        private int ComprobacionNumFacturas()
-        {
-            var fecha = ConfigFacturas.Default.Fecha;
-            int numfac = ConfigFacturas.Default.NumFactura;
-
-            if (fecha == null)
-            {
-                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
-                numfac = 1;
-                ConfigFacturas.Default.NumFactura = numfac;
-            }
-            else if (string.IsNullOrEmpty(fecha))
-            {
-                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
-                numfac += 1;
-                ConfigFacturas.Default.NumFactura = numfac;
-            }
-            else if (DateTime.Now.ToString("yyyy-MM-dd") == fecha.ToString())
-            {
-                numfac += 1;
-                ConfigFacturas.Default.NumFactura = numfac;
-            }
-            else
-            {
-                ConfigFacturas.Default.Fecha = DateTime.Now.ToString("yyyy-MM-dd");
-                numfac = 1;
-                ConfigFacturas.Default.NumFactura = numfac;
-            }
-
-            ConfigFacturas.Default.Save();
-
-            return numfac;
-        }
-
         public void AsignarReporte()
         {
             this.Controls.Add(this.reportViewer1);
@@ -123,6 +89,7 @@ namespace CapaPresentacion
                 {
                     this.reportViewer1.LocalReport.ReportEmbeddedResource =
                         "CapaPresentacion.ReportesFacturas.FacturaFinal.DeliveryPreBill.rdlc";
+                    this.AddProductDetails();
                     ReportParameter[] extended = new ReportParameter[this.reportParameters.Length + 6];
                     this.reportParameters.CopyTo(extended, 0);
                     this.DeliveryParameters().CopyTo(extended, this.reportParameters.Length);
@@ -159,10 +126,13 @@ namespace CapaPresentacion
                 && this.TablaDatosPrincipales.Columns.Contains("Num_mesa")
                 && "DOMICILIO".Equals(Convert.ToString(this.TablaDatosPrincipales.Rows[0]["Num_mesa"]),
                     StringComparison.OrdinalIgnoreCase);
+            int? receiptNumber = !isDelivery && this.TablaDatosPrincipales.Rows.Count > 0
+                ? NVentas.GetReceiptNumber(Convert.ToInt32(this.TablaDatosPrincipales.Rows[0]["Id_venta"])) : null;
             List<ReportParameter> parameters = new List<ReportParameter>
             {
                 new ReportParameter("Titulo", isDelivery ? "DOMICILIO - FACTURA" : "Restaurante Casa Grande"),
-                new ReportParameter("NumFactura", this.ComprobacionNumFacturas().ToString()),
+                new ReportParameter("NumFactura", receiptNumber.HasValue
+                    ? "N - " + receiptNumber.Value.ToString(CultureInfo.InvariantCulture) : string.Empty),
             };
             if (isDelivery)
             {
@@ -170,6 +140,7 @@ namespace CapaPresentacion
                 this.reportViewer1.LocalReport.ReportEmbeddedResource =
                     "CapaPresentacion.ReportesFacturas.FacturaFinal.DeliveryInvoice.rdlc";
                 parameters.AddRange(this.DeliveryParameters());
+                this.AddProductDetails();
             }
             this.reportParameters = parameters.ToArray();
 
@@ -183,6 +154,41 @@ namespace CapaPresentacion
 
             ReportDataSource dsDetallePago = new ReportDataSource("DetallePago", this.TablaDetalleVenta);
             reportViewer1.LocalReport.DataSources.Add(dsDetallePago);
+        }
+
+        // Solo en las facturas de domicilio: cada producto lleva su detalle como en las comandas de mesa. Debajo de un plato
+        // con ingredientes salen sus ingredientes (sopa, crema, arroz, acompanantes...) y, justo despues, la observacion
+        // que se escribio para ESE producto al pedirlo ("**observacion"); las bebidas llevan solo su observacion. Las
+        // facturas de mesa no cambian.
+        private void AddProductDetails()
+        {
+            if (this.TablaDetallePedido == null || !this.TablaDetallePedido.Columns.Contains("Id_detalle_pedido")
+                || !this.TablaDetallePedido.Columns.Contains("Nombre"))
+                return;
+            DataTable ingredients = NPedido.GetIngredientLines(this.Id_pedido);
+            bool hasNotes = this.TablaDetallePedido.Columns.Contains("Observaciones");
+            foreach (DataRow row in this.TablaDetallePedido.Rows)
+            {
+                bool isDish = !this.TablaDetallePedido.Columns.Contains("Tipo")
+                    || string.Equals(Convert.ToString(row["Tipo"]), "PLATO", StringComparison.OrdinalIgnoreCase);
+                DataRow[] lines = isDish && ingredients != null
+                    ? ingredients.Select("Id_detalle_pedido = " + Convert.ToInt32(row["Id_detalle_pedido"]))
+                    : new DataRow[0];
+                string note = hasNotes ? Convert.ToString(row["Observaciones"]).Trim() : string.Empty;
+                if (lines.Length == 0 && note.Length == 0)
+                    continue;
+
+                System.Text.StringBuilder name = new System.Text.StringBuilder(Convert.ToString(row["Nombre"]));
+                if (lines.Length > 0)
+                {
+                    name.Append(':');
+                    foreach (DataRow line in lines)
+                        name.Append(Environment.NewLine).Append("- ").Append(Convert.ToString(line["Nombre_ingrediente"]));
+                }
+                if (note.Length > 0)
+                    name.Append(Environment.NewLine).Append("**").Append(note);
+                row["Nombre"] = name.ToString();
+            }
         }
 
         // Telefono, direccion, barrio y referencia de entrega del pedido para el reporte de domicilio.

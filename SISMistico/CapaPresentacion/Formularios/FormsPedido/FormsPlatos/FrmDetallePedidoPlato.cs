@@ -25,13 +25,23 @@ namespace CapaPresentacion.Formularios.FormsPedido.Platos
             if (this.panel1.Controls.Count > 0)
                 this.panel1.Controls.Clear();
 
+            // Con muchas opciones el dialogo no debe salirse de la pantalla: se acota al area de trabajo.
+            Rectangle area = Screen.FromControl(this).WorkingArea;
+            if (this.Height > area.Height)
+            {
+                this.Height = area.Height;
+                this.CenterToScreen();
+            }
+
             CustomPlato customPlato = new CustomPlato
             {
                 Dock = DockStyle.Fill,
                 IsEnabledBebida = this.IsEnabledBebida,
+                DishName = this.Product?.Nombre,
             };
             await customPlato.LoadIngredientes();
             customPlato.OnBtnSaveClick += CustomPlato_OnBtnSaveClick;
+            customPlato.OnBtnCancelClick += (s, args) => this.Close();
             this.panel1.Controls.Add(customPlato);
         }
 

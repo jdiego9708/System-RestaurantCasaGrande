@@ -32,7 +32,7 @@
             this.date1 = new System.Windows.Forms.DateTimePicker();
             this.date2 = new System.Windows.Forms.DateTimePicker();
             this.btnBuscar = new CapaPresentacion.UI.ModernButton();
-            this.dgvVentas = new System.Windows.Forms.DataGridView();
+            this.dgvVentas = new CapaPresentacion.UI.TouchDataGridView();
             this.btnResumen = new System.Windows.Forms.Button();
             this.ListaHora1 = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -314,7 +314,7 @@
         private System.Windows.Forms.DateTimePicker date1;
         private System.Windows.Forms.DateTimePicker date2;
         public CapaPresentacion.UI.ModernButton btnBuscar;
-        private System.Windows.Forms.DataGridView dgvVentas;
+        private CapaPresentacion.UI.TouchDataGridView dgvVentas;
         public System.Windows.Forms.Button btnResumen;
         private System.Windows.Forms.ComboBox ListaHora1;
         private System.Windows.Forms.Label label2;

@@ -94,11 +94,13 @@ namespace CapaPresentacion.Formularios.FormsPedido
             foreach (UserControl old in previous)
                 old.Dispose();
 
+            // Una fila por producto: ocupa todo el ancho util (descontando la barra de desplazamiento).
+            int rowWidth = this.panelResultados.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
             List<UserControl> items = new List<UserControl>();
             foreach (ProductBinding product in this.catalogResults
                 .Skip(this.catalogPage * CatalogPageSize).Take(CatalogPageSize))
             {
-                ProductoItem item = new ProductoItem { Product = product };
+                ProductSearchRow item = new ProductSearchRow { Product = product, Width = rowWidth };
                 item.OnBtnAddClick += ProductoItem_OnBtnAddClick;
                 items.Add(item);
             }
@@ -117,7 +119,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
             this.panelResultados.ResumeLayout();
 
             this.UpdateCatalogPager();
-            this.LoadCatalogImages(items.Cast<ProductoItem>().ToList(), generation);
+            this.LoadCatalogImages(items.Cast<ProductSearchRow>().ToList(), generation);
         }
 
         private void UpdateCatalogPager()
@@ -133,7 +135,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
 
         // Las fotos se preparan fuera del hilo de la ventana y se asignan en el; la lista ya se puede usar
         // mientras llegan.
-        private void LoadCatalogImages(List<ProductoItem> items, int generation)
+        private void LoadCatalogImages(List<ProductSearchRow> items, int generation)
         {
             if (items.Count == 0)
                 return;
@@ -147,7 +149,7 @@ namespace CapaPresentacion.Formularios.FormsPedido
                 {
                     if (generation != this.catalogGeneration)
                         return;
-                    ProductoItem item = items[i];
+                    ProductSearchRow item = items[i];
                     Image image = ProductThumbnails.Get(fileNames[i]) ?? placeholder;
                     try
                     {

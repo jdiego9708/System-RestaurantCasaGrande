@@ -141,22 +141,53 @@ namespace CapaPresentacion
         public bool Visible_px { get => _visible_px; set => _visible_px = value; }
         public string Texto { get => texto; set => texto = value; }
 
-        private void TxtBusqueda_TextChanged(object sender, EventArgs e)
+        private const float DefaultTextSize = 9.75F;
+        private float textSize = DefaultTextSize;
+
+        /// <summary>
+        /// Tamano de la letra del cuadro de texto, en puntos. Con el valor por defecto el control queda como
+        /// siempre; con otro valor la altura del control sigue a la del texto.
+        /// </summary>
+        [System.ComponentModel.DefaultValue(DefaultTextSize)]
+        public float TextSize
         {
-            TextBox txt = (TextBox)sender;
-            this.Texto = txt.Text;
+            get => this.textSize;
+            set
+            {
+                this.textSize = value;
+                this.UpdateTextFont();
+                if (this.textSize != DefaultTextSize)
+                {
+                    // El TextBox recalcula su alto al cambiar de fuente; el panel y el control lo acompanan.
+                    this.panel1.Height = this.txtBusqueda.Height;
+                    this.Height = this.panel1.Height;
+                }
+            }
+        }
+
+        // Cursiva mientras muestra el texto inicial; normal cuando el usuario escribe.
+        private void UpdateTextFont()
+        {
+            TextBox txt = this.txtBusqueda;
             if (txt.Text.Equals("") || txt.Text.Equals(this.Texto_inicial))
             {
                 txt.Font =
-                        new Font("Segoe UI", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
+                        new Font("Segoe UI", this.textSize, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
                 txt.ForeColor = Color.FromArgb(64, 64, 64);
             }
             else
             {
                 txt.Font =
-                        new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+                        new Font("Segoe UI", this.textSize, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
                 txt.ForeColor = Color.Black;
             }
+        }
+
+        private void TxtBusqueda_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = (TextBox)sender;
+            this.Texto = txt.Text;
+            this.UpdateTextFont();
         }
 
         private void CustomTextBox_Load(object sender, EventArgs e)
